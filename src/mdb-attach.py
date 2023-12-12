@@ -5,6 +5,7 @@ import signal
 import sys
 import click
 from utils import parse_ranks
+import cmd
 
 
 dbg_procs = []
@@ -24,6 +25,8 @@ def main(ranks, host, port, program):
 
 def connect_proc(host, port, program):
     c = pexpect.spawn(f'gdb -q -ex \"target remote {host}:{port}\" {program}', timeout=None)
+    # shell_cmd = f'gdb -q -ex \"target remote {host}:{port}\" {program} > /tmp/log.{port}'
+    # c = pexpect.spawn('/bin/bash', ['-c', shell_cmd], timeout=None)
     c.sendline('b MAIN__')
     c.sendline('c')
     return c
@@ -39,8 +42,6 @@ def close_procs(sig, frame):
 
 def connect(prog_opts):
 
-    dbg_threads = []
-
     ranks = prog_opts['ranks']
     port = prog_opts['port']
     host = prog_opts['host']
@@ -53,11 +54,49 @@ def connect(prog_opts):
 
     signal.signal(signal.SIGINT, close_procs)
 
-    while True:
-        sys.stdout.write("\r")
-        rank = int(input('rank to debug: '))
+    mdbShell().cmdloop()
+    # while True:
+    #     sys.stdout.write("\r")
+    #     command = int(input('(mdb) '))
+    #     parse_command(command)
+
+class mdbShell(cmd.Cmd):
+    intro = 'mdb - mpi debugger - built on gdb. Type ? for more info'
+    prompt = '(mdb) '
+
+    def do_interact(self, rank):
+        """
+        Description:
+        Jump into interactive mode for a specific rank.
+
+        Example:
+        The following command will debug the 2nd process (proc id 1)
+
+            (mdb) interact 1
+        """
+        rank = int(rank)
         c = dbg_procs[rank]
         c.interact()
+        sys.stdout.write("\r")
+        return
+
+    def do_pcommand(self, command):
+        """
+        Description:
+        Run [command] on every process.
+
+        Example:
+        The following command will run [command] on every process.
+
+            (mdb) pcommand
+        """
+        for c in dbg_procs:
+            c.sendline(command)
+            c.expect('(gdb)')
+            print("c.before = \n", c.before.decode('utf-8'))
+            print("c.after = \n", c.after.decode('utf-8'))
+        return
+
 
 if __name__ == "__main__":
     main()
