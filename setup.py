@@ -1,19 +1,19 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='mdb',
-    version='0.0.0',
+    name="mdb",
+    version="0.0.0",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'Click',
-        'Pexpect',
-        'Matplotlib',
-        'Numpy',
+        "Click",
+        "Pexpect",
+        "Matplotlib",
+        "Numpy",
     ],
     entry_points={
-        'console_scripts': [
-            'mdb = mdb.mdb:main',
+        "console_scripts": [
+            "mdb = mdb.mdb:main",
         ],
     },
 )
