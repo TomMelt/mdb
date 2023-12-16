@@ -228,7 +228,3 @@ class mdbShell(cmd.Cmd):
         pool.starmap(send_command, zip(itertools.repeat(command), self.select))
 
         return
-
-
-if __name__ == "__main__":
-    main()

@@ -1,8 +1,6 @@
 import subprocess as sub
 import os
-import sys
 import click
-from .utils import parse_ranks
 
 
 @click.command()
@@ -31,7 +29,3 @@ def launch_server(my_rank, no_ranks, port, args):
     sub.run(["gdbserver", f"localhost:{port}", f"{args}"])
     print(f"server on rank {my_rank} closed")
     return
-
-
-if __name__ == "__main__":
-    main()
