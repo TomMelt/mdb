@@ -1,11 +1,15 @@
 import subprocess as sub
 import os
 import click
-import sys
 
 
 @click.command()
-@click.option("-p", "--port", default=2000, help="Starting port address. Each rank's port is assigned as [port_address + rank].")
+@click.option(
+    "-p",
+    "--port",
+    default=2000,
+    help="Starting port address. Each rank's port is assigned as [port_address + rank].",
+)
 @click.option("--args", help="program and args for gdb")
 def launch(port, args):
     prog_opts = dict(port=port, args=args)
