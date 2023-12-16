@@ -11,9 +11,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 dbg_procs = []
+plt.style.use('dark_background')
 GDBPROMPT = r'\(gdb\)'
 
-pool = Pool(4)
+pool = Pool(8)
 
 @click.command()
 @click.option('-n', '--ranks', default=1, help='Total number of ranks to debug.')
@@ -127,25 +128,32 @@ class mdbShell(cmd.Cmd):
             c.expect(GDBPROMPT)
             output = c.before.decode('utf-8')
             result = 0.
-            for line in output:
-                if re.search(r'^\$\d+ = ', line):
-                    result = line.split(' ')[2]
-                    result = float(result)
+            for line in output.split('\n'):
+                float_regex = r'\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)'
+                m = re.search(float_regex, line)
+                if m:
+                    result = m.group(1)
+                    try:
+                        result = float(result)
+                    except ValueError:
+                        print(f'cannot convert variable [{var}] to a float.')
+                        return
             return rank, result
 
         ranks = []
         results = []
         for rank, result in pool.starmap(send_print, zip(itertools.repeat(var), self.select)):
-            ranks.append(rank)
+            ranks.append(str(rank)) # string for barchart labels
             results.append(result)
 
         results = np.array(results)
         print(f'min : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn    : {len(results)}')
 
         fig, ax = plt.subplots()
-        ax.plot(ranks, results)
+        ax.bar(ranks, results)
         ax.set_xlabel('rank')
         ax.set_ylabel('value')
+        ax.set_title(var)
         plt.show()
 
         return
