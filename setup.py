@@ -8,6 +8,8 @@ setup(
     install_requires=[
         'Click',
         'Pexpect',
+        'Matplotlib',
+        'Numpy',
     ],
     entry_points={
         'console_scripts': [
