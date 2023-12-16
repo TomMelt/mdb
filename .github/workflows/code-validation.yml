@@ -17,5 +17,9 @@ jobs:
     - name: Install Python Packages
       run: |
         pip install black flake8
-        black .                # check code is compliant with black formatting
-        flake8 --ignore=E501 . # check for flake8 compliance but ignore E501 (line-length)
+    - name: Run black  # check code is compliant with black formatting
+      run: |
+        black .
+    - name: Run flake8 # check for flake8 compliance but ignore E501 (line-length)
+      run: |
+        flake8 --ignore=E501 .
