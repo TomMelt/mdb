@@ -8,9 +8,14 @@ import click
     "-p",
     "--port",
     default=2000,
+    show_default=True,
     help="Starting port address. Each rank's port is assigned as [port_address + rank].",
 )
-@click.option("--args", help="program and args for gdb")
+@click.option(
+    "--args",
+    help="program and any command line arguments. Similar to gdb option.",
+    required=True,
+)
 def launch(port, args):
     prog_opts = dict(port=port, args=args)
 
@@ -24,7 +29,6 @@ def launch(port, args):
 
 
 def launch_server(my_rank, no_ranks, port, args):
-    print(f"no of ranks = {no_ranks} , my rank = {my_rank}.")
     port = port + int(my_rank)
     sub.run(["gdbserver", f"localhost:{port}", f"{args}"])
     print(f"server on rank {my_rank} closed")
