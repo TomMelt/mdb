@@ -85,13 +85,13 @@ implementations but I just haven't done it yet.
 
 # TODO
 
-- [ ] handle session termination and CTRL-C signalling better
+- [x] handle session termination and CTRL-C signalling better
 - [ ] add tests
 - [ ] expand docs
 - [ ] record asciinema demo? / youtube video?
 - [ ] add CI
 - [ ] expand README
-- [ ] restructure code to remove global vars
+- [x] restructure code to remove global vars
 - [ ] add support for other MPI launchers (intel MPI, mpiexec, srun etc?)
 
 # Contributing
