@@ -36,12 +36,26 @@ from .mdb_shell import mdbShell
     help="Starting port address. Each rank's port is assigned as [port_address + rank].",
 )
 @click.option("--program", help="program for gdb to debug.", required=True)
-def attach(ranks, select, host, port, program):
+@click.option(
+    "-b",
+    "--breakpt",
+    default="",
+    show_default=True,
+    help="By default mdb will search for the first breakpoint (main or MAIN__). You can chose to override this by manually specifying a specific breakpoint.",
+)
+def attach(ranks, select, host, port, program, breakpt):
     # debug all ranks if "select" is not set
     if select == "":
         select = ",".join([str(rank) for rank in list(range(ranks))])
 
-    prog_opts = dict(ranks=ranks, select=select, host=host, port=port, program=program)
+    prog_opts = dict(
+        ranks=ranks,
+        select=select,
+        host=host,
+        port=port,
+        program=program,
+        breakpt=breakpt,
+    )
 
     client = Client(prog_opts)
     client.connect()
