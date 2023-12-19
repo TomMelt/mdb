@@ -38,7 +38,7 @@ def launch(port, args):
         except KeyError:
             pass
 
-    if prog_opts["no_ranks"] == None or prog_opts["my_rank"] == None:
+    if prog_opts["no_ranks"] is None or prog_opts["my_rank"] is None:
         print(
             "Error: cannot find MPI information in environment variables. I currently search for:"
         )
