@@ -21,13 +21,31 @@ import click
 def launch(port, args):
     args = list(args)
     prog_opts = dict(port=port, args=args)
+    prog_opts["no_ranks"] = None
+    prog_opts["my_rank"] = None
 
-    try:
-        prog_opts["no_ranks"] = int(os.environ["OMPI_COMM_WORLD_SIZE"])
-        prog_opts["my_rank"] = int(os.environ["OMPI_COMM_WORLD_RANK"])
-    except KeyError as e:
-        print(e)
+    env_vars = {
+        "open MPI": ("OMPI_COMM_WORLD_SIZE", "OMPI_COMM_WORLD_RANK"),
+        "intel MPI": ("MPI_LOCALNRANKS", "MPI_LOCALRANKID"),
+        "PMI": ("PMI_SIZE", "PMI_RANK"),
+        "slurm": ("SLURM_NTASKS", "SLURM_PROCID"),
+    }
+
+    for env_name, (env_size, env_rank) in env_vars.items():
+        try:
+            prog_opts["no_ranks"] = int(os.environ[env_size])
+            prog_opts["my_rank"] = int(os.environ[env_rank])
+        except KeyError:
+            pass
+
+    if prog_opts["no_ranks"] == None or prog_opts["my_rank"] == None:
+        print(
+            "Error: cannot find MPI information in environment variables. I currently search for:"
+        )
+        for env_name, env_var in env_vars.items():
+            print(f"Library: {env_name} , variables {env_var}")
         exit(1)
+
     launch_server(**prog_opts)
 
 
