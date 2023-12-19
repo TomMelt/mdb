@@ -78,8 +78,8 @@ Currently I am building and testing for open MPI only. In principle it really wo
 implementations but I just haven't done it yet.
 
 - [x] open MPI mpirun
-- [ ] intel MPI mpirun
-- [ ] slurm srun
+- [x] intel MPI mpirun
+- [x] slurm srun
 - [ ] mpiexec ?
 - [ ] others...
 
@@ -89,10 +89,10 @@ implementations but I just haven't done it yet.
 - [ ] add tests
 - [ ] expand docs
 - [ ] record asciinema demo? / youtube video?
-- [ ] add CI
+- [x] add CI
 - [ ] expand README
 - [x] restructure code to remove global vars
-- [ ] add support for other MPI launchers (intel MPI, mpiexec, srun etc?)
+- [x] add support for other MPI launchers (intel MPI, mpiexec, srun etc?)
 
 # Contributing
 
