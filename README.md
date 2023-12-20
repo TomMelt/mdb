@@ -71,6 +71,8 @@ The main dependencies are (see [`requirements.txt`](requirements.txt)):
 * `matplotlib`
 * `numpy`
 * `pexpect`
+* `youplot`/`uplot` (optional but recommended for fancy ascii plots - see [here](https://github.com/red-data-tools/YouPlot) for
+  installation instructions)
 
 # Supported MPI implementations
 
