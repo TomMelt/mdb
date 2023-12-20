@@ -99,3 +99,17 @@ implementations but I just haven't done it yet.
 If you would like to be involved in the development, feel free to submit a PR. A word of caution though... the code is currently
 in a highly volatile state and a plan major changes to the interface and layout. I will update this section when I reach a more
 stable part of the development. Either way changes are welcome at anytime.
+
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more details on how best to contribute.
+
+# Acknowledgements
+
+This project was inspired by @mystery-e204's [mpidb](https://github.com/mystery-e204/mpidb) tool and @Azrael3000's
+[tmpi](https://github.com/Azrael3000/tmpi) tmux interface.
+
+# Similar Projects
+
+I have recently come across @robertu94's [mpigdb](https://github.com/robertu94/mpigdb). I wish I came across it before I started
+my own because I think it handles the interface to gdb in a nicer way and sort of does what I wanted. The main difference from
+my perspective is that I can plot variables across mpi processes using `mdb` and AFAIK `mpigdb` cannot. If you like `mdb` I
+recommend checking out `mpigdb` as well -- it also uses rust!
