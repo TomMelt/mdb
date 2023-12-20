@@ -2,6 +2,7 @@ import cmd
 import itertools
 import re
 import sys
+from subprocess import PIPE, run
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,11 +14,12 @@ plt.style.use("dark_background")
 
 
 class mdbShell(cmd.Cmd):
-    intro = "mdb - mpi debugger - built on gdb. Type ? for more info"
+    intro = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "Ctrl+]"'
     prompt = "(mdb) "
     select = list()
     ranks = list()
     client = None
+    plot_lib = "uplot"
 
     def __init__(self, prog_opts, client):
         self.ranks = prog_opts["ranks"]
@@ -25,6 +27,13 @@ class mdbShell(cmd.Cmd):
         self.select = parse_ranks(select_str)
         self.prompt = f"(mdb {select_str}) "
         self.client = client
+        self.plot_lib = prog_opts["plot_lib"]
+        if self.plot_lib == "uplot":
+            try:
+                run(["uplot", "--help"], capture_output=False)
+            except FileNotFoundError:
+                print("warning: uplot not found. Defaulting to matplotlib.")
+                self.plot_lib = "matplotlib"
         super().__init__()
 
     def do_interact(self, rank):
@@ -47,10 +56,12 @@ class mdbShell(cmd.Cmd):
         sys.stdout.write("\r")
         return
 
-    def do_print(self, var):
+    def do_info(self, var):
         """
         Description:
-        Print [var] on every selected process.
+        Print basic statistics (min, mean, max) and produce a bar chart for a
+        given variable [var] on all selected processes. This is intended for
+        float/integer variables.
 
         Example:
         The following command will print variable [var] on all selected processes.
@@ -85,37 +96,30 @@ class mdbShell(cmd.Cmd):
             results.append(result)
 
         results = np.array(results)
+
         print(
-            f"min : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn    : {len(results)}"
+            f"min : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn   : {len(results)}"
         )
 
-        fig, ax = plt.subplots()
-        ax.bar(ranks, results)
-        ax.set_xlabel("rank")
-        ax.set_ylabel("value")
-        ax.set_title(var)
-        plt.show()
+        if self.plot_lib == "uplot":
+            plt_data_str = "\n".join(
+                [", ".join([str(x), str(y)]) for x, y in zip(ranks, results)]
+            )
+            run(
+                ["uplot", "bar", "-d,", "--xlabel", f"{var}", "--ylabel", "rank"],
+                stdout=PIPE,
+                input=plt_data_str,
+                encoding="ascii",
+            )
+        else:
+            fig, ax = plt.subplots()
+            ax.bar(ranks, results)
+            ax.set_xlabel("rank")
+            ax.set_ylabel("value")
+            ax.set_title(var)
+            plt.show()
 
         return
-
-    def do_clearbuffers(self, args):
-        """
-        Description:
-        Clear all process stdout buffers.
-
-        Example:
-        The following command will clear the stdout buffer for each process.
-
-            (mdb) clearbuffers
-        """
-        for rank in range(self.ranks):
-            c = self.client.dbg_procs[rank]
-            while True:
-                if c.before:
-                    c.expect(r".+")
-                else:
-                    break
-        print("cleared")
 
     def do_command(self, command):
         """
