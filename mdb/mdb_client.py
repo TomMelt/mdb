@@ -1,6 +1,4 @@
 import itertools
-import os
-import re
 import sys
 from multiprocessing.dummy import Pool
 
@@ -18,28 +16,17 @@ class Client:
     host = "localhost"
     start_port = 2000
     program = ""
-    breakpt = ""
+    breakpt = "main"
 
     def __init__(self, prog_opts):
         self.ranks = prog_opts["ranks"]
         self.host = prog_opts["host"]
         self.start_port = prog_opts["port"]
         self.program = prog_opts["program"]
-        self.breakpt = prog_opts["breakpt"]
+        if prog_opts["breakpt"] != "":
+            self.breakpt = prog_opts["breakpt"]
         self.select = parse_ranks(prog_opts["select"])
         self.pool = Pool(self.ranks)
-        if self.breakpt == "":
-            self.set_main_breakpoint(self.program)
-        return
-
-    def set_main_breakpoint(self, program):
-        matches = re.findall(
-            r"\bmain_*", os.popen(f"nm {program}").read(), flags=re.IGNORECASE
-        )
-        if "MAIN__" in matches:
-            self.breakpt = "MAIN__"
-        else:
-            self.breakpt = "main"
         return
 
     def close_procs(self, sig, frame):
