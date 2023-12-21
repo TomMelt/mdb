@@ -30,7 +30,7 @@ class mdbShell(cmd.Cmd):
         self.plot_lib = prog_opts["plot_lib"]
         if self.plot_lib == "uplot":
             try:
-                run(["uplot", "--help"], capture_output=False)
+                run(["uplot", "--help"], capture_output=True)
             except FileNotFoundError:
                 print("warning: uplot not found. Defaulting to matplotlib.")
                 self.plot_lib = "matplotlib"
