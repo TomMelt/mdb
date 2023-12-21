@@ -1,8 +1,10 @@
+import asyncio
 import cmd
 import itertools
 import os
 import re
 import readline
+import signal
 import sys
 from subprocess import PIPE, run
 
@@ -140,7 +142,7 @@ class mdbShell(cmd.Cmd):
             c = self.client.dbg_procs[rank]
             c.sendline(command)
             c.expect(GDBPROMPT)
-            print(f"{rank}: " + c.before.decode("utf-8"), end="\n")
+            print(f"{rank}: " + c.before.decode("utf-8"), end="")
             return
 
         self.client.pool.starmap(
@@ -182,7 +184,16 @@ class mdbShell(cmd.Cmd):
         """
         Run this function when a signal is caught.
         """
-        print("SIGINT signal caught. Need to implement gdb interrupt.")
+
+        async def send_sigint(proc):
+            os.kill(proc.pid, signal.SIGINT)
+            return
+
+        async def interrupt(dbg_procs):
+            await asyncio.gather(*map(lambda proc: send_sigint(proc), dbg_procs))
+
+        asyncio.run(interrupt(self.client.dbg_procs))
+        return
 
     def default(self, line):
         if line == "EOF":
