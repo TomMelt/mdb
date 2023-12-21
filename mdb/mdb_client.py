@@ -15,14 +15,12 @@ class Client:
     select = ""
     host = "localhost"
     start_port = 2000
-    program = ""
     breakpt = "main"
 
     def __init__(self, prog_opts):
         self.ranks = prog_opts["ranks"]
         self.host = prog_opts["host"]
         self.start_port = prog_opts["port"]
-        self.program = prog_opts["program"]
         if prog_opts["breakpt"] != "":
             self.breakpt = prog_opts["breakpt"]
         self.select = parse_ranks(prog_opts["select"])
@@ -47,7 +45,6 @@ class Client:
                 ports,
                 list(range(self.ranks)),
                 itertools.repeat(self.select),
-                itertools.repeat(self.program),
                 itertools.repeat(self.breakpt),
             ),
         )
@@ -55,9 +52,9 @@ class Client:
             self.dbg_procs.append(p)
 
 
-def connect_proc(host, port, rank, select, program, breakpt):
+def connect_proc(host, port, rank, select, breakpt):
     print(f"connecting to port: {port}")
-    c = pexpect.spawn(f"gdb -q {program}", timeout=None)
+    c = pexpect.spawn("gdb -q", timeout=None)
     c.expect(GDBPROMPT)
     print(c.before.decode("utf-8"), end="")
     c.sendline("set pagination off")

@@ -35,7 +35,6 @@ from .mdb_shell import mdbShell
     show_default=True,
     help="Starting port address. Each rank's port is assigned as [port_address + rank].",
 )
-@click.option("--program", help="program for gdb to debug.", required=True)
 @click.option(
     "-b",
     "--breakpt",
@@ -49,7 +48,7 @@ from .mdb_shell import mdbShell
     show_default=True,
     help="Plotting library to use. Recommended default is [uplot] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -s 0-100.",
 )
-def attach(ranks, select, host, port, program, breakpt, plot_lib):
+def attach(ranks, select, host, port, breakpt, plot_lib):
     # debug all ranks if "select" is not set
     if select == "":
         select = ",".join([str(rank) for rank in list(range(ranks))])
@@ -64,7 +63,6 @@ def attach(ranks, select, host, port, program, breakpt, plot_lib):
         select=select,
         host=host,
         port=port,
-        program=program,
         breakpt=breakpt,
         plot_lib=plot_lib,
     )
