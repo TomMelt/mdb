@@ -69,6 +69,6 @@ def attach(ranks, select, host, port, breakpt, plot_lib):
 
     client = Client(prog_opts)
     client.connect()
-    signal.signal(signal.SIGINT, client.close_procs)
     mshell = mdbShell(prog_opts, client)
+    signal.signal(signal.SIGINT, mshell.hook_SIGINT)
     mshell.cmdloop()

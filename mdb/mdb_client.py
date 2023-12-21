@@ -27,8 +27,7 @@ class Client:
         self.pool = Pool(self.ranks)
         return
 
-    def close_procs(self, sig, frame):
-        print("")  # print blank line
+    def close_procs(self):
         for proc in self.dbg_procs:
             print(f"closing process {proc.pid}")
             proc.close()

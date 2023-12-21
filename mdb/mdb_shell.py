@@ -1,6 +1,8 @@
 import cmd
 import itertools
+import os
 import re
+import readline
 import sys
 from subprocess import PIPE, run
 
@@ -14,8 +16,10 @@ plt.style.use("dark_background")
 
 
 class mdbShell(cmd.Cmd):
-    intro = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "Ctrl+]"'
+    intro = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "Ctrl+]".'
     prompt = "(mdb) "
+    hist_file = os.path.expanduser("~/.mdb_history")
+    hist_filesize = 10000
     select = list()
     ranks = list()
     client = None
@@ -129,7 +133,7 @@ class mdbShell(cmd.Cmd):
         Example:
         The following command will run gdb command [command] on every process.
 
-            (mdb) pcommand [command]
+            (mdb) command [command]
         """
 
         def send_command(command, rank):
@@ -143,4 +147,45 @@ class mdbShell(cmd.Cmd):
             send_command, zip(itertools.repeat(command), self.select)
         )
 
+        return
+
+    def do_quit(self, command):
+        """
+        Description:
+        Quit mdb.
+
+        Example:
+        Quit the mdb debugger using the following command:
+
+            (mdb) quit
+        """
+
+        print("\nexiting mdb...")
+        return True
+
+    def preloop(self):
+        """
+        Override cmd preloop method to load mdb history.
+        """
+        if os.path.exists(self.hist_file):
+            readline.read_history_file(self.hist_file)
+
+    def postloop(self):
+        """
+        Override cmd postloop method to save mdb history and close gdb processes.
+        """
+        readline.set_history_length(self.hist_filesize)
+        readline.write_history_file(self.hist_file)
+        self.client.close_procs()
+
+    def hook_SIGINT(self, *args):
+        """
+        Run this function when a signal is caught.
+        """
+        print("SIGINT signal caught. Need to implement gdb interrupt.")
+
+    def default(self, line):
+        if line == "EOF":
+            self.do_quit(None)
+            return True
         return
