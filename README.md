@@ -18,13 +18,13 @@ Technically `gdb` supports other languages as well, but this is the intersection
 First run `mdb` in launch mode as part of your normal program run.
 
 ```bash
-mpirun -n 8 mdb launch --args ./a.out
+mpirun -n 8 mdb launch ./a.out
 ```
 
 In a separate terminal (and even separate machine if you wish (but you'd need to use SSH)) use `mdb` in attach mode.
 
 ```bash
-mdb attach -n 8 -s 0,2-4 --program a.out
+mdb attach -n 8 -s 0,2-4
 ```
 
 This will run the debugger with 8 processes in total but only specific processes [0,2,3,4] have been selected (`-s`) for
