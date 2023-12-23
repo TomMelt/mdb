@@ -6,6 +6,7 @@ import re
 import readline
 import signal
 import sys
+from shlex import split
 from subprocess import PIPE, run
 
 import matplotlib.pyplot as plt
@@ -164,6 +165,22 @@ class mdbShell(cmd.Cmd):
 
         print("\nexiting mdb...")
         return True
+
+    def do_shell(self, command):
+        """
+        Description:
+        Run shell (UNIX) command.
+
+        Alias [!]
+
+        Example:
+        Run a UNIX shell command from mdb.
+
+            (mdb) !ls
+        """
+        print("split(command) = \n", split(command))
+        run(split(command))
+        return
 
     def preloop(self):
         """
