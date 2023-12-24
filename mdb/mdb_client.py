@@ -1,4 +1,3 @@
-import itertools
 import sys
 from multiprocessing.dummy import Pool
 
