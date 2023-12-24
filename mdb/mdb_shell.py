@@ -1,4 +1,3 @@
-import asyncio
 import cmd
 import itertools
 import os
@@ -6,6 +5,7 @@ import re
 import readline
 import signal
 import sys
+from multiprocessing.dummy import Pool
 from shlex import split
 from subprocess import PIPE, run
 
@@ -217,17 +217,18 @@ class mdbShell(cmd.Cmd):
         Run this function when a signal is caught.
         """
 
-        async def send_sigint(proc):
+        pool = Pool(self.ranks)
+
+        def send_sigint(proc):
             os.kill(proc.pid, signal.SIGINT)
             return
 
-        async def interrupt(dbg_procs):
-            await asyncio.gather(*map(lambda proc: send_sigint(proc), dbg_procs))
-
-        asyncio.run(interrupt(self.client.dbg_procs))
+        pool.map(send_sigint, self.client.dbg_procs)
 
         # clear the interrupt message from each pexpect stdout stream.
         self.client.clear_stdout()
+
+        pool.close()
 
         return
 
