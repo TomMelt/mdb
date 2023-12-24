@@ -182,6 +182,21 @@ class mdbShell(cmd.Cmd):
         run(split(command))
         return
 
+    def do_select(self, ranks):
+        """
+        Description:
+        Change which rank(s) are manually controlled.
+
+        Example:
+        Manually control ranks 0,2,3 and 4 using the following command:
+
+            (mdb) select 0,2-4
+        """
+        self.hook_SIGINT(None)
+        self.prompt = f"(mdb {ranks}) "
+        self.select = parse_ranks(ranks)
+        return
+
     def preloop(self):
         """
         Override cmd preloop method to load mdb history.
