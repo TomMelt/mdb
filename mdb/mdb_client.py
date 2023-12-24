@@ -36,17 +36,7 @@ class Client:
         return
 
     def connect(self):
-        ports = [self.start_port + rank for rank in range(self.ranks)]
-        procs = self.pool.starmap(
-            connect_proc,
-            zip(
-                itertools.repeat(self.host),
-                ports,
-                list(range(self.ranks)),
-                itertools.repeat(self.select),
-                itertools.repeat(self.breakpt),
-            ),
-        )
+        procs = self.pool.map(self.connect_proc, list(range(self.ranks)))
         for p in procs:
             self.dbg_procs.append(p)
 
@@ -67,24 +57,24 @@ class Client:
 
         return
 
-
-def connect_proc(host, port, rank, select, breakpt):
-    print(f"connecting to port: {port}")
-    c = pexpect.spawn("gdb -q", timeout=None)
-    c.expect(GDBPROMPT)
-    print(c.before.decode("utf-8"), end="")
-    c.sendline("set pagination off")
-    c.expect(GDBPROMPT)
-    c.sendline("set confirm off")
-    c.expect(GDBPROMPT)
-    c.sendline(f"target remote {host}:{port}")
-    c.expect(GDBPROMPT)
-    c.sendline(f"b {breakpt}")
-    c.expect(GDBPROMPT)
-    c.sendline("c")
-    c.expect(GDBPROMPT)
-    if rank not in select:
-        # we do not need to monitor these processes
-        # let them stay in continue mode
+    def connect_proc(self, rank):
+        port = self.start_port + rank
+        print(f"connecting to port: {port}")
+        c = pexpect.spawn("gdb -q", timeout=None)
+        c.expect(GDBPROMPT)
+        print(c.before.decode("utf-8"), end="")
+        c.sendline("set pagination off")
+        c.expect(GDBPROMPT)
+        c.sendline("set confirm off")
+        c.expect(GDBPROMPT)
+        c.sendline(f"target remote {self.host}:{port}")
+        c.expect(GDBPROMPT)
+        c.sendline(f"b {self.breakpt}")
+        c.expect(GDBPROMPT)
         c.sendline("c")
-    return c
+        c.expect(GDBPROMPT)
+        if rank not in self.select:
+            # we do not need to monitor these processes
+            # let them stay in continue mode
+            c.sendline("c")
+        return c
