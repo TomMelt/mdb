@@ -52,8 +52,8 @@ typical debugging session and the features of `mdb`.
 2. (optional - but recommended) Create a conda environment or venv.
 
     ```bash
-    conda create -n mdb-new python
-    conda activate mdb-new
+    conda create -n mdb python
+    conda activate mdb
     ```
 
 3. Install `mdb`.
