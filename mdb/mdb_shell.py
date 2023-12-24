@@ -225,6 +225,10 @@ class mdbShell(cmd.Cmd):
             await asyncio.gather(*map(lambda proc: send_sigint(proc), dbg_procs))
 
         asyncio.run(interrupt(self.client.dbg_procs))
+
+        # clear the interrupt message from each pexpect stdout stream.
+        self.client.clear_stdout()
+
         return
 
     def default(self, line):

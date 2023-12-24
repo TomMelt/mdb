@@ -50,6 +50,23 @@ class Client:
         for p in procs:
             self.dbg_procs.append(p)
 
+    def clear_stdout(self):
+        """
+        Clear stdout from pexpect.
+        """
+
+        def send_command(rank):
+            c = self.dbg_procs[rank]
+            try:
+                c.expect(GDBPROMPT, timeout=0.1)
+            except pexpect.exceptions.TIMEOUT:
+                pass
+            return
+
+        self.pool.map(send_command, list(range(self.ranks)))
+
+        return
+
 
 def connect_proc(host, port, rank, select, breakpt):
     print(f"connecting to port: {port}")
