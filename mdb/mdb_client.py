@@ -46,15 +46,15 @@ class Client:
 
         def send_command(rank):
             c = self.dbg_procs[rank]
-            try:
-                c.expect(GDBPROMPT, timeout=0.1)
-            except pexpect.exceptions.TIMEOUT:
-                pass
+            while True:
+                try:
+                    c.expect(GDBPROMPT, timeout=0.1)
+                    # print(c.before.decode("utf-8"), end="")
+                except pexpect.exceptions.TIMEOUT:
+                    break
             return
 
         self.pool.map(send_command, list(range(self.ranks)))
-
-        return
 
     def connect_proc(self, rank):
         port = self.start_port + rank

@@ -192,7 +192,7 @@ class mdbShell(cmd.Cmd):
 
             (mdb) select 0,2-4
         """
-        self.hook_SIGINT(None)
+        self.hook_SIGINT()
         self.prompt = f"(mdb {ranks}) "
         self.select = parse_ranks(ranks)
         return
@@ -225,10 +225,17 @@ class mdbShell(cmd.Cmd):
 
         pool.map(send_sigint, self.client.dbg_procs)
 
-        # clear the interrupt message from each pexpect stdout stream.
-        self.client.clear_stdout()
+        def send_interrupt(rank):
+            c = self.client.dbg_procs[rank]
+            c.sendline("interrupt")
+            return
+
+        pool.map(send_interrupt, self.select)
 
         pool.close()
+
+        # clear the interrupt message from each pexpect stdout stream.
+        self.client.clear_stdout()
 
         return
 
