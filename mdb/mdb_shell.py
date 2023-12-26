@@ -131,24 +131,42 @@ class mdbShell(cmd.Cmd):
     def do_command(self, command):
         """
         Description:
-        Run [command] on every process.
+        Run [command] on every selected process. Alternatively, manually
+        specify which ranks to run the command on.
 
         Example:
         The following command will run gdb command [command] on every process.
 
             (mdb) command [command]
+
+        The following command will run gdb command [command] on processes 0,3,4 and 5.
+
+            (mdb) command 0,3-5 [command]
         """
 
         def send_command(command, rank):
             c = self.client.dbg_procs[rank]
             c.sendline(command)
             c.expect(GDBPROMPT)
-            print(f"{rank}: " + c.before.decode("utf-8"), end="")
+            output = c.before.decode("utf-8")
+            # strip bracketted paste (see issue #669 https://github.com/pexpect/pexpect/issues/669)
+            output = re.sub(r"\x1b\[\?2004[lh]\r*", "", output)
+            # prepend rank number to each line of output (excluding first and last)
+            lines = [
+                f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]
+            ]
+            output = "".join(lines)
+            print(output)
             return
 
-        self.client.pool.starmap(
-            send_command, zip(itertools.repeat(command), self.select)
-        )
+        select = self.select
+        commands = command.split(" ")
+
+        if re.match(r"\d[,0-9-]+", commands[0]):
+            select = parse_ranks(commands[0])
+            command = " ".join(commands[1:])
+
+        self.client.pool.starmap(send_command, zip(itertools.repeat(command), select))
 
         return
 
