@@ -258,6 +258,8 @@ class mdbShell(cmd.Cmd):
 
     def default(self, line):
         if line == "EOF":
-            self.do_quit(None)
-            return True
-        return
+            return self.onecmd("quit")
+        else:
+            print(
+                f"unrecognized command [{line}]. Type help to find out list of possible commands."
+            )
