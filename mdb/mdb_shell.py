@@ -196,7 +196,6 @@ class mdbShell(cmd.Cmd):
 
             (mdb) !ls
         """
-        print("split(command) = \n", split(command))
         run(split(command))
         return
 
