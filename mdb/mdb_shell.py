@@ -27,6 +27,7 @@ class mdbShell(cmd.Cmd):
     ranks = list()
     client = None
     plot_lib = "uplot"
+    exec_script = ""
 
     def __init__(self, prog_opts, client):
         self.ranks = prog_opts["ranks"]
@@ -34,6 +35,7 @@ class mdbShell(cmd.Cmd):
         self.select = parse_ranks(select_str)
         self.prompt = f"(mdb {select_str}) "
         self.client = client
+        self.exec_script = prog_opts["exec_script"]
         self.plot_lib = prog_opts["plot_lib"]
         if self.plot_lib == "uplot":
             try:
@@ -236,12 +238,32 @@ class mdbShell(cmd.Cmd):
         self.select = parse_ranks(ranks)
         return
 
+    def do_execute(self, file):
+        """
+        Description:
+        Execute commands from an mdb script file.
+
+        Example:
+        Run commands from script file test.mdb
+
+            (mdb) execute test.mdb
+        """
+        try:
+            with open(file) as infile:
+                self.cmdqueue.extend(infile.read().splitlines())
+        except FileNotFoundError:
+            print(
+                f"File [{file}] not found. Please check the file exists and try again."
+            )
+
     def preloop(self):
         """
         Override cmd preloop method to load mdb history.
         """
         if os.path.exists(self.hist_file):
             readline.read_history_file(self.hist_file)
+        if self.exec_script != "":
+            self.onecmd(f"execute {self.exec_script}")
 
     def postloop(self):
         """

@@ -43,12 +43,20 @@ from .mdb_shell import mdbShell
     help="By default mdb will search for the first breakpoint (main or MAIN__). You can chose to override this by manually specifying a specific breakpoint.",
 )
 @click.option(
+    "-x",
+    "--execute",
+    default="",
+    type=click.Path(exists=True),
+    show_default=True,
+    help="Execute a set of mdb commands contained in a script file.",
+)
+@click.option(
     "--plot-lib",
     default="uplot",
     show_default=True,
     help="Plotting library to use. Recommended default is [uplot] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -s 0-100.",
 )
-def attach(ranks, select, host, port, breakpt, plot_lib):
+def attach(ranks, select, host, port, breakpt, execute, plot_lib):
     # debug all ranks if "select" is not set
     if select == "":
         select = ",".join([str(rank) for rank in list(range(ranks))])
@@ -64,6 +72,7 @@ def attach(ranks, select, host, port, breakpt, plot_lib):
         host=host,
         port=port,
         breakpt=breakpt,
+        exec_script=execute,
         plot_lib=plot_lib,
     )
 
