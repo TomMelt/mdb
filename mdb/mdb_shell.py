@@ -164,7 +164,7 @@ class mdbShell(cmd.Cmd):
         select = self.select
         commands = command.split(" ")
 
-        if re.match(r"\d[,0-9-]+", commands[0]):
+        if re.match(r"[0-9,-]+", commands[0]):
             select = parse_ranks(commands[0])
             command = " ".join(commands[1:])
 
