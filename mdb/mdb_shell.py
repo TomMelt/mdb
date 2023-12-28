@@ -199,6 +199,28 @@ class mdbShell(cmd.Cmd):
         run(split(command))
         return
 
+    def do_update_winsize(self, _):
+        """
+        Description:
+        Update the each processes terminal window size to match the current
+        terminal window size mdb is running in. This is handy if you resize
+        your terminal and use [interact] with gdb's tui mode.
+
+        Example:
+        Update winsize after resizing your terminal window
+
+            (mdb) update_winsize
+        """
+
+        def update_winsize(rank):
+            cols, rows = os.get_terminal_size()
+            c = self.client.dbg_procs[rank]
+            c.setwinsize(rows=rows, cols=cols)
+            return
+
+        self.client.pool.map(update_winsize, self.select)
+        return
+
     def do_select(self, ranks):
         """
         Description:
