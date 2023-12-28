@@ -12,7 +12,7 @@ from subprocess import PIPE, run
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .utils import parse_ranks
+from .utils import parse_ranks, strip_bracketted_paste
 
 GDBPROMPT = r"\(gdb\)"
 plt.style.use("dark_background")
@@ -151,8 +151,7 @@ class mdbShell(cmd.Cmd):
             c.sendline(command)
             c.expect(GDBPROMPT)
             output = c.before.decode("utf-8")
-            # strip bracketted paste (see issue #669 https://github.com/pexpect/pexpect/issues/669)
-            output = re.sub(r"\x1b\[\?2004[lh]\r*", "", output)
+            output = strip_bracketted_paste(output)
             # prepend rank number to each line of output (excluding first and last)
             lines = [
                 f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]
