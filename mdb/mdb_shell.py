@@ -32,7 +32,6 @@ class mdbShell(cmd.Cmd):
     ranks = list()
     client = None
     plot_lib = "uplot"
-    exec_script = ""
 
     def __init__(self, prog_opts, client):
         self.ranks = prog_opts["ranks"]
@@ -324,7 +323,7 @@ class mdbShell(cmd.Cmd):
         """
         if os.path.exists(self.hist_file):
             readline.read_history_file(self.hist_file)
-        if self.exec_script != "":
+        if self.exec_script is not None:
             self.onecmd(f"execute {self.exec_script}")
 
     def postloop(self):
