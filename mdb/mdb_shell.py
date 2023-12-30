@@ -12,7 +12,12 @@ from subprocess import PIPE, run
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .utils import parse_ranks, strip_bracketted_paste
+from .utils import (
+    parse_ranks,
+    strip_bracketted_paste,
+    strip_control_characters,
+    tabular_output,
+)
 
 GDBPROMPT = r"\(gdb\)"
 plt.style.use("dark_background")
@@ -254,6 +259,64 @@ class mdbShell(cmd.Cmd):
             print(
                 f"File [{file}] not found. Please check the file exists and try again."
             )
+
+    def do_status(self, _):
+        """
+        Description:
+        Display status of each processes. Status will be red if at a breakpoint
+        and green if not.
+
+        Example:
+        Display status of all processes.
+
+            (mdb) status
+        """
+
+        def status(rank):
+            c = self.client.dbg_procs[rank]
+
+            # regex to find filename and linenumber in format "filename:linenumber"
+            file_line_num = r"\s+at\s+([a-zA-Z0-9.:\/-_]+)"
+
+            # get current stack for this rank's process
+            c.sendline("backtrace 1")
+            c.expect(GDBPROMPT)
+            output = c.before.decode("utf-8")
+            output = strip_bracketted_paste(output)
+            output = strip_control_characters(output)
+            current_stack = None
+            match = re.search(file_line_num, output)
+            if match:
+                current_stack = match.group(1)
+
+            # get all breakpoints for this rank's process
+            c.sendline("info break")
+            c.expect(GDBPROMPT)
+            output = c.before.decode("utf-8")
+            output = strip_bracketted_paste(output)
+            output = strip_control_characters(output)
+            breakpoints = re.findall(file_line_num, output)
+
+            # if current stack is at breakpoint return True else False
+            if current_stack and len(breakpoints):
+                if current_stack in breakpoints:
+                    return True
+            return False
+
+        at_breakpoint = self.client.pool.map(status, list(range(self.ranks)))
+
+        def status_to_color(rank, at_breakpoint):
+            if at_breakpoint:
+                return f"\x1b[31m{rank}\x1b[m"
+            else:
+                return f"\x1b[32m{rank}\x1b[m"
+
+        status = list(map(status_to_color, list(range(self.ranks)), at_breakpoint))
+
+        # print tabular status
+        tabular_output(status, cols=32)
+
+        return
 
     def preloop(self):
         """
