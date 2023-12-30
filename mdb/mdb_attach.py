@@ -70,7 +70,7 @@ def attach(ranks, select, host, port, breakpt, exec_script, plot_lib):
         host=host,
         port=port,
         breakpt=breakpt,
-        exec_script=exec_script,
+        exec_script=exec_script.name,
         plot_lib=plot_lib,
     )
 
