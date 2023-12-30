@@ -44,10 +44,8 @@ from .mdb_shell import mdbShell
 )
 @click.option(
     "-x",
-    "--execute",
-    default="",
-    type=click.Path(exists=True),
-    show_default=True,
+    "--exec-script",
+    type=click.File("r"),
     help="Execute a set of mdb commands contained in a script file.",
 )
 @click.option(
@@ -56,7 +54,7 @@ from .mdb_shell import mdbShell
     show_default=True,
     help="Plotting library to use. Recommended default is [uplot] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -s 0-100.",
 )
-def attach(ranks, select, host, port, breakpt, execute, plot_lib):
+def attach(ranks, select, host, port, breakpt, exec_script, plot_lib):
     # debug all ranks if "select" is not set
     if select == "":
         select = ",".join([str(rank) for rank in list(range(ranks))])
@@ -72,7 +70,7 @@ def attach(ranks, select, host, port, breakpt, execute, plot_lib):
         host=host,
         port=port,
         breakpt=breakpt,
-        exec_script=execute,
+        exec_script=exec_script,
         plot_lib=plot_lib,
     )
 
