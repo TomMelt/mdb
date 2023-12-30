@@ -251,9 +251,18 @@ class mdbShell(cmd.Cmd):
 
             (mdb) execute test.mdb
         """
+
+        def strip_comments(text):
+            if re.match(r"^\s*#.*", text):
+                return None
+            return text
+
         try:
             with open(file) as infile:
-                self.cmdqueue.extend(infile.read().splitlines())
+                commands = infile.read().splitlines()
+                # strip comments from list of commands (lines starting with `#`)
+                commands = list(filter(strip_comments, commands))
+                self.cmdqueue.extend(commands)
         except FileNotFoundError:
             print(
                 f"File [{file}] not found. Please check the file exists and try again."
