@@ -20,6 +20,6 @@ jobs:
     - name: Run black  # check code is compliant with black formatting
       run: |
         black --check .
-    - name: Run flake8 # check for flake8 compliance but ignore E501 (line-length)
+    - name: Run flake8 # check for flake8 compliance
       run: |
-        flake8 --ignore=E501 .
+        flake8 .
