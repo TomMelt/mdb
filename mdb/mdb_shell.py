@@ -283,33 +283,19 @@ class mdbShell(cmd.Cmd):
         def status(rank):
             c = self.client.dbg_procs[rank]
 
-            # regex to find filename and linenumber in format "filename:linenumber"
-            file_line_num = r"\s+at\s+([a-zA-Z0-9.:\/-_]+)"
-
-            # get current stack for this rank's process
+            # regex to find program counter in gdb backtrace output
+            hex_regex = r"#0\s+0[xX][0-9a-fA-F]+"
             c.sendline("backtrace 1")
             c.expect(GDBPROMPT)
             output = c.before.decode("utf-8")
             output = strip_bracketted_paste(output)
             output = strip_control_characters(output)
-            current_stack = None
-            match = re.search(file_line_num, output)
+            match = re.search(hex_regex, output)
+            # if program counter hex is not found then the process is at a breakpoint
             if match:
-                current_stack = match.group(1)
-
-            # get all breakpoints for this rank's process
-            c.sendline("info break")
-            c.expect(GDBPROMPT)
-            output = c.before.decode("utf-8")
-            output = strip_bracketted_paste(output)
-            output = strip_control_characters(output)
-            breakpoints = re.findall(file_line_num, output)
-
-            # if current stack is at breakpoint return True else False
-            if current_stack and len(breakpoints):
-                if current_stack in breakpoints:
-                    return True
-            return False
+                return False
+            else:
+                return True
 
         at_breakpoint = self.client.pool.map(status, list(range(self.ranks)))
 
