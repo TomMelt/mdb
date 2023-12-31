@@ -10,7 +10,7 @@ def strip_bracketted_paste(text):
 
 
 def strip_control_characters(text):
-    return re.sub(r"\x1b\[[\d+\[m]+", "", text)
+    return re.sub(r"\x1b\[\d*m", "", text)
 
 
 def parse_ranks(ranks):
