@@ -330,6 +330,8 @@ class mdbShell(cmd.Cmd):
         """
         Override cmd preloop method to load mdb history.
         """
+        readline.parse_and_bind('"\e[A": history-search-backward')
+        readline.parse_and_bind('"\e[B": history-search-forward')
         if os.path.exists(self.hist_file):
             readline.read_history_file(self.hist_file)
         if self.exec_script is not None:
