@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import cmd
 import itertools
 import os
@@ -8,35 +10,37 @@ import sys
 from multiprocessing.dummy import Pool
 from shlex import split
 from subprocess import PIPE, run
+from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from .utils import (
     parse_ranks,
+    print_tabular_output,
     strip_bracketted_paste,
     strip_control_characters,
-    tabular_output,
 )
+
+if TYPE_CHECKING:
+    from pexpect import spawn  # type: ignore
+
+    from .mdb_attach import Prog_opts
+    from .mdb_client import Client
 
 GDBPROMPT = r"\(gdb\)"
 plt.style.use("dark_background")
 
 
 class mdbShell(cmd.Cmd):
-    intro = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "Ctrl+]".'
-    prompt = "(mdb) "
-    hist_file = os.path.expanduser("~/.mdb_history")
-    hist_filesize = 10000
-    select = list()
-    ranks = list()
-    client = None
-    plot_lib = "uplot"
+    intro: str = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "Ctrl+]".'
+    hist_file: str = os.path.expanduser("~/.mdb_history")
+    hist_filesize: int = 10000
 
-    def __init__(self, prog_opts, client):
+    def __init__(self, prog_opts: Prog_opts, client: Client) -> None:
         self.ranks = prog_opts["ranks"]
-        select_str = prog_opts["select"]
-        self.select = parse_ranks(select_str)
+        select_str: str = prog_opts["select"]
+        self.select = parse_ranks(prog_opts["select"])
         self.prompt = f"(mdb {select_str}) "
         self.client = client
         self.exec_script = prog_opts["exec_script"]
@@ -49,7 +53,7 @@ class mdbShell(cmd.Cmd):
                 self.plot_lib = "matplotlib"
         super().__init__()
 
-    def do_interact(self, rank):
+    def do_interact(self, line: str) -> None:
         """
         Description:
         Jump into interactive mode for a specific rank.
@@ -59,7 +63,7 @@ class mdbShell(cmd.Cmd):
 
             (mdb) interact 1
         """
-        rank = int(rank)
+        rank: int = int(line)
         if rank not in self.select:
             print(f"rank {rank} is not one of the selected ranks {self.select}")
             return
@@ -69,7 +73,7 @@ class mdbShell(cmd.Cmd):
         sys.stdout.write("\r")
         return
 
-    def do_info(self, var):
+    def do_info(self, line: str) -> None:
         """
         Description:
         Print basic statistics (min, mean, max) and produce a bar chart for a
@@ -82,7 +86,7 @@ class mdbShell(cmd.Cmd):
             (mdb) pprint [var]
         """
 
-        def send_print(var, rank):
+        def send_print(var: str, rank: int) -> tuple[int, float]:
             c = self.client.dbg_procs[rank]
             c.sendline(f"print {var}")
             c.expect(GDBPROMPT)
@@ -90,24 +94,21 @@ class mdbShell(cmd.Cmd):
             result = 0.0
             for line in output.split("\n"):
                 float_regex = r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
-                m = re.search(float_regex, line)
-                if m:
-                    result = m.group(1)
+                match = re.search(float_regex, line)
+                if match:
                     try:
-                        result = float(result)
+                        result = float(match.group(1))
                     except ValueError:
                         print(f"cannot convert variable [{var}] to a float.")
-                        return
             return rank, result
 
-        ranks = []
-        results = []
-        for rank, result in self.client.pool.starmap(
-            send_print, zip(itertools.repeat(var), self.select)
-        ):
-            ranks.append(str(rank))  # string for barchart labels
-            results.append(result)
-
+        var = line
+        results: tuple[float] | np.ndarray[float, Any]
+        ranks, results = zip(
+            *self.client.pool.starmap(
+                send_print, zip(itertools.repeat(var), self.select)
+            )
+        )
         results = np.array(results)
 
         print(
@@ -134,7 +135,7 @@ class mdbShell(cmd.Cmd):
 
         return
 
-    def do_command(self, command):
+    def do_command(self, line: str) -> None:
         """
         Description:
         Run [command] on every selected process. Alternatively, manually
@@ -150,7 +151,7 @@ class mdbShell(cmd.Cmd):
             (mdb) command 0,3-5 [command]
         """
 
-        def send_command(command, rank):
+        def send_command(command: str, rank: int) -> None:
             c = self.client.dbg_procs[rank]
             c.sendline(command)
             c.expect(GDBPROMPT)
@@ -164,6 +165,7 @@ class mdbShell(cmd.Cmd):
             print(output)
             return
 
+        command = line
         select = self.select
         commands = command.split(" ")
 
@@ -175,7 +177,7 @@ class mdbShell(cmd.Cmd):
 
         return
 
-    def do_quit(self, command):
+    def do_quit(self, line: str) -> bool:
         """
         Description:
         Quit mdb.
@@ -187,9 +189,10 @@ class mdbShell(cmd.Cmd):
         """
 
         print("\nexiting mdb...")
+        self.client.close_procs()
         return True
 
-    def do_shell(self, command):
+    def do_shell(self, line: str) -> None:
         """
         Description:
         Run shell (UNIX) command.
@@ -201,10 +204,10 @@ class mdbShell(cmd.Cmd):
 
             (mdb) !ls
         """
-        run(split(command))
+        run(split(line))
         return
 
-    def do_update_winsize(self, _):
+    def do_update_winsize(self, line: str) -> None:
         """
         Description:
         Update the each processes terminal window size to match the current
@@ -217,7 +220,7 @@ class mdbShell(cmd.Cmd):
             (mdb) update_winsize
         """
 
-        def update_winsize(rank):
+        def update_winsize(rank: int) -> None:
             cols, rows = os.get_terminal_size()
             c = self.client.dbg_procs[rank]
             c.setwinsize(rows=rows, cols=cols)
@@ -226,7 +229,7 @@ class mdbShell(cmd.Cmd):
         self.client.pool.map(update_winsize, self.select)
         return
 
-    def do_select(self, ranks):
+    def do_select(self, line: str) -> None:
         """
         Description:
         Change which rank(s) are manually controlled.
@@ -236,12 +239,13 @@ class mdbShell(cmd.Cmd):
 
             (mdb) select 0,2-4
         """
+        ranks = line
         self.hook_SIGINT()
         self.prompt = f"(mdb {ranks}) "
         self.select = parse_ranks(ranks)
         return
 
-    def do_execute(self, file):
+    def do_execute(self, line: str) -> None:
         """
         Description:
         Execute commands from an mdb script file.
@@ -252,11 +256,12 @@ class mdbShell(cmd.Cmd):
             (mdb) execute test.mdb
         """
 
-        def strip_comments(text):
+        def strip_comments(text: str) -> str | None:
             if re.match(r"^\s*#.*", text):
                 return None
             return text
 
+        file = line
         try:
             with open(file) as infile:
                 commands = infile.read().splitlines()
@@ -268,7 +273,7 @@ class mdbShell(cmd.Cmd):
                 f"File [{file}] not found. Please check the file exists and try again."
             )
 
-    def do_status(self, _):
+    def do_status(self, line: str) -> None:
         """
         Description:
         Display status of each processes. Status will be red if at a breakpoint
@@ -280,7 +285,7 @@ class mdbShell(cmd.Cmd):
             (mdb) status
         """
 
-        def status(rank):
+        def status(rank: int) -> bool:
             c = self.client.dbg_procs[rank]
 
             # regex to find program counter in gdb backtrace output
@@ -297,54 +302,54 @@ class mdbShell(cmd.Cmd):
             else:
                 return True
 
-        at_breakpoint = self.client.pool.map(status, list(range(self.ranks)))
+        at_breakpoint: list[bool] = self.client.pool.map(
+            status, list(range(self.ranks))
+        )
 
-        def status_to_color(rank, at_breakpoint):
+        def status_to_color(rank: int, at_breakpoint: bool) -> str:
             if at_breakpoint:
                 return f"\x1b[31m{rank}\x1b[m"
             else:
                 return f"\x1b[32m{rank}\x1b[m"
 
-        status = list(map(status_to_color, list(range(self.ranks)), at_breakpoint))
+        current_status = list(
+            map(status_to_color, list(range(self.ranks)), at_breakpoint)
+        )
 
-        # print tabular status
-        tabular_output(status, cols=32)
+        print_tabular_output(current_status, cols=32)
 
         return
 
-    def preloop(self):
-        """
-        Override cmd preloop method to load mdb history.
-        """
+    def preloop(self) -> None:
+        """Override cmd preloop method to load mdb history."""
+
         readline.parse_and_bind('"\\e[A": history-search-backward')
         readline.parse_and_bind('"\\e[B": history-search-forward')
         if os.path.exists(self.hist_file):
             readline.read_history_file(self.hist_file)
         if self.exec_script is not None:
             self.onecmd(f"execute {self.exec_script}")
+        return
 
-    def postloop(self):
-        """
-        Override cmd postloop method to save mdb history and close gdb processes.
-        """
+    def postloop(self) -> None:
+        """Override cmd postloop method to save mdb history and close gdb processes."""
+
         readline.set_history_length(self.hist_filesize)
         readline.write_history_file(self.hist_file)
-        self.client.close_procs()
+        return
 
-    def hook_SIGINT(self, *args):
-        """
-        Run this function when a signal is caught.
-        """
+    def hook_SIGINT(self, *args: Any) -> None:
+        """Run this function when a signal is caught."""
 
         pool = Pool(self.ranks)
 
-        def send_sigint(proc):
+        def send_sigint(proc: spawn) -> None:
             os.kill(proc.pid, signal.SIGINT)
             return
 
         pool.map(send_sigint, self.client.dbg_procs)
 
-        def send_interrupt(rank):
+        def send_interrupt(rank: int) -> None:
             c = self.client.dbg_procs[rank]
             c.sendline("interrupt")
             return
@@ -355,13 +360,15 @@ class mdbShell(cmd.Cmd):
 
         # clear the interrupt message from each pexpect stdout stream.
         self.client.clear_stdout()
-
         return
 
-    def default(self, line):
+    def default(self, line: str) -> bool:  # type: ignore[override]
+        """Method called on an input line when the command prefix is not recognized."""
         if line == "EOF":
-            return self.onecmd("quit")
+            self.onecmd("quit")
+            return True
         else:
             print(
                 f"unrecognized command [{line}]. Type help to find out list of possible commands."
             )
+            return False

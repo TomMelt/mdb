@@ -1,10 +1,11 @@
 import click
+
 from .mdb_attach import attach
 from .mdb_launch import launch
 
 
 @click.group()
-def main():
+def main() -> None:
     pass
 
 

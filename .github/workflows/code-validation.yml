@@ -16,10 +16,14 @@ jobs:
         python-version: '3.11'
     - name: Install Python Packages
       run: |
-        pip install black flake8
+        pip install black flake8 mypy
+        mypy --install-types
     - name: Run black  # check code is compliant with black formatting
       run: |
         black --check .
     - name: Run flake8 # check for flake8 compliance
       run: |
         flake8 .
+    - name: Run mypy # static type analysis
+      run: |
+        mypy --strict .

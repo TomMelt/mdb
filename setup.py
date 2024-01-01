@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="mdb",
@@ -11,6 +11,11 @@ setup(
         "Matplotlib",
         "Numpy",
     ],
+    extras_require={
+        "develop": [
+            "Mypy",
+        ]
+    },
     entry_points={
         "console_scripts": [
             "mdb = mdb.mdb:main",
