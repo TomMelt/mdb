@@ -14,9 +14,8 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    - name: Install Python Packages
+    - name: Install mdb and additional python packages
       run: |
-        pip install black flake8 mypy types-setuptools
         pip install -e .[develop]
     - name: Run black  # check code is compliant with black formatting
       run: |
