@@ -17,6 +17,7 @@ jobs:
     - name: Install Python Packages
       run: |
         pip install black flake8 mypy types-setuptools
+        pip install -e .[develop]
     - name: Run black  # check code is compliant with black formatting
       run: |
         black --check .
