@@ -62,7 +62,6 @@ def launch_server(rank: int, start_port: int, args: list[str]) -> None:
     Returns:
         None.
     """
-    print("rank = \n", rank)
     port = start_port + rank
     sub.run(["gdbserver", f"localhost:{port}"] + args)
     print(f"server on rank {rank} closed")
