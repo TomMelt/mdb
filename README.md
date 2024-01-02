@@ -43,6 +43,8 @@ typical debugging session and the features of `mdb`.
 
 # Installation
 
+These instructions are for normal use of `mdb`. Please see [below](#Developers) for a developer install.
+
 1. Clone the repository.
 
     ```bash
@@ -104,6 +106,25 @@ stable part of the development. Either way changes are welcome at anytime.
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more details on how best to contribute.
 
+# Developers
+
+For development it is best to install `mdb` with some additional dependencies. These can be installed using the same
+`setup.py` file. For developer install please use the following command:
+
+```bash
+pip install -e .[develop]
+```
+
+This will install additional dependencies, namely, `black`, `flake8` and `mypy`.
+
+* [`black`](https://black.readthedocs.io/en/stable/) is used for formatting the source code and I let `black` have the final say on formatting decisions. I do not use
+  manual override e.g., `# fmt: off` (see [black documentation](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#code-style)).
+* [`flake8`](https://flake8.pycqa.org/en/latest/) is used to check the style and quality of some python code. I use default settings with two exceptions. That is, I
+  ignore errors `E203` and `E501`. `E501` is `Line too long` and whilst I try to keep a maximum line length of 99 it is often
+  not sensible to force this. `E203` is `Whitespace before ':'`, which gets incorrectly triggered for array slices (see
+[here](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#slices) for more info)
+* [`mypy`](https://mypy.readthedocs.io/en/stable/) is a static type checker and is used to help ensure that variables and functions are being used correctly.
+
 # Acknowledgements
 
 This project was inspired by @mystery-e204's [mpidb](https://github.com/mystery-e204/mpidb) tool and @Azrael3000's
@@ -111,7 +132,8 @@ This project was inspired by @mystery-e204's [mpidb](https://github.com/mystery-
 
 # Similar Projects
 
-I have recently come across @robertu94's [mpigdb](https://github.com/robertu94/mpigdb). I wish I came across it before I started
-my own because I think it handles the interface to gdb in a nicer way and sort of does what I wanted. The main difference from
-my perspective is that I can plot variables across mpi processes using `mdb` and AFAIK `mpigdb` cannot. If you like `mdb` I
-recommend checking out `mpigdb` as well -- it also uses rust!
+I have recently come across @robertu94's [mpigdb](https://github.com/robertu94/mpigdb). It seems to offer similar functionality
+and it has a closer integration with gdb using gdb's inbuilt `inferior`s to handle multiple processes at the same time (see
+[gdb manual sec. 4.9](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Inferiors-Connections-and-Programs.html#Inferiors-Connections-and-Programs)
+for more info). The main difference from my perspective is that I can plot variables across mpi processes using `mdb` and AFAIK
+`mpigdb` cannot. If you like `mdb` you may want to check out `mpigdb` as well.
