@@ -50,10 +50,10 @@ if you want to help with something small.
 ## Coding conventions
 
 I use [black](https://black.readthedocs.io/en/stable/index.html) and [flake8](https://flake8.pycqa.org/en/latest/) to enforce
-consistent style. In general I try to use _sensible_ naming conventions although I appreciate that is hard to condense into
-words. Please use your best judgement and look at the rest of the code for inspiration.
+consistent style. In general I try to use _sensible_ naming conventions although I appreciate that the exact meaning of
+_sensible_ is hard to condense into words. Please use your best judgement and look at the rest of the code for inspiration.
 
-The GitHub CI is setup to check for compliance with `flake8`, `black` and `mypy`. To check modifications to the code locally,
+The GitHub CI is setup to check for compliance with `black`, `flake8` and `mypy`. To check modifications to the code locally,
 without relying on the CI, please follow the [developer installation instructions](README.md#Developers). Then you should be
 able to run the following to check for code compliance.
 

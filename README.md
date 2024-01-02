@@ -118,7 +118,7 @@ pip install -e .[develop]
 This will install additional dependencies, namely, `black`, `flake8` and `mypy`.
 
 * [`black`](https://black.readthedocs.io/en/stable/) is used for formatting the source code and I let `black` have the final say on formatting decisions. I do not use
-  manual override e.g., `# fmt: off` (see [black documentation](https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#code-style)).
+  manual override e.g., `# fmt: off` (see [black documentation](https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html)).
 * [`flake8`](https://flake8.pycqa.org/en/latest/) is used to check the style and quality of some python code. I use default settings with two exceptions. That is, I
   ignore errors `E203` and `E501`. `E501` is `Line too long` and whilst I try to keep a maximum line length of 99 it is often
   not sensible to force this. `E203` is `Whitespace before ':'`, which gets incorrectly triggered for array slices (see
