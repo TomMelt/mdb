@@ -18,11 +18,10 @@ import click
     required=True,
     nargs=-1,
 )
-def launch(port, args):
+def launch(port: int, args: tuple[str] | list[str]) -> None:
     args = list(args)
-    prog_opts = dict(port=port, args=args)
-    prog_opts["no_ranks"] = None
-    prog_opts["my_rank"] = None
+    num_ranks = 0
+    rank = 0
 
     env_vars = {
         "open MPI": ("OMPI_COMM_WORLD_SIZE", "OMPI_COMM_WORLD_RANK"),
@@ -33,12 +32,12 @@ def launch(port, args):
 
     for env_name, (env_size, env_rank) in env_vars.items():
         try:
-            prog_opts["no_ranks"] = int(os.environ[env_size])
-            prog_opts["my_rank"] = int(os.environ[env_rank])
+            num_ranks = int(os.environ[env_size])
+            rank = int(os.environ[env_rank])
         except KeyError:
             pass
 
-    if prog_opts["no_ranks"] is None or prog_opts["my_rank"] is None:
+    if num_ranks == 0:
         print(
             "Error: cannot find MPI information in environment variables. I currently search for:"
         )
@@ -46,11 +45,22 @@ def launch(port, args):
             print(f"Library: {env_name} , variables {env_var}")
         exit(1)
 
-    launch_server(**prog_opts)
+    launch_server(rank=rank, start_port=port, args=args)
 
 
-def launch_server(my_rank, no_ranks, port, args):
-    port = port + int(my_rank)
+def launch_server(rank: int, start_port: int, args: list[str]) -> None:
+    """launch a gdb server on the current rank.
+
+    Args:
+        rank: rank on which gdb server is running.
+        start_port: starting port. Port number will be port+rank. Defaults to 2000.
+        args: binary to debug and optional list of arguments for that binary.
+
+    Returns:
+        None.
+    """
+    print("rank = \n", rank)
+    port = start_port + rank
     sub.run(["gdbserver", f"localhost:{port}"] + args)
-    print(f"server on rank {my_rank} closed")
+    print(f"server on rank {rank} closed")
     return

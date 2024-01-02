@@ -1,9 +1,23 @@
 import signal
 
 import click
+from typing_extensions import TypedDict
 
 from .mdb_client import Client
 from .mdb_shell import mdbShell
+
+Prog_opts = TypedDict(
+    "Prog_opts",
+    {
+        "ranks": int,
+        "select": str,
+        "host": str,
+        "port": int,
+        "breakpt": str,
+        "exec_script": str,
+        "plot_lib": str,
+    },
+)
 
 
 @click.command()
@@ -38,7 +52,7 @@ from .mdb_shell import mdbShell
 @click.option(
     "-b",
     "--breakpt",
-    default="",
+    default="main",
     show_default=True,
     help="By default mdb will search for the first breakpoint (main or MAIN__). You can chose to override this by manually specifying a specific breakpoint.",
 )
@@ -54,17 +68,25 @@ from .mdb_shell import mdbShell
     show_default=True,
     help="Plotting library to use. Recommended default is [uplot] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -s 0-100.",
 )
-def attach(ranks, select, host, port, breakpt, exec_script, plot_lib):
+def attach(
+    ranks: int,
+    select: str,
+    host: str,
+    port: int,
+    breakpt: str,
+    exec_script: click.File,
+    plot_lib: str,
+) -> None:
     # debug all ranks if "select" is not set
     if select == "":
-        select = ",".join([str(rank) for rank in list(range(ranks))])
+        select = f"0-{ranks - 1}"
 
     supported_plot_libs = ["uplot", "matplotlib"]
     if plot_lib not in supported_plot_libs:
         msg = f"warning: unrecognized plot library [{plot_lib}]. Supported libraries are [{supported_plot_libs}]."
         raise ValueError(msg)
 
-    prog_opts = dict(
+    prog_opts: Prog_opts = dict(
         ranks=ranks,
         select=select,
         host=host,
