@@ -89,13 +89,18 @@ def attach(
         msg = f"warning: unrecognized plot library [{plot_lib}]. Supported libraries are [{supported_plot_libs}]."
         raise ValueError(msg)
 
+    if exec_script is None:
+        script = None
+    else:
+        script = exec_script.name
+
     prog_opts: Prog_opts = dict(
         ranks=ranks,
         select=select,
         host=host,
         port=port,
         breakpt=breakpt,
-        exec_script=exec_script.name,
+        exec_script=script,
         plot_lib=plot_lib,
     )
 
