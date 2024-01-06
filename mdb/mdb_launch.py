@@ -47,6 +47,24 @@ def launch(port: int, args: tuple[str] | list[str]) -> None:
         for env_name, env_var in env_vars.items():
             print(f"Library: {env_name} , variables {env_var}")
         exit(1)
+        return
+
+    mpi_version = sub.run(["mpirun", "--version"], capture_output=True).stdout.decode(
+        "utf8"
+    )
+    if "intel" in mpi_version.lower():
+        gdbservers = ""
+        if rank == 0:
+            print(
+                "Error: Intel MPI detected. Please use this command to launch the mdb instead."
+            )
+            gdbservers = " ".join(
+                [f"gdbserver :{port+rank}:{rank};" for rank in range(num_ranks)]
+            )
+            cmd = [f"\n\tmpirun -n {num_ranks} -gtool"] + [f'"{gdbservers}"'] + args
+            print(" ".join(cmd))
+        exit(1)
+        return
 
     launch_server(rank=rank, start_port=port, args=args)
 
