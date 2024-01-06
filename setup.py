@@ -17,7 +17,12 @@ setup(
             "flake8",
             "mypy",
             "types-setuptools",
-        ]
+        ],
+        "docs": [
+            "sphinx",
+            "sphinx_click",
+            "sphinx_rtd_theme",
+        ],
     },
     entry_points={
         "console_scripts": [
