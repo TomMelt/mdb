@@ -57,7 +57,7 @@ Prog_opts = TypedDict(
     "--breakpt",
     default="main",
     show_default=True,
-    help="By default mdb will search for the first breakpoint (main or MAIN__). You can chose to override this by manually specifying a specific breakpoint.",
+    help="By default mdb will search for the first breakpoint (`main` or `MAIN__`). You can chose to override this by manually specifying a specific breakpoint.",
 )
 @click.option(
     "-x",

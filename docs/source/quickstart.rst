@@ -6,12 +6,11 @@
 Quick Start
 ===========
 
-
-The ``mdb`` program has two subcommands which act as modes of operation,
-``launch`` and ``attach``. ``mdb``'s command line interface (CLI) is built with
-`Click <https://click.palletsprojects.com/en/8.1.x/>`_ and each command has a
-``--help`` option. The following shows the help message for ``mdb attach`` `click`_
-command.
+The ``mdb`` program has two subcommands which act as modes of operation, ``launch`` and ``attach``.
+``mdb``'s command line interface (CLI) is built with `Click
+<https://click.palletsprojects.com/en/8.1.x/>`_ and each command has a ``--help`` option. For more
+information please see the :ref:`cli` documentation. For example, ``mdb attach --help`` produces the
+following output.
 
 .. code-block:: console
 
@@ -41,14 +40,18 @@ command.
       --help                      Show this message and exit.
 
 
-To begin a debugging session, first we must launch the debugger as part of the MPI launcher.
-Currently supported MPI launchers are intel MPI and open MPI ``mpirun`` and slurm's ``srun``.
+Launching the mdb Client
+------------------------
 
-Here is an example launching ``mdb`` binary called ``a.out`` on 8 processes.
+To begin a debugging session, first we must launch the debugger as part of the MPI launcher.
+Currently supported MPI launchers are intel MPI and open MPI ``mpirun`` and slurm's ``srun``. For
+simplicity, this example will all be run on the same machine
+
+Here is an example launching ``mdb`` binary called ``a.out`` on 4 processes.
 
 .. code-block:: console
 
-   $ mpirun -n 8 mdb launch a.out
+   $ mpirun -n 4 mdb launch a.out
    Process /home/melt/sync/cambridge/projects/side/meltdb-old/a.out created; pid = 163542
    Listening on port 2002
    Process /home/melt/sync/cambridge/projects/side/meltdb-old/a.out created; pid = 163548
@@ -58,7 +61,7 @@ Here is an example launching ``mdb`` binary called ``a.out`` on 8 processes.
    Process /home/melt/sync/cambridge/projects/side/meltdb-old/a.out created; pid = 163554
    Listening on port 2003
 
-``mdb`` has two modes of operation; ``mdb launch`` and ``mdb attach``. 
+Now in a separate terminal (but same machine)
 
 ..
         ```bash
