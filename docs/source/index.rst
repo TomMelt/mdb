@@ -17,7 +17,7 @@ MPI is implemented in and that I have had a chance to test.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Basics:
+   :caption: Getting Started:
 
    Installation <installation>
    Quick Start <quickstart>
@@ -26,19 +26,21 @@ MPI is implemented in and that I have had a chance to test.
 .. toctree::
    :maxdepth: 2
    :caption: Reference:
+   :hidden:
 
-   Command Line Interface <click>
+   mdb Command Line Interface (CLI) <click>
    gdb Cheat Sheet <gdbcheatsheet>
 
 .. toctree::
    :maxdepth: 2
    :caption: API:
+   :hidden:
 
    mdb API <mdb>
 
-Indices and tables
-==================
+.. Indices and tables
+.. ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. * :ref:`genindex`
+.. * :ref:`modindex`
+.. * :ref:`search`
