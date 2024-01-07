@@ -1,0 +1,10 @@
+command info proc
+command b simple-mpi.f90:15
+command b simple-mpi.f90:17
+command continue
+command 0-2,5,7 continue
+command bt -1
+info var
+command 3,4,6 c
+info var
+quit
