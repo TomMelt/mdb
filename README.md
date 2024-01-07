@@ -1,6 +1,14 @@
 # mdb
 
+[![readthedocs](https://readthedocs.org/projects/mdb/badge/?version=latest)](https://mdb.readthedocs.io/en/latest/?badge=latest)
+[![style](https://github.com/TomMelt/mdb/actions/workflows/code-validation.yml/badge.svg?branch=main)](https://github.com/TomMelt/mdb/actions/workflows/code-validation.yml)
+
 An MPI debugger built on [`gdb`](https://www.sourceware.org/gdb/).
+
+# Documentation
+
+For help with installation, a quick-start tutorial (with example debug session) and an API reference please check out `mdb`'s
+[documentation](https://mdb.readthedocs.io/en/latest/).
 
 # Purpose
 
