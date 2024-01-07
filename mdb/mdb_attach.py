@@ -57,7 +57,7 @@ Prog_opts = TypedDict(
     "--breakpt",
     default="main",
     show_default=True,
-    help="By default mdb will search for the first breakpoint (main or MAIN__). You can chose to override this by manually specifying a specific breakpoint.",
+    help="By default mdb will search for the first breakpoint (`main` or `MAIN__`). You can chose to override this by manually specifying a specific breakpoint.",
 )
 @click.option(
     "-x",
@@ -69,7 +69,7 @@ Prog_opts = TypedDict(
     "--plot-lib",
     default="uplot",
     show_default=True,
-    help="Plotting library to use. Recommended default is [uplot] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -s 0-100.",
+    help="Plotting library to use. Recommended default is [uplot] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -n 100.",
 )
 def attach(
     ranks: int,
