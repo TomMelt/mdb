@@ -29,7 +29,7 @@ First we will create and activate a conda environment for ``mdb`` (you can optio
    $ conda activate mdb
 
 Then we can download and install the ``mdb`` code. You can download/clone the ``mdb`` code anywhere
-but in this example I will choose the home directiory.
+but in this example I will choose the home directory.
 
 .. code-block:: console
 
@@ -38,7 +38,7 @@ but in this example I will choose the home directiory.
    $ cd mdb
    $ pip install -e .
 
-That's it! We now have ``mdb`` installed and ready to go. You can test the install was successfuly
+That's it! We now have ``mdb`` installed and ready to go. You can test the install was successfully
 by running ``mdb --help``. You should see the following output.
 
 .. code-block:: console

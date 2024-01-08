@@ -65,7 +65,7 @@ Launching the mdb Client
 ------------------------
 
 To begin a debugging session, first we must launch the debugger as part of the MPI launcher.
-Currently supported MPI launchers are intel MPI and open MPI ``mpirun`` and slurm's ``srun``. For
+Currently supported MPI launchers are Intel MPI and open MPI ``mpirun`` and Slurm's ``srun``. For
 simplicity, this example will all be run on the same machine
 
 Here is an example launching ``mdb`` with the ``simple-mpi.exe`` binary on 8 processes. If you don't
@@ -97,7 +97,7 @@ Attaching to the mdb Client
 ---------------------------
 
 Now in a separate terminal (but same physical machine -- remote debugging is still WIP) run the
-``attach`` command. We are over-riding the default ``main`` breakpoint (which generaly works for
+``attach`` command. We are over-riding the default ``main`` breakpoint (which generally works for
 C/C++ programs) with ``MAIN__`` using the ``-b/--breakpt`` option. The reason for this is that the
 entry point for Fortran programs tends to be different from the standard ``main`` entry point for
 C/C++ programs. It's worth noting, you can choose any other valid breakpoint as an initial starting
