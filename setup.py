@@ -11,6 +11,7 @@ setup(
         "numpy",
         "pexpect",
         "rich",
+        "typing_extensions",
     ],
     extras_require={
         "develop": [
