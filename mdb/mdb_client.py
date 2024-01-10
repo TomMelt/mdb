@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import pexpect  # type: ignore
 
 from .mdb_shell import GDBPROMPT
-from .utils import parse_ranks
+from .utils import parse_ranks, strip_bracketted_paste, strip_control_characters
 
 if TYPE_CHECKING:
     from multiprocessing.pool import ThreadPool
@@ -53,9 +53,12 @@ class Client:
 
     def connect(self) -> None:
         """Connect to gdb server on each rank."""
-        procs = self.pool.map(self.connect_proc, list(range(self.ranks)))
-        for p in procs:
-            self.dbg_procs.append(p)
+        try:
+            procs = self.pool.map(self.connect_proc, list(range(self.ranks)))
+            for p in procs:
+                self.dbg_procs.append(p)
+        except TimeoutError as e:
+            raise TimeoutError(e)
         return
 
     def connect_proc(self, rank: int) -> pexpect.spawn:
@@ -79,6 +82,12 @@ class Client:
         c.expect(GDBPROMPT)
         c.sendline(f"target remote {self.host}:{port}")
         c.expect(GDBPROMPT)
+        connection_msg = c.before.decode("utf-8")
+        connection_msg = strip_bracketted_paste(connection_msg)
+        connection_msg = strip_control_characters(connection_msg)
+        if "Connection timed out" in connection_msg:
+            error_msg = connection_msg.split("\r\n")[1]
+            raise TimeoutError(error_msg)
         c.sendline(f"b {self.breakpt}")
         c.expect(GDBPROMPT)
         c.sendline("c")

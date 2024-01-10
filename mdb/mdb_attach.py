@@ -105,7 +105,11 @@ def attach(
     )
 
     client = Client(prog_opts)
-    client.connect()
+    try:
+        client.connect()
+    except TimeoutError as e:
+        print(f'error: mdb timeout with error message "{e}"')
+        exit(1)
     mshell = mdbShell(prog_opts, client)
     signal.signal(signal.SIGINT, mshell.hook_SIGINT)
     mshell.cmdloop()
