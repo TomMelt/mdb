@@ -2,6 +2,7 @@
    details.
 
 .. _cli:
+
 Command Line Interface
 ======================
 

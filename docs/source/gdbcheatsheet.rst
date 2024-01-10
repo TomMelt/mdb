@@ -5,6 +5,7 @@ gdb Cheat Sheet
 ===============
 
 .. _supported:
+
 Note on Supported Commands
 --------------------------
 
@@ -19,6 +20,7 @@ instead of using ``start`` or ``run`` commands, as you can non-MPI applications,
 already be waiting at the breakpoint specified by ``-b/--breakpt``.
 
 .. _gdbcheat:
+
 Useful Commands
 ---------------
 

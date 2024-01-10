@@ -107,18 +107,19 @@ now we will continue with this.
 .. code-block:: console
 
    $ mdb attach -n 8 -b MAIN__
-   connecting to port: 2000
-   connecting to port: 2001
-   connecting to port: 2002
-   connecting to port: 2003
-   connecting to port: 2004
-   connecting to port: 2006
-   connecting to port: 2005
-   connecting to port: 2007
+   Connecting processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8/8
 
-The first part of the output will look something like the above. This means that ``mdb`` is
-attaching to the client processes (launched in the previous step). Then it will be followed by the
-welcome text.
+The first part of the output will look something like the above. This means that ``mdb`` has
+successfully attached to the client processes (launched in the previous step). If you get a
+``TimeOutError`` like the following, then please check ``mdb`` was launched properly in the first
+step.
+
+.. code-block:: console
+
+   Connecting processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0/8
+   error: mdb timeout with error message "localhost:2000: Connection timed out."
+
+If connection was successful, then the connection output will be followed by the welcome text.
 
 .. code-block:: console
 

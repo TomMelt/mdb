@@ -20,7 +20,7 @@ The easiest way to install ``mdb`` is to clone the repo and install it into a `c
 <https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_, or
 other virtual environment of your choice.
 
-First we will create and activate a conda environment for ``mdb`` (you can optionally specify a
+First we will create and activate a ``conda`` environment for ``mdb`` (you can optionally specify a
 ``python`` version e.g., using ``python==3.12.0``).
 
 .. code-block:: console
@@ -67,3 +67,11 @@ can be done in the following way.
 required for verifying the quality of the code. Please also familiarize yourself with the
 `CONTRIBUTING.md <https://github.com/TomMelt/mdb/blob/main/CONTRIBUTING.md>`_ guide, for more
 details on how to best contribute to ``mdb``.
+
+The additional ``develop`` dependencies are, ``black``, ``flake8`` and ``mypy``.
+
+* `black <https://black.readthedocs.io/en/stable>`_ is used for formatting the source code.
+* `flake8 <https://flake8.pycqa.org/en/latest>`_ is used to check the style and quality of some
+  python code.
+* `mypy <https://mypy.readthedocs.io/en/stable>`_ is a static type checker and is used to help
+  ensure that variables and functions are being used correctly.
