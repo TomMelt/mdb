@@ -7,7 +7,12 @@ from multiprocessing.dummy import Pool
 from typing import TYPE_CHECKING
 
 import pexpect  # type: ignore
-from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn
+from rich.progress import (  # type: ignore
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    TextColumn,
+)
 
 from .mdb_shell import GDBPROMPT
 from .utils import parse_ranks, strip_bracketted_paste, strip_control_characters
