@@ -10,6 +10,7 @@ setup(
         "matplotlib",
         "numpy",
         "pexpect",
+        "rich",
     ],
     extras_require={
         "develop": [

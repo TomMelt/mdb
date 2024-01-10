@@ -75,6 +75,7 @@ The main python dependencies are (see [`requirements.txt`](requirements.txt)):
 * `matplotlib`
 * `numpy`
 * `pexpect`
+* `rich`
 
 These will all be installed as part of the default `pip` installation. See [installing
 mdb](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb) in the documentation for more information.
