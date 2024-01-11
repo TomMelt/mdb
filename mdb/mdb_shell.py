@@ -56,15 +56,21 @@ def buffered_input_filter(
         the backspace characters needed to remove the current string.
     """
 
-    def input_filter(s: bytes, data: list[str] = [""]) -> bytes:
+    # closure memory
+    # we use a list with a single item to avoid unbounds
+    data = [""]
+
+    def input_filter(s: bytes) -> bytes:
         c = s.decode()
         if c == "\n" or c == "\r":
             response = handle_input(data[0])
-            # clear the buffer
+            # clear the buffer for next command
             data[0] = ""
             if response:
                 return response.encode()
         elif c == chr(4):  # catch ctrl-d
+            # clear the buffer to avoid persistence between interacts
+            data[0] = ""
             return INTERACT_ESCAPE_CHARACTER.encode()
         else:
             data[0] += c
