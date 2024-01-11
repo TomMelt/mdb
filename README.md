@@ -47,7 +47,7 @@ These instructions are for normal use of `mdb`. Please see [below](#Developers) 
 
     ```bash
     cd mdb/
-    pip install -e .
+    pip install .
     ```
 
 More information can be found in the [installation
