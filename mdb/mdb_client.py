@@ -32,17 +32,19 @@ class Client:
     def close_procs(self) -> None:
         """Close all open processes."""
 
-        with Progress(
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            MofNCompleteColumn(),
-        ) as progress:
-            connect_progress = progress.add_task(
-                "Closing processes...", total=self.ranks
-            )
-            for proc in self.dbg_procs:
-                proc.close()
-                progress.advance(connect_progress)
+        if self.dbg_procs:
+            with Progress(
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                MofNCompleteColumn(),
+            ) as progress:
+                connect_progress = progress.add_task(
+                    "Closing processes...", total=self.ranks
+                )
+                for proc in self.dbg_procs:
+                    proc.close()
+                    progress.advance(connect_progress)
+            self.dbg_procs = []
         return
 
     def clear_stdout(self) -> None:

@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pexpect  # type: ignore
 
 from .utils import (
     parse_ranks,
@@ -26,7 +27,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from pexpect import spawn  # type: ignore
+    from pexpect import spawn
 
     from .mdb_attach import Prog_opts
     from .mdb_client import Client
@@ -237,7 +238,12 @@ class mdbShell(cmd.Cmd):
             select = parse_ranks(commands[0])
             command = " ".join(commands[1:])
 
-        self.client.pool.starmap(send_command, zip(itertools.repeat(command), select))
+        try:
+            self.client.pool.starmap(
+                send_command, zip(itertools.repeat(command), select)
+            )
+        except pexpect.EOF:
+            self.client.close_procs()
 
         return
 
@@ -384,8 +390,16 @@ class mdbShell(cmd.Cmd):
 
         return
 
+    def precmd(self, line: str) -> str:
+        """Override Cmd.precmd() to only run the command if debug processes are open."""
+        if self.client.dbg_procs or line in ["quit", "EOF"]:
+            return line
+        else:
+            print("warning: no debug processes running. Please relaunch the debugger")
+            return "NULL"
+
     def preloop(self) -> None:
-        """Override cmd preloop method to load mdb history."""
+        """Override Cmd.preloop() to load mdb history."""
 
         readline.parse_and_bind('"\\e[A": history-search-backward')
         readline.parse_and_bind('"\\e[B": history-search-forward')
@@ -396,7 +410,7 @@ class mdbShell(cmd.Cmd):
         return
 
     def postloop(self) -> None:
-        """Override cmd postloop method to save mdb history and close gdb processes."""
+        """Override Cmd.postloop() to save mdb history and close gdb processes."""
 
         readline.set_history_length(self.hist_filesize)
         readline.write_history_file(self.hist_file)
@@ -429,8 +443,13 @@ class mdbShell(cmd.Cmd):
     def default(self, line: str) -> bool:  # type: ignore[override]
         """Method called on an input line when the command prefix is not recognized."""
         if line == "EOF":
+            # Cmd converts CTRL+D to "EOF"
             self.onecmd("quit")
             return True
+        elif line == "NULL":
+            # do nothing
+            # useful to have a fake command for precmd()
+            return False
         else:
             print(
                 f"unrecognized command [{line}]. Type help to find out list of possible commands."
