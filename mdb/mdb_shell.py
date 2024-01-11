@@ -42,10 +42,11 @@ def buffered_input_filter(
     """Wrap functions to generate arguments for `pexpect.interact` filters.
 
     Wraps a callback function with a buffer so that instead of receiving each
-    character as it is typed, the filter function is given the currently
-    enterec command. The wrapper also augments/overrides the interaction with
-    common substitutions for control characters, e.g. `Ctrl-d` will send
-    `INTERACT_ESCAPE_CHARACTER`.
+    character as it is typed, the filter function is given the current command
+    string. The wrapper also augments/overrides the interaction with common
+    substitutions for control characters:
+    - `Ctrl-d` will send `INTERACT_ESCAPE_CHARACTER` to end the interaction
+      instead of `quit` to the gdb shell.
 
     The `handle_input` argument is only called after each newline or carriage
     return, and should return the modified input to be sent to the shell.
