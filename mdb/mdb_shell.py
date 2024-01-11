@@ -128,7 +128,8 @@ class mdbShell(cmd.Cmd):
             escape_character=INTERACT_ESCAPE_CHARACTER,
             input_filter=buffered_input_filter(input_filter),
         )
-        sys.stdout.write("\r")
+        # newline incase there was a command in progress when interaction quit
+        sys.stdout.write("\n")
         return
 
     def do_info(self, line: str) -> None:
