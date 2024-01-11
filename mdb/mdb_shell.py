@@ -31,7 +31,9 @@ if TYPE_CHECKING:
     from .mdb_attach import Prog_opts
     from .mdb_client import Client
 
-INTERACT_ESCAPE_CHARACTER = chr(29)
+INTERACT_ESCAPE = chr(29)  # ctrl+]
+INTERACT_CANCEL = chr(3)  # ctrl+c
+INTERACT_EOF = chr(4)  # ctrl+d
 GDBPROMPT = r"\(gdb\)"
 plt.style.use("dark_background")
 
@@ -57,23 +59,20 @@ def buffered_input_filter(
     """
 
     # closure memory
-    # we use a list with a single item to avoid unbounds
-    data = [""]
+    buffer: list[str] = []
 
     def input_filter(s: bytes) -> bytes:
         c = s.decode()
         if c == "\n" or c == "\r":
-            response = handle_input(data[0])
+            response = handle_input("".join(buffer))
             # clear the buffer for next command
-            data[0] = ""
+            buffer.clear()
             if response:
                 return response.encode()
-        elif c == chr(4):  # catch ctrl-d
-            # clear the buffer to avoid persistence between interacts
-            data[0] = ""
-            return INTERACT_ESCAPE_CHARACTER.encode()
+        elif c == INTERACT_EOF:  # catch ctrl-d
+            return INTERACT_ESCAPE.encode()
         else:
-            data[0] += c
+            buffer.append(c)
 
         return s
 
@@ -118,17 +117,21 @@ class mdbShell(cmd.Cmd):
 
         def input_filter(inp: str) -> str:
             if inp == "exit" or inp == "q" or inp == "quit":
-                return INTERACT_ESCAPE_CHARACTER
+                return INTERACT_ESCAPE
             return ""
 
-        # data is a list to a string so that the memory is static
         c = self.client.dbg_procs[rank]
         sys.stdout.write("\r(gdb) ")
         c.interact(
-            escape_character=INTERACT_ESCAPE_CHARACTER,
+            escape_character=INTERACT_ESCAPE,
             input_filter=buffered_input_filter(input_filter),
         )
-        # newline incase there was a command in progress when interaction quit
+
+        # clear whatever might still be in the input buffer
+        c.send(INTERACT_CANCEL)
+
+        # write newline incase there was a command in progress when interaction quit
+        # to avoid overflowing the (mdb) prompt with the end of the command
         sys.stdout.write("\n")
         return
 
