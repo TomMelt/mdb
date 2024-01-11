@@ -82,7 +82,7 @@ def buffered_input_filter(
 
 
 class mdbShell(cmd.Cmd):
-    intro: str = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "Ctrl+]".'
+    intro: str = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
     hist_file: str = os.path.expanduser("~/.mdb_history")
     hist_filesize: int = 10000
 
