@@ -13,7 +13,7 @@ import sys
 from multiprocessing.dummy import Pool
 from shlex import split
 from subprocess import PIPE, run
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,8 +31,46 @@ if TYPE_CHECKING:
     from .mdb_attach import Prog_opts
     from .mdb_client import Client
 
+INTERACT_ESCAPE_CHARACTER = chr(29)
 GDBPROMPT = r"\(gdb\)"
 plt.style.use("dark_background")
+
+
+def buffered_input_filter(
+    handle_input: Callable[[str], str]
+) -> Callable[[bytes], bytes]:
+    """Wrap functions to generate arguments for `pexpect.interact` filters.
+
+    Wraps a callback function with a buffer so that instead of receiving each
+    character as it is typed, the filter function is given the currently
+    enterec command. The wrapper also augments/overrides the interaction with
+    common substitutions for control characters, e.g. `Ctrl-d` will send
+    `INTERACT_ESCAPE_CHARACTER`.
+
+    The `handle_input` argument is only called after each newline or carriage
+    return, and should return the modified input to be sent to the shell.
+
+    Warning:
+        If `handle_input` is to replace the current input, it must also include
+        the backspace characters needed to remove the current string.
+    """
+
+    def input_filter(s: bytes, data: list[str] = [""]) -> bytes:
+        c = s.decode()
+        if c == "\n" or c == "\r":
+            response = handle_input(data[0])
+            # clear the buffer
+            data[0] = ""
+            if response:
+                return response.encode()
+        elif c == chr(4):  # catch ctrl-d
+            return INTERACT_ESCAPE_CHARACTER.encode()
+        else:
+            data[0] += c
+
+        return s
+
+    return input_filter
 
 
 class mdbShell(cmd.Cmd):
@@ -70,9 +108,19 @@ class mdbShell(cmd.Cmd):
         if rank not in self.select:
             print(f"rank {rank} is not one of the selected ranks {self.select}")
             return
+
+        def input_filter(inp: str) -> str:
+            if inp == "exit" or inp == "q" or inp == "quit":
+                return INTERACT_ESCAPE_CHARACTER
+            return ""
+
+        # data is a list to a string so that the memory is static
         c = self.client.dbg_procs[rank]
         sys.stdout.write("\r(gdb) ")
-        c.interact()
+        c.interact(
+            escape_character=INTERACT_ESCAPE_CHARACTER,
+            input_filter=buffered_input_filter(input_filter),
+        )
         sys.stdout.write("\r")
         return
 
