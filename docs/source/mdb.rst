@@ -4,9 +4,8 @@
 mdb package
 ===========
 
-Submodules
-----------
-
+.. Submodules
+.. ----------
 
 .. automodule:: mdb.mdb
    :members:
@@ -37,9 +36,9 @@ Submodules
    :members:
    :show-inheritance:
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: mdb
-   :members:
-   :show-inheritance:
+.. .. automodule:: mdb
+..    :members:
+..    :show-inheritance:

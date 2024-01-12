@@ -31,11 +31,11 @@ def strip_control_characters(text: str) -> str:
 
 def parse_ranks(ranks: str) -> set[int]:
     """Parse a string of ranks into a set of integers. E.g.,
-    `parse_ranks('1,3-5')` would return the following: `set(1,3,4,5)`.
+    ``parse_ranks("1,3-5")`` would return the following: ``set(1,3,4,5)``.
 
     Args:
         ranks: string of ranks using either a mix of comma separation and
-        ranges using hyphen `-`.
+          ranges using hyphen.
 
     Returns:
         A set of ranks represented by integers.

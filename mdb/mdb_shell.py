@@ -42,23 +42,30 @@ plt.style.use("dark_background")
 def buffered_input_filter(
     handle_input: Callable[[str], str]
 ) -> Callable[[bytes], bytes]:
-    """Wrap functions to generate arguments for `pexpect.interact` filters.
+    """Wrap functions to generate arguments for ``pexpect.interact`` filters.
 
     Wraps a callback function with a buffer so that instead of receiving each
     character as it is typed, the filter function is given the current command
     string. The wrapper also augments/overrides the interaction with common
     substitutions for control characters:
-    - `Ctrl-d` will send `INTERACT_ESCAPE_CHARACTER` to end the interaction
-      instead of `quit` to the gdb shell.
 
-    The `handle_input` argument is only called after each newline or carriage
-    return, and should return characters to be sent to the GDB shell else an
+        - ``Ctrl-d`` will send ``INTERACT_ESCAPE_CHARACTER`` to end the
+          interaction instead of ``quit`` to the gdb shell.
+
+    The ``handle_input`` argument is only called after each newline or carriage
+    return, and should return characters to be sent to the gdb shell else an
     empty string.
 
-    Note that if `handle_input` is to modify the string in any way other than
+    Note that if ``handle_input`` is to modify the string in any way other than
     by sending new characters to the shell, it must also include the backspace
     characters needed to remove (parts of) the current string and include the
-    newline character to execute the command in GDB.
+    newline character to execute the command in gdb.
+
+    Args:
+        handle_input: function that takes a ``str`` and returns a ``str``.
+
+    Returns:
+        function that takes ``bytes`` and returns ``bytes``.
     """
 
     # closure memory

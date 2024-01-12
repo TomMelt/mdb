@@ -20,15 +20,14 @@ MPI is implemented in and that I have had a chance to test.
    :caption: Getting Started:
 
    Installation <installation>
-   Quick Start <quickstart>
-   Example Debug Session <example>
+   Quick Start <quick-start>
 
 .. toctree::
    :maxdepth: 2
    :caption: Reference:
    :hidden:
 
-   mdb Command Line Interface (CLI) <click>
+   mdb Command Line Interface (CLI) <mdb-cli>
    gdb Cheat Sheet <gdbcheatsheet>
 
 .. toctree::
