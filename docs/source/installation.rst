@@ -36,7 +36,7 @@ but in this example I will choose the home directory.
    $ cd ~
    $ git clone https://github.com/TomMelt/mdb.git
    $ cd mdb
-   $ pip install -e .
+   $ pip install .
 
 That's it! We now have ``mdb`` installed and ready to go. You can test the install was successfully
 by running ``mdb --help``. You should see the following output.
@@ -63,10 +63,12 @@ can be done in the following way.
 
    $ pip install -e .[docs,develop]
 
-``docs`` installs packages required to build the documentation and ``develop`` installs packages
-required for verifying the quality of the code. Please also familiarize yourself with the
-`CONTRIBUTING.md <https://github.com/TomMelt/mdb/blob/main/CONTRIBUTING.md>`_ guide, for more
-details on how to best contribute to ``mdb``.
+The ``-e`` (or ``--editable``) flag installs the project in editable mode meaning that your changes
+will be reflected when you save the source files and restart ``mdb``. ``docs`` installs packages
+required to build the documentation and ``develop`` installs packages required for verifying the
+quality of the code. Please also familiarize yourself with the `CONTRIBUTING.md
+<https://github.com/TomMelt/mdb/blob/main/CONTRIBUTING.md>`_ guide, for more details on how to best
+contribute to ``mdb``.
 
 The additional ``develop`` dependencies are, ``black``, ``flake8`` and ``mypy``.
 

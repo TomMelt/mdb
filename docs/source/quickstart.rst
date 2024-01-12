@@ -123,7 +123,8 @@ If connection was successful, then the connection output will be followed by the
 
 .. code-block:: console
 
-   mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "Ctrl+]"
+   mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q",
+   "quit", "Ctrl+D" or "Ctrl+]".
 
 This text provides information on how to use ``mdb``. Typing ``help`` or ``?`` will print this same
 message. Typing ``help`` or ``?`` followed by one of the ``mdb`` commands will display help text for
@@ -204,10 +205,16 @@ Specifically we are going to connect to rank 1's ``gdb`` instance.
    (gdb)
 
 Notice that the command prompt has now changed from ``(mdb 0-7)`` to ``(gdb)``. This represents that
-we are now inside ``gdb``. **To exit** interactive mode (not ``gdb``) we can type ``CTRL+]``. If you
-type ``q`` or ``quit`` from inside of ``gdb`` it will kill that processes instance of ``gdb`` and
-the rest of the processes may also break. In the interactive session we can issue any *gdbserver
-compatible* commands (see :ref:`supported`), for example,
+we are now inside ``gdb``. To exit interactive mode (not ``gdb``) type ``CTRL+D``, ``quit``, ``q``
+or ``CTRL+]``. The ``gdb`` command ``quit`` (alias ``q``) and escape sequence ``CTRL+D`` are now
+intercepted by ``mdbShell.input_filter()`` to stop ``gdb`` killing the debug session on that
+process. In practice it was too easy to accidentally kill the ``gdb`` session during the interactive
+session and it not possible to simply restart that single process without quitting and relaunching
+the entire ``mdb`` parallel debug session. Furthermore, the program behaviour will most-likely be
+undefined when a single process is killed inadvertently. If users are still want to run ``gdb``
+command ``quit`` on a specific rank (or ranks) they can used the command ``command [ranks] quit`` --
+but it is **not recommended**. In the interactive session we can issue any *gdbserver compatible*
+commands (see :ref:`supported`), for example,
 
 .. code-block:: console
 

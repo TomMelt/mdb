@@ -47,11 +47,14 @@ These instructions are for normal use of `mdb`. Please see [below](#Developers) 
 
     ```bash
     cd mdb/
-    pip install -e .
+    pip install .
     ```
 
 More information can be found in the [installation
 guide](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb).
+
+**Please Note** `mdb` doesn't currently support Windows (see
+[here](https://mdb.readthedocs.io/en/latest/installation.html#windows-support) for more info).
 
 ## Dependencies
 
@@ -93,11 +96,12 @@ implementations but I just haven't done it yet.
 
 # TODO
 
-- [ ] add tests
-- [ ] rewrite launcher to add more functionality
-- [ ] record asciinema demo? / youtube video?
+- [ ] upload tests
+- [ ] rewrite launcher to add more functionality (e.g., auto-restart if MPI job fails)
+- [ ] intercept `stdin` to run commands on another process (or processes) inside of an interactive session
 - [ ] track MPI communication dependencies (holistic metric)
 - [ ] print aggregated backtrace (holistic metric)
+- [ ] record asciinema demo? / youtube video?
 
 # Contributing
 
@@ -122,5 +126,5 @@ This project was inspired by @mystery-e204's [mpidb](https://github.com/mystery-
 I have recently come across @robertu94's [mpigdb](https://github.com/robertu94/mpigdb). It seems to offer similar functionality
 and it has a closer integration with gdb using gdb's inbuilt `inferior`s to handle multiple processes at the same time (see
 [gdb manual sec. 4.9](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Inferiors-Connections-and-Programs.html#Inferiors-Connections-and-Programs)
-for more info). The main difference from my perspective is that I can plot variables across mpi processes using `mdb` and AFAIK
+for more info). The main difference from my perspective is that I can plot variables across MPI processes using `mdb` and AFAIK
 `mpigdb` cannot. If you like `mdb` you may want to check out `mpigdb` as well.
