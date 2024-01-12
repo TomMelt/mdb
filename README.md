@@ -96,7 +96,6 @@ implementations but I just haven't done it yet.
 
 # TODO
 
-- [ ] upload tests
 - [ ] rewrite launcher to add more functionality (e.g., auto-restart if MPI job fails)
 - [ ] intercept `stdin` to run commands on another process (or processes) inside of an interactive session
 - [ ] track MPI communication dependencies (holistic metric)
