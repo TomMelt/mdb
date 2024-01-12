@@ -44,8 +44,35 @@ Before merging, pull requests are required to pass all continuous integration.
 
 ## Testing
 
-:flushed: currently the tests are not pushed into main yet, and they are nowhere near complete. This is a great place to start
-if you want to help with something small.
+[pytest](https://docs.pytest.org/en/latest/contents.html) is used as a testing framework. The tests will be run as part of the
+GitHub CI. If you are doing development work, please install the developer version of `mdb` and run the tests locally to make
+sure they pass before submitting your PR. Furthermore, please write tests for any new source code that you add.
+
+You can run the existing tests (and your new ones) with the following command:
+
+```shell
+$ pytest -v tests/
+```
+
+You should see something like this:
+
+```shell
+$ pytest -v tests/
+=========================================================== test session starts ============================================================
+platform linux -- Python 3.12.0, pytest-7.4.4, pluggy-1.3.0 -- path/to/python
+cachedir: .pytest_cache
+rootdir: path/to/mdb
+plugins: cov-4.1.0
+collected 3 items                                                                                                                          
+
+tests/test_utils.py::test_parse_ranks PASSED                                                                                         [ 33%]
+tests/test_utils.py::test_strip_functions PASSED                                                                                     [ 66%]
+tests/test_utils.py::test_print_tabular_output PASSED                                                                                [100%]
+
+============================================================ 3 passed in 0.01s =============================================================
+```
+
+The key point is all tests should pass.
 
 ## Coding conventions
 
@@ -57,7 +84,7 @@ The GitHub CI is setup to check for compliance with `black`, `flake8` and `mypy`
 without relying on the CI, please follow the [developer installation instructions](README.md#Developers). Then you should be
 able to run the following to check for code compliance.
 
-```bash
+```shell
 flake8 .
 black --check .
 mypy --strict .
