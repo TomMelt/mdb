@@ -14,9 +14,22 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+    - name: Install gdb gdbserver openmpi ruby ruby-dev
+      run: |
+        sudo apt update
+        sudo apt install -yq gdb gdbserver libopenmpi-dev ruby ruby-dev
+    - name: Install youplot
+      run: |
+        sudo gem install youplot
+    - name: Build example mpi program
+      run: |
+        make -C examples/
     - name: Install mdb and additional python packages
       run: |
         pip install -e .[develop]
     - name: Run tests
       run: |
-        pytest -v tests/
+        pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv tests/
+    - name: Check coverage
+      run: |
+        python .github/workflows/coverage.py 60

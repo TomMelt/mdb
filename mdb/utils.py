@@ -26,7 +26,7 @@ def strip_control_characters(text: str) -> str:
     Returns:
         The string with ANSI control characters removed.
     """
-    return re.sub(r"\x1b\[\d*m", "", text)
+    return re.sub(r"\x1b\[[\d;]*m", "", text)
 
 
 def parse_ranks(ranks: str) -> set[int]:
