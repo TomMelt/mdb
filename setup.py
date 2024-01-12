@@ -19,6 +19,8 @@ setup(
             "flake8",
             "mypy",
             "types-setuptools",
+            "pytest",
+            "pytest-cov",
         ],
         "docs": [
             "sphinx",
