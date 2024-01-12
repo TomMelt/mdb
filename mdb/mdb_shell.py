@@ -51,11 +51,13 @@ def buffered_input_filter(
       instead of `quit` to the gdb shell.
 
     The `handle_input` argument is only called after each newline or carriage
-    return, and should return the modified input to be sent to the shell.
+    return, and should return characters to be sent to the GDB shell else an
+    empty string.
 
-    Warning:
-        If `handle_input` is to replace the current input, it must also include
-        the backspace characters needed to remove the current string.
+    Note that if `handle_input` is to modify the string in any way other than
+    by sending new characters to the shell, it must also include the backspace
+    characters needed to remove (parts of) the current string and include the
+    newline character to execute the command in GDB.
     """
 
     # closure memory
