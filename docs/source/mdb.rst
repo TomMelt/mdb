@@ -9,36 +9,31 @@ mdb package
 
 .. automodule:: mdb.mdb
    :members:
-   :show-inheritance:
-
-
-.. automodule:: mdb.mdb_attach
-   :members:
+   :undoc-members:
    :show-inheritance:
 
 
 .. automodule:: mdb.mdb_client
    :members:
-   :show-inheritance:
-
-
-.. automodule:: mdb.mdb_launch
-   :members:
-   :show-inheritance:
-
-
-.. automodule:: mdb.mdb_shell
-   :members:
+   :undoc-members:
    :show-inheritance:
 
 
 .. automodule:: mdb.mdb_server
    :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: mdb.mdb_shell
+   :members:
+   :undoc-members:
    :show-inheritance:
 
 
 .. automodule:: mdb.utils
    :members:
+   :undoc-members:
    :show-inheritance:
 
 .. Module contents
