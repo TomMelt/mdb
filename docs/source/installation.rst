@@ -70,10 +70,13 @@ quality of the code. Please also familiarize yourself with the `CONTRIBUTING.md
 <https://github.com/TomMelt/mdb/blob/main/CONTRIBUTING.md>`_ guide, for more details on how to best
 contribute to ``mdb``.
 
-The additional ``develop`` dependencies are, ``black``, ``flake8`` and ``mypy``.
+The additional ``develop`` dependencies are;
 
 * `black <https://black.readthedocs.io/en/stable>`_ is used for formatting the source code.
 * `flake8 <https://flake8.pycqa.org/en/latest>`_ is used to check the style and quality of some
   python code.
 * `mypy <https://mypy.readthedocs.io/en/stable>`_ is a static type checker and is used to help
   ensure that variables and functions are being used correctly.
+* `pytest <https://docs.pytest.org/en/7.4.x/>`_ for creating and running unit and integration tests
+* `pytest-cov <https://pytest-cov.readthedocs.io/en/latest/index.html>`_ for producing coverage
+  reports.

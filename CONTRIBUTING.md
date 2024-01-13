@@ -51,28 +51,51 @@ sure they pass before submitting your PR. Furthermore, please write tests for an
 You can run the existing tests (and your new ones) with the following command:
 
 ```shell
-$ pytest -v tests/
+$ pytest --cov-report term-missing --cov=mdb -vv tests/
 ```
 
-You should see something like this:
+The coverage report (`--cov-report term-missing`) will help ensure that new features are added with tests. You should see
+something like this:
 
 ```shell
-$ pytest -v tests/
+$ pytest --cov-report term-missing --cov=mdb -vv tests/
 =========================================================== test session starts ============================================================
-platform linux -- Python 3.12.0, pytest-7.4.4, pluggy-1.3.0 -- path/to/python
+platform linux -- Python 3.12.0, pytest-7.4.4, pluggy-1.3.0 -- /home/melt/miniconda3/envs/mdb/bin/python
 cachedir: .pytest_cache
-rootdir: path/to/mdb
+rootdir: /home/melt/sync/cambridge/projects/side/mdb
 plugins: cov-4.1.0
-collected 3 items                                                                                                                          
+collected 5 items
 
-tests/test_utils.py::test_parse_ranks PASSED                                                                                         [ 33%]
-tests/test_utils.py::test_strip_functions PASSED                                                                                     [ 66%]
-tests/test_utils.py::test_print_tabular_output PASSED                                                                                [100%]
+tests/test_integration.py::test_mdb_simple PASSED
+[ 20%]
+tests/test_integration.py::test_mdb_timeout PASSED
+[ 40%]
+tests/test_utils.py::test_parse_ranks PASSED
+[ 60%]
+tests/test_utils.py::test_strip_functions PASSED
+[ 80%]
+tests/test_utils.py::test_print_tabular_output PASSED
+[100%]
 
-============================================================ 3 passed in 0.01s =============================================================
+---------- coverage: platform linux, python 3.12.0-final-0 -----------
+Name                Stmts   Miss  Cover   Missing
+-------------------------------------------------
+mdb/__init__.py         0      0   100%
+mdb/mdb.py              8      0   100%
+mdb/mdb_attach.py      34      2    94%   89-90
+mdb/mdb_client.py      71      3    96%   16-18, 114
+mdb/mdb_launch.py      39     13    67%   44-50, 56-67
+mdb/mdb_shell.py      219     54    75%   30-33, 72-89, 108-110, 123-146, 173-174, 201-206, 284-285, 300-307, 378, 390, 454-455
+mdb/utils.py           16      0   100%
+-------------------------------------------------
+TOTAL                 387     72    81%
+
+
+============================================================ 5 passed in 13.97s ============================================================
 ```
 
-The key point is all tests should pass.
+The key point is all tests should pass and `TOTAL` coverage should stay above 60%. If the coverage drops below 60% then the
+GitHub CI will fail.
 
 ## Coding conventions
 
