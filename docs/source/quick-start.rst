@@ -97,16 +97,18 @@ default, but for this tutorial I am running (and compiling) with open MPI (and `
 **Note**: You can start ``mdb launch`` in ``--auto-restart`` mode so that it will automatically
 relaunch when your MPI program ends.
 
+.. _attach_client:
+
 Attaching to the mdb Client
 ---------------------------
 
-Now in a separate terminal (but same physical machine -- remote debugging is still WIP) run the
-``attach`` command. We are over-riding the default ``main`` breakpoint (which generally works for
-C/C++ programs) with ``MAIN__`` using the ``-b/--breakpt`` option. The reason for this is that the
-entry point for Fortran programs tends to be different from the standard ``main`` entry point for
-C/C++ programs. It's worth noting, you can choose any other valid breakpoint as an initial starting
-point e.g., ``simple-mpi.f90:10`` for a breakpoint on line ``10`` in file ``simple-mpi.f90``. For
-now we will continue with this.
+Now in a separate terminal (but same physical machine -- see :ref:`remote_debugging` for information
+on how to attach to remote machines) run the ``attach`` command. We are over-riding the default
+``main`` breakpoint (which generally works for C/C++ programs) with ``MAIN__`` using the
+``-b/--breakpt`` option. The reason for this is that the entry point for Fortran programs tends to
+be different from the standard ``main`` entry point for C/C++ programs. It's worth noting, you can
+choose any other valid breakpoint as an initial starting point e.g., ``simple-mpi.f90:10`` for a
+breakpoint on line ``10`` in file ``simple-mpi.f90``. For now we will continue with this.
 
 .. code-block:: console
 
@@ -339,3 +341,22 @@ sessions. To run the example debug session you can use the following command,
 
 Scripted debugging is also allowed in ``gdb`` and this is where the true benefit of CLI tools really
 shines.
+
+.. _remote_debugging:
+
+Remote debugging
+----------------
+
+There are two ways to debug code running on remote servers.
+
+1. ``ssh`` to the remote server and then run ``mdb attach`` as shown in :ref:`attach_client`.
+2. Use the ``--host [hostname]`` option with ``mdb attach`` -- where ``[hostname]`` can be an IP
+   address or node name.
+
+Option 1 is the easiest, quickest and recommended. When using option 2, information on shared
+libraries and debug info has to be sent via TCP and this can be very slow. I have noticed that,
+especially when debugging Intel MPI applications, several GiBs of data are transferred and this
+takes a considerable amount of time (depending on network speed).
+
+There is a third option which I am considering but haven't had a chance to implement or test yet and
+that is using ssh to port forward.

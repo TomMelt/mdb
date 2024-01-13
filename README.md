@@ -89,16 +89,15 @@ mdb](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb) in t
 Currently I am building and testing for open MPI only. In principle it really won't take much work to expand to other
 implementations but I just haven't done it yet.
 
-- [x] open MPI mpirun
-- [x] intel MPI mpirun
-- [ ] slurm srun?
-- [x] mpiexec ?
+- [x] Open MPI `mpirun` and `mpiexec`
+- [x] Intel MPI `mpirun` and `mpiexec`
+- [ ] Slurm `srun` (should work but still needs testing)
 - [ ] others...
 
 # TODO
 
-- [ ] rewrite launcher to add more functionality (e.g., auto-restart if MPI job fails)
-- [ ] intercept `stdin` to run commands on another process (or processes) inside of an interactive session
+- [x] rewrite launcher to add more functionality (e.g., auto-restart if MPI job fails)
+- [x] intercept `stdin` to run commands on another process (or processes) inside of an interactive session
 - [ ] track MPI communication dependencies (holistic metric)
 - [ ] print aggregated backtrace (holistic metric)
 - [ ] record asciinema demo? / youtube video?
