@@ -7,4 +7,6 @@ command bt -1
 info var
 command 3,4,6 c
 info var
+command c
+command q
 quit
