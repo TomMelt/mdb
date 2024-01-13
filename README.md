@@ -1,7 +1,8 @@
 # mdb
 
-[![readthedocs](https://readthedocs.org/projects/mdb/badge/?version=latest)](https://mdb.readthedocs.io/en/latest/?badge=latest)
+[![tests](https://github.com/TomMelt/mdb/actions/workflows/tests.yml/badge.svg)](https://github.com/TomMelt/mdb/actions/workflows/tests.yml)
 [![style](https://github.com/TomMelt/mdb/actions/workflows/code-validation.yml/badge.svg?branch=main)](https://github.com/TomMelt/mdb/actions/workflows/code-validation.yml)
+[![readthedocs](https://readthedocs.org/projects/mdb/badge/?version=latest)](https://mdb.readthedocs.io/en/latest/?badge=latest)
 
 An MPI debugger built on [`gdb`](https://www.sourceware.org/gdb/).
 
