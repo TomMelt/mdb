@@ -167,5 +167,8 @@ cython_debug/
 spellfile.en.utf-8.add
 spellfile.en.utf-8.add.spl
 
+# vim swapfiles
+.*.swp
+
 # json coverage file
 cov.json
