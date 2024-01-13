@@ -32,6 +32,11 @@ mdb package
    :show-inheritance:
 
 
+.. automodule:: mdb.mdb_server
+   :members:
+   :show-inheritance:
+
+
 .. automodule:: mdb.utils
    :members:
    :show-inheritance:

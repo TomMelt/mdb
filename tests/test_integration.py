@@ -141,7 +141,7 @@ def test_mdb_simple() -> None:
     # run the mdb launcher in the background
     Popen(
         shlex.split(
-            "mpirun -n 2 --oversubscribe mdb launch  ./examples/simple-mpi.exe"
+            "mdb launch -n 2 --launch-command='mpirun --oversubscribe' ./examples/simple-mpi.exe"
         ),
         stdin=None,
         stdout=None,

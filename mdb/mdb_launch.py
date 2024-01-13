@@ -1,13 +1,53 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
-import os
-import subprocess as sub
-
 import click
+from typing_extensions import TypedDict
+
+from .mdb_server import Server
+
+Server_opts = TypedDict(
+    "Server_opts",
+    {
+        "ranks": int,
+        "select": str,
+        "host": str,
+        "launch_command": str,
+        "port": int,
+        "config_filename": str,
+        "args": str,
+    },
+)
 
 
 @click.command()
+@click.option(
+    "-n",
+    "--ranks",
+    default=1,
+    show_default=True,
+    help="Total number of ranks to debug.",
+)
+@click.option(
+    "-s",
+    "--select",
+    default=None,
+    show_default=True,
+    help="Rank(s) to debug e.g., 0,3-5 will debug ranks 0,3,4 and 5. If empty all ranks will be selected. Note ranks starts with zero index.",
+)
+@click.option(
+    "-h",
+    "--host",
+    default="localhost",
+    show_default=True,
+    help="Host machine name.",
+)
+@click.option(
+    "--launch-command",
+    default="mpirun",
+    show_default=True,
+    help="MPI launcher e.g., mpirun, mpiexec, srun etc.",
+)
 @click.option(
     "-p",
     "--port",
@@ -15,72 +55,56 @@ import click
     show_default=True,
     help="Starting port address. Each rank's port is assigned as [port_address + rank].",
 )
+@click.option(
+    "--config-filename",
+    default=".mdb.conf",
+    show_default=True,
+    help="filename for the mpirun configuration.",
+)
+@click.option(
+    "-r",
+    "--auto-restart",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Allow mdb launcher to automatically relaunch the job if the debug session ends.",
+)
 @click.argument(
     "args",
-    # help="program and any command line arguments. Similar to gdb option.",
     required=True,
     nargs=-1,
 )
-def launch(port: int, args: tuple[str] | list[str]) -> None:
+def launch(
+    ranks: int,
+    select: str | None,
+    host: str,
+    launch_command: str,
+    port: int,
+    config_filename: str,
+    auto_restart: bool,
+    args: tuple[str] | list[str],
+) -> None:
     args = list(args)
-    num_ranks = 0
-    rank = 0
 
-    env_vars = {
-        "open MPI": ("OMPI_COMM_WORLD_SIZE", "OMPI_COMM_WORLD_RANK"),
-        "intel MPI": ("MPI_LOCALNRANKS", "MPI_LOCALRANKID"),
-        "PMI": ("PMI_SIZE", "PMI_RANK"),
-        "slurm": ("SLURM_NTASKS", "SLURM_PROCID"),
-    }
+    # debug all ranks if "select" is not set
+    if select is None:
+        select = f"0-{ranks - 1}"
 
-    for env_name, (env_size, env_rank) in env_vars.items():
-        try:
-            num_ranks = int(os.environ[env_size])
-            rank = int(os.environ[env_rank])
-        except KeyError:
-            pass
-
-    if num_ranks == 0:
-        print(
-            "Error: cannot find MPI information in environment variables. I currently search for:"
-        )
-        for env_name, env_var in env_vars.items():
-            print(f"Library: {env_name} , variables {env_var}")
-        exit(1)
-        return
-
-    mpi_version = sub.run(["mpirun", "--version"], capture_output=True).stdout.decode(
-        "utf8"
+    server_opts: Server_opts = dict(
+        ranks=ranks,
+        select=select,
+        host=host,
+        launch_command=launch_command,
+        port=port,
+        config_filename=config_filename,
+        args=" ".join(args),
     )
-    if "intel" in mpi_version.lower():
-        gdbservers = ""
-        if rank == 0:
-            print(
-                "Error: Intel MPI detected. Please use this command to launch the mdb instead."
-            )
-            gdbservers = " ".join(
-                [f"gdbserver :{port+rank}:{rank};" for rank in range(num_ranks)]
-            )
-            cmd = [f"\n\tmpirun -n {num_ranks} -gtool"] + [f'"{gdbservers}"'] + args
-            print(" ".join(cmd))
-        exit(1)
-        return
 
-    launch_server(rank=rank, start_port=port, args=args)
-
-
-def launch_server(rank: int, start_port: int, args: list[str]) -> None:
-    """launch a gdb server on the current rank.
-
-    Args:
-        rank: rank on which gdb server is running.
-        start_port: starting port. Port number will be port+rank. Defaults to 2000.
-        args: binary to debug and optional list of arguments for that binary.
-
-    Returns:
-        None.
-    """
-    port = start_port + rank
-    sub.run(["gdbserver", f"localhost:{port}"] + args)
-    print(f"server on rank {rank} closed")
+    server = Server(server_opts)
+    server.write_app_file()
+    keep_running = True
+    while keep_running:
+        server.run()
+        if not auto_restart:
+            keep_running = False
     return

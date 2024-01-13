@@ -34,7 +34,7 @@ Prog_opts = TypedDict(
 @click.option(
     "-s",
     "--select",
-    default="",
+    default=None,
     show_default=True,
     help="Rank(s) to debug e.g., 0,3-5 will debug ranks 0,3,4 and 5. If empty all ranks will be selected. Note ranks starts with zero index.",
 )
@@ -57,7 +57,7 @@ Prog_opts = TypedDict(
     "--breakpt",
     default="main",
     show_default=True,
-    help="By default mdb will search for the first breakpoint (`main` or `MAIN__`). You can chose to override this by manually specifying a specific breakpoint.",
+    help="By default mdb will set ``main`` as the first breakpoint. You can chose to override this by manually specifying a specific breakpoint.",
 )
 @click.option(
     "-x",
@@ -73,7 +73,7 @@ Prog_opts = TypedDict(
 )
 def attach(
     ranks: int,
-    select: str,
+    select: str | None,
     host: str,
     port: int,
     breakpt: str,
@@ -81,7 +81,7 @@ def attach(
     plot_lib: str,
 ) -> None:
     # debug all ranks if "select" is not set
-    if select == "":
+    if select is None:
         select = f"0-{ranks - 1}"
 
     supported_plot_libs = ["uplot", "matplotlib"]
