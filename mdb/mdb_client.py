@@ -92,6 +92,8 @@ class Client:
         c.expect(GDBPROMPT)
         c.sendline("set pagination off")
         c.expect(GDBPROMPT)
+        c.sendline("set tcp connect-timeout 10")
+        c.expect(GDBPROMPT)
         c.sendline("set confirm off")
         c.expect(GDBPROMPT)
         c.sendline(f"target remote {self.host}:{port}")
