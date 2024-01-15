@@ -84,6 +84,12 @@ def launch(
     auto_restart: bool,
     args: tuple[str] | list[str],
 ) -> None:
+    """Launch mdb debug server.
+
+    Example:
+
+    $ mdb launch -n 8 --auto-restart ./simple-mpi.exe
+    """
     args = list(args)
 
     # debug all ranks if "select" is not set

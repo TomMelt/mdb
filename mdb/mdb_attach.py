@@ -80,6 +80,12 @@ def attach(
     exec_script: click.File,
     plot_lib: str,
 ) -> None:
+    """Attach to mdb debug server.
+
+    Example:
+
+    $ mdb attach -n 8
+    """
     # debug all ranks if "select" is not set
     if select is None:
         select = f"0-{ranks - 1}"
