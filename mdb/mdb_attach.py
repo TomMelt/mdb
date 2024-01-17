@@ -67,9 +67,9 @@ Prog_opts = TypedDict(
 )
 @click.option(
     "--plot-lib",
-    default="uplot",
+    default="termgraph",
     show_default=True,
-    help="Plotting library to use. Recommended default is [uplot] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -n 100.",
+    help="Plotting library to use. Recommended default is [termgraph] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -n 100.",
 )
 def attach(
     ranks: int,
@@ -90,7 +90,7 @@ def attach(
     if select is None:
         select = f"0-{ranks - 1}"
 
-    supported_plot_libs = ["uplot", "matplotlib"]
+    supported_plot_libs = ["termgraph", "matplotlib"]
     if plot_lib not in supported_plot_libs:
         msg = f"warning: unrecognized plot library [{plot_lib}]. Supported libraries are [{supported_plot_libs}]."
         raise ValueError(msg)

@@ -14,6 +14,9 @@ setup(
         "typing_extensions",
     ],
     extras_require={
+        "termgraph": [
+            "termgraph",
+        ],
         "develop": [
             "black",
             "flake8",

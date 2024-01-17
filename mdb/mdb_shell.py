@@ -12,7 +12,7 @@ import signal
 import sys
 from multiprocessing.dummy import Pool
 from shlex import split
-from subprocess import PIPE, run
+from subprocess import run
 from typing import TYPE_CHECKING, Any, Callable
 
 import matplotlib.pyplot as plt
@@ -102,11 +102,11 @@ class mdbShell(cmd.Cmd):
         self.client = client
         self.exec_script = prog_opts["exec_script"]
         self.plot_lib = prog_opts["plot_lib"]
-        if self.plot_lib == "uplot":
+        if self.plot_lib == "termgraph":
             try:
-                run(["uplot", "--help"], capture_output=True)
+                run(["termgraph", "--help"], capture_output=True)
             except FileNotFoundError:
-                print("warning: uplot not found. Defaulting to matplotlib.")
+                print("warning: termgraph not found. Defaulting to matplotlib.")
                 self.plot_lib = "matplotlib"
         super().__init__()
 
@@ -184,18 +184,17 @@ class mdbShell(cmd.Cmd):
         results = np.array(results)
 
         print(
-            f"min : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn   : {len(results)}"
+            f"name: {var}\nmin : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn   : {len(results)}"
         )
 
-        if self.plot_lib == "uplot":
+        if self.plot_lib == "termgraph":
             plt_data_str = "\n".join(
                 [", ".join([str(x), str(y)]) for x, y in zip(ranks, results)]
             )
             run(
-                ["uplot", "bar", "-d,", "--xlabel", f"{var}", "--ylabel", "rank"],
-                stdout=PIPE,
+                split("termgraph --color green"),
                 input=plt_data_str,
-                encoding="ascii",
+                encoding="utf-8",
             )
         else:
             fig, ax = plt.subplots()
