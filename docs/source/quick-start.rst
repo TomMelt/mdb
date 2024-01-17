@@ -33,10 +33,10 @@ following output.
       -x, --exec-script FILENAME  Execute a set of mdb commands contained in a
                                   script file.
       --plot-lib TEXT             Plotting library to use. Recommended default is
-                                  [uplot] but if this is not available
+                                  [termgraph] but if this is not available
                                   [matplotlib] will be used. [matplotlib] is best
                                   if there are many ranks to debug e.g., -n 100.
-                                  [default: uplot]
+                                  [default: termgraph]
       --help                      Show this message and exit.
 
 
@@ -243,8 +243,8 @@ Plotting variables across ranks
 
 It may be useful for some applications to see how the value of a single variable varies across all
 ranks. This can be achieved with the ``info`` command, which will display an ASCII plot (if
-``youplot`` is installed) or a ``Matplotlib`` plot if not. In ``simple-example.f90`` we can see that
-variable ``var`` is set on line 15.
+``termgraph`` is installed) or a ``Matplotlib`` plot if not. In ``simple-example.f90`` we can see
+that variable ``var`` is set on line 15.
 
 .. code-block:: fortran
 
@@ -276,21 +276,20 @@ showing non-zero values for those ranks (except rank ``0`` which is actually set
 .. code-block:: console
 
    (mdb 0-7) info var
+   name: var
    min : 0.0
    max : 70.0
    mean: 18.75
    n   : 8
-             ┌                                        ┐
-           0 ┤ 0.0
-           1 ┤■■■■■ 10.0
-           2 ┤■■■■■■■■■■ 20.0
-      rank 3 ┤ 0.0
-           4 ┤ 0.0
-           5 ┤■■■■■■■■■■■■■■■■■■■■■■■■ 50.0
-           6 ┤ 0.0
-           7 ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 70.0
-             └                                        ┘
-                                var
+
+   0:  0.00
+   1: ▇▇▇▇▇▇▇ 10.00
+   2: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 20.00
+   3:  0.00
+   4:  0.00
+   5: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 50.00
+   6:  0.00
+   7: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 70.00
 
 We can see that ranks ``0,1,2,5`` and ``7`` are displaying the correct values. If we now continue on
 ranks ``3,4`` and ``6`` we should see the full plot.
@@ -299,21 +298,20 @@ ranks ``3,4`` and ``6`` we should see the full plot.
 
    (mdb 0-7) command 3,4,6 c
    (mdb 0-7) info var
+   name: var
    min : 0.0
    max : 70.0
    mean: 35.0
    n   : 8
-             ┌                                        ┐
-           0 ┤ 0.0
-           1 ┤■■■■■ 10.0
-           2 ┤■■■■■■■■■■ 20.0
-      rank 3 ┤■■■■■■■■■■■■■■■ 30.0
-           4 ┤■■■■■■■■■■■■■■■■■■■ 40.0
-           5 ┤■■■■■■■■■■■■■■■■■■■■■■■■ 50.0
-           6 ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 60.0
-           7 ┤■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■ 70.0
-             └                                        ┘
-                                var
+
+   0:  0.00
+   1: ▇▇▇▇▇▇▇ 10.00
+   2: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 20.00
+   3: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 30.00
+   4: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 40.00
+   5: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 50.00
+   6: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 60.00
+   7: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 70.00
 
 Perfect, we can now see that all ranks are showing the expected values. For debugging large numbers
 of ranks e.g., n>10, it is probably best to switch to ``matplotlib`` using the ``mdb attach

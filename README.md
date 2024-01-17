@@ -63,13 +63,9 @@ guide](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb).
 
 * `gdb`
 * `gdbserver`
-* `youplot`/`uplot` (optional - see [here](https://github.com/red-data-tools/YouPlot) for installation instructions)
 
 `mdb` does not package `gdb` or `gdbserver`. You will need these installed on your system in order to run `mdb`. Please visit
 [GNU's website](https://sourceware.org/gdb/) for information on how to install `gdb` and `gdbserver` on your system.
-
-`youplot` is a command line tool for fancy Unicode plots in the terminal. It is completely optional and `mdb` can default to
-`matplotlib` for plotting instead.
 
 ### Python Dependencies
 
@@ -82,6 +78,11 @@ The main python dependencies are (see [`requirements.txt`](requirements.txt)):
 * `rich`
 
 These will all be installed as part of the default `pip` installation. See [installing
+mdb](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb) in the documentation for more information.
+
+* `termgraph` (optional - fancy unicodep plots straight to your terminal)
+
+`termgraph` is optional but can be installed alongside `mbd`. See [installing
 mdb](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb) in the documentation for more information.
 
 # Supported MPI implementations

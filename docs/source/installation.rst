@@ -36,10 +36,11 @@ but in this example I will choose the home directory.
    $ cd ~
    $ git clone https://github.com/TomMelt/mdb.git
    $ cd mdb
-   $ pip install .
+   $ pip install .[termgraph]
 
 That's it! We now have ``mdb`` installed and ready to go. You can test the install was successfully
-by running ``mdb --help``. You should see the following output.
+by running ``mdb --help``. You should see the following output. Specifying ``[termgraph]`` is
+optional but it will give pretty plots straight to the terminal.
 
 .. code-block:: console
 
