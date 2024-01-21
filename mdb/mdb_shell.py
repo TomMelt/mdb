@@ -121,9 +121,18 @@ class mdbShell(cmd.Cmd):
 
             (mdb) interact 1
         """
-        rank: int = int(line)
+        try:
+            rank: int = int(line)
+        except ValueError:
+            print(
+                f"warning: unrecognized rank {line}. Must specify an integer for the rank."
+            )
+            return
+
         if rank not in self.select:
-            print(f"rank {rank} is not one of the selected ranks {self.select}")
+            print(
+                f"warning: rank {rank} is not one of the selected ranks {self.select_str}."
+            )
             return
 
         def input_filter(inp: str) -> str:
@@ -241,7 +250,7 @@ class mdbShell(cmd.Cmd):
         select = self.select
         commands = command.split(" ")
 
-        if re.match(r"[0-9,-]+", commands[0]):
+        if re.match(r"^[0-9,-]+$", commands[0]):
             select = parse_ranks(commands[0])
             command = " ".join(commands[1:])
 
