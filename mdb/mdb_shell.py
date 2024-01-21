@@ -93,12 +93,13 @@ class mdbShell(cmd.Cmd):
     intro: str = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
     hist_file: str = os.path.expanduser("~/.mdb_history")
     hist_filesize: int = 10000
+    broadcast_mode: bool = False
 
     def __init__(self, prog_opts: Prog_opts, client: Client) -> None:
         self.ranks = prog_opts["ranks"]
-        select_str: str = prog_opts["select"]
+        self.select_str: str = prog_opts["select"]
         self.select = parse_ranks(prog_opts["select"])
-        self.prompt = f"(mdb {select_str}) "
+        self.prompt = f"(mdb {self.select_str}) "
         self.client = client
         self.exec_script = prog_opts["exec_script"]
         self.plot_lib = prog_opts["plot_lib"]
@@ -315,10 +316,10 @@ class mdbShell(cmd.Cmd):
 
             (mdb) select 0,2-4
         """
-        ranks = line
+        self.select_str = line
         self.hook_SIGINT()
-        self.prompt = f"(mdb {ranks}) "
-        self.select = parse_ranks(ranks)
+        self.prompt = f"(mdb {self.select_str}) "
+        self.select = parse_ranks(self.select_str)
         return
 
     def do_execute(self, line: str) -> None:
@@ -396,13 +397,57 @@ class mdbShell(cmd.Cmd):
 
         return
 
+    def do_broadcast(self, line: str) -> None:
+        """
+        Description:
+        Broadcast mode (bcm) sends commands to the selected ranks (see help
+        select for more info). Broadcast mode is enabled/(disabled) by typing
+        broadcast start/(stop). To exit broadcast mode, enter command
+        [broadcast stop] or [quit] or press CTRL+D.
+
+        Example:
+        The following command will start broadcast mode.
+
+            (mdb) broadcast start
+        """
+
+        if line.lower() == "start":
+            self.broadcast_mode = True
+        elif line.lower() == "stop":
+            self.broadcast_mode = False
+        else:
+            print(
+                f"warning: unrecognized option {line}. Valid options are [start] or [stop]."
+            )
+
+        if self.broadcast_mode:
+            self.prompt = f"\r\x1b[33m(bcm {self.select_str})\x1b[m "
+        else:
+            self.prompt = f"\r(mdb {self.select_str}) "
+
+        return
+
     def precmd(self, line: str) -> str:
         """Override Cmd.precmd() to only run the command if debug processes are open."""
-        if self.client.dbg_procs or line in ["quit", "EOF"]:
-            return line
-        else:
+
+        if self.client.dbg_procs is []:
             print("warning: no debug processes running. Please relaunch the debugger")
             return "NULL"
+
+        else:
+            if line in ["quit", "EOF"]:
+                if self.broadcast_mode:
+                    return "broadcast stop"
+                return line
+
+            if line == "broadcast stop":
+                return line
+
+            if self.broadcast_mode:
+                line = "command " + line
+                return line
+
+            return line
 
     def preloop(self) -> None:
         """Override Cmd.preloop() to load mdb history."""

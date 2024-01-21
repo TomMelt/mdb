@@ -197,6 +197,33 @@ In theory you now have enough information to start debugging your own programs. 
 this simple example if you want to get to grips with ``mdb``. There are a couple more useful things
 I want to show you though before you leave.
 
+Broadcast mode
+--------------
+
+Whilst the ``command`` command is pretty useful. For long debugging sessions it can be annoying
+constantly prefixing ``command`` to every ``gdb`` command you want to run. This is where broadcast
+mode comes in handy. In broadcast mode all commands will be automatically prefixed with ``command``
+so that they run on the selected ranks. By default all ranks are selected unless you have manually
+specified a different selection with the ``select`` command.
+
+To enter broadcast mode type the following,
+
+.. code-block:: console
+
+   (mdb 0-7) broadcast start
+   (bct 0-7)
+
+The command prompt will turn to ``(bct 0-7)`` and will also change color to yellow (depending on
+your terminal color scheme). To leave broadcast mode either press ``CTRL+D`` or type
+``quit``/``broadcast stop``, e.g.,
+
+.. code-block:: console
+
+   (bct 0-7) broadcast stop
+   (mdb 0-7)
+
+The prompt should return to ``(mdb 0-7)`` and be back to the standard font color.
+
 Interactive mode
 ----------------
 
