@@ -232,19 +232,18 @@ class mdbShell(cmd.Cmd):
             (mdb) command 0,3-5 [command]
         """
 
-        def send_command(command: str, rank: int) -> None:
+        def send_command(command: str, rank: int) -> str:
             c = self.client.dbg_procs[rank]
             c.sendline(command)
             c.expect(GDBPROMPT)
-            output = c.before.decode("utf-8")
+            output = str(c.before.decode("utf-8"))
             output = strip_bracketted_paste(output)
             # prepend rank number to each line of output (excluding first and last)
             lines = [
                 f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]
             ]
             output = "".join(lines)
-            print(output)
-            return
+            return output
 
         command = line
         select = self.select
@@ -255,9 +254,13 @@ class mdbShell(cmd.Cmd):
             command = " ".join(commands[1:])
 
         try:
-            self.client.pool.starmap(
+            results = self.client.pool.starmap(
                 send_command, zip(itertools.repeat(command), select)
             )
+            for result in results:
+                print(result, end="")
+                print(72 * "-")
+
         except pexpect.EOF:
             self.client.close_procs()
 

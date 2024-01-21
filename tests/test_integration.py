@@ -7,6 +7,7 @@ from typing import Union
 from mdb.utils import strip_bracketted_paste, strip_control_characters
 
 script_text = """# this is a simple test script
+!echo hello
 command info proc
 command b simple-mpi.f90:15
 command b simple-mpi.f90:17
@@ -19,7 +20,6 @@ command continue
 execute deliberately-missing-file.mdb
 status
 select 0-1
-!echo hello
 broadcast start
 p 5*5
 broadcast stop
@@ -31,72 +31,72 @@ quit
 ans_text = """Connecting processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
 hello
 mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".
-1:process 127650
-1:cmdline = './examples/simple-mpi.exe'
-1:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
-1:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-
-0:process 127646
+0:process 165478
 0:cmdline = './examples/simple-mpi.exe'
 0:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
 0:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-
-1:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
-
+------------------------------------------------------------------------
+1:process 165481
+1:cmdline = './examples/simple-mpi.exe'
+1:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
+1:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
+------------------------------------------------------------------------
 0:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
-
+------------------------------------------------------------------------
+1:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
+------------------------------------------------------------------------
 0:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
-
+------------------------------------------------------------------------
 1:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
-
+------------------------------------------------------------------------
 0:Continuing.
-0:[New Thread 127646.127717]
-0:[New Thread 127646.127719]
+0:[New Thread 165478.165519]
+0:[New Thread 165478.165521]
 0:
 0:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
 0:15  var = 10.*process_rank
-
+------------------------------------------------------------------------
 1:Continuing.
-1:[New Thread 127650.127718]
-1:[New Thread 127650.127720]
+1:[New Thread 165481.165518]
+1:[New Thread 165481.165520]
 1:
 1:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
 1:15  var = 10.*process_rank
-
+------------------------------------------------------------------------
 0:Continuing.
 0:
 0:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
 0:17  if (process_rank == 0) then
-
+------------------------------------------------------------------------
 0:#0  simple () at simple-mpi.f90:17
-
+------------------------------------------------------------------------
 1:#0  simple () at simple-mpi.f90:15
-
+------------------------------------------------------------------------
 unrecognized command [made-up-command]. Type help to find out list of possible commands.
 1:Continuing.
 1:
 1:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
 1:simple () at simple-mpi.f90:15
 1:15  var = 10.*process_rank
-
+------------------------------------------------------------------------
 File [deliberately-missing-file.mdb] not found. Please check the file exists and try again.
 0 1
 0:$1 = 25
-
+------------------------------------------------------------------------
 1:$1 = 25
-
+------------------------------------------------------------------------
 0:Continuing.
 0:
 0:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
 0:simple () at simple-mpi.f90:17
 0:17  if (process_rank == 0) then
-
+------------------------------------------------------------------------
 1:Continuing.
 1:
 1:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
 1:simple () at simple-mpi.f90:15
 1:15  var = 10.*process_rank
-
+------------------------------------------------------------------------
 Closing processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
 
 exiting mdb...
@@ -118,10 +118,8 @@ def strip_runtime_specific_output(text: str) -> str:
 
 
 def standardize_output(text: str) -> str:
-    # remove process and thread ids
+    # remove process and thread ids and other system specific output
     text = strip_runtime_specific_output(text)
-    # sort output lines in alphabetical order
-    text = "\n".join(sorted(text.splitlines()))
 
     def filter_mask(line: str) -> Union[str, None]:
         if re.search(r"\d+:Reading.*from remote target...", line):

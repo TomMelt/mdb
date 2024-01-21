@@ -76,22 +76,22 @@ default, but for this tutorial I am running (and compiling) with open MPI (and `
 .. code-block:: console
 
    $ mdb launch -n 8 ./simple-mpi.exe
-   Process ./simple-mpi.exe created; pid = 62872
-   Listening on port 2006
-   Process ./simple-mpi.exe created; pid = 62876
-   Listening on port 2002
-   Process ./simple-mpi.exe created; pid = 62881
-   Listening on port 2003
-   Process ./simple-mpi.exe created; pid = 62887
-   Listening on port 2004
-   Process ./simple-mpi.exe created; pid = 62891
-   Listening on port 2005
-   Process ./simple-mpi.exe created; pid = 62896
+   Process ./simple-mpi.exe created; pid = 169875
    Listening on port 2000
-   Process ./simple-mpi.exe created; pid = 62901
-   Listening on port 2007
-   Process ./simple-mpi.exe created; pid = 62906
+   Process ./simple-mpi.exe created; pid = 169879
    Listening on port 2001
+   Process ./simple-mpi.exe created; pid = 169883
+   Listening on port 2002
+   Process ./simple-mpi.exe created; pid = 169887
+   Listening on port 2003
+   Process ./simple-mpi.exe created; pid = 169892
+   Listening on port 2004
+   Process ./simple-mpi.exe created; pid = 169895
+   Listening on port 2005
+   Process ./simple-mpi.exe created; pid = 169898
+   Listening on port 2006
+   Process ./simple-mpi.exe created; pid = 169901
+   Listening on port 2007
 
 
 **Note**: You can start ``mdb launch`` in ``--auto-restart`` mode so that it will automatically
@@ -156,28 +156,32 @@ that any commands issued via ``command`` will be sent to processors ``0-7``. For
 .. code-block:: console
 
    (mdb 0-7) command info proc
-   1:      process 62906
+   0:      process 169875
+   0:      cmdline = './simple-mpi.exe'
+   0:      cwd = '/home/melt/sync/cambridge/projects/side/mdb/examples'
+   0:      exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
+   ------------------------------------------------------------------------
+   1:      process 169879
    1:      cmdline = './simple-mpi.exe'
-   1:      cwd = '/home/melt/mdb/examples'
-   1:      exe = '/home/melt/mdb/examples/simple-mpi.exe'
-
-   7:      process 62901
-   7:      cmdline = './simple-mpi.exe'
-   7:      cwd = '/home/melt/mdb/examples'
-   7:      exe = '/home/melt/mdb/examples/simple-mpi.exe'
 
    ...
 
-   0:      process 62896
-   0:      cmdline = './simple-mpi.exe'
-   0:      cwd = '/home/melt/mdb/examples'
-   0:      exe = '/home/melt/mdb/examples/simple-mpi.exe'
+   6:      cwd = '/home/melt/sync/cambridge/projects/side/mdb/examples'
+   6:      exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
+   ------------------------------------------------------------------------
+   7:      process 169901
+   7:      cmdline = './simple-mpi.exe'
+   7:      cwd = '/home/melt/sync/cambridge/projects/side/mdb/examples'
+   7:      exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
+   ------------------------------------------------------------------------
 
 From brevity I have used ``...`` to shorten the output. ``command`` is used to send commands
-directly to the ``gdb`` instance of each processor. In this case I sent ``info proc`` which prints
-information on each process. Notice that the process id's match those from the ``launch`` command.
-Whilst there is no guarantee for the order of output, each process will have it's process rank id
-prepended to the output in the format ``[rank id]:`` . If you want to issue a ``gdb`` command to a
+directly to the ``gdb`` instance of each processor (see :ref:`broadcast_mode` which covers the
+``broadcast`` command -- this is useful for longer debug sessions). In this case I sent ``info
+proc`` which prints information on each process. Notice that the process id's match those from the
+``launch`` command. The output is sorted in numerical order with each process having it's own rank
+id prepended to the output in the format ``[rank id]:``. Each rank's output is separated by a
+dividing line of hyphen characters i.e., ``---``. If you want to issue a ``gdb`` command to a
 specific rank (or set of ranks) only then you can provide an optional set of ranks, either
 comma-separated, hyphen-separated or a mix of both. For example, to send command ``backtrace -1`` to
 ranks ``0,2-4`` use the following.
@@ -196,6 +200,8 @@ ranks ``0,2-4`` use the following.
 In theory you now have enough information to start debugging your own programs. Have a play with
 this simple example if you want to get to grips with ``mdb``. There are a couple more useful things
 I want to show you though before you leave.
+
+.. _broadcast_mode:
 
 Broadcast mode
 --------------
