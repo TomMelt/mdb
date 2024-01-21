@@ -19,45 +19,49 @@ command continue
 execute deliberately-missing-file.mdb
 status
 select 0-1
+!echo hello
+broadcast start
+p 5*5
+broadcast stop
 command continue
 command quit
-!echo hello
 quit
 """
 
 ans_text = """Connecting processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
+hello
 mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".
-0:process 100561
-0:cmdline = './examples/simple-mpi.exe'
-0:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
-0:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-
-1:process 100566
+1:process 127650
 1:cmdline = './examples/simple-mpi.exe'
 1:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
 1:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
+
+0:process 127646
+0:cmdline = './examples/simple-mpi.exe'
+0:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
+0:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
 
 1:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
 
 0:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
 
-1:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
-
 0:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
 
-1:Continuing.
-1:[New Thread 100566.100596]
-1:[New Thread 100566.100598]
-1:
-1:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
-1:15  var = 10.*process_rank
+1:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
 
 0:Continuing.
-0:[New Thread 100561.100597]
-0:[New Thread 100561.100599]
+0:[New Thread 127646.127717]
+0:[New Thread 127646.127719]
 0:
 0:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
 0:15  var = 10.*process_rank
+
+1:Continuing.
+1:[New Thread 127650.127718]
+1:[New Thread 127650.127720]
+1:
+1:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
+1:15  var = 10.*process_rank
 
 0:Continuing.
 0:
@@ -77,11 +81,9 @@ unrecognized command [made-up-command]. Type help to find out list of possible c
 
 File [deliberately-missing-file.mdb] not found. Please check the file exists and try again.
 0 1
-1:Continuing.
-1:
-1:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
-1:simple () at simple-mpi.f90:15
-1:15  var = 10.*process_rank
+0:$1 = 25
+
+1:$1 = 25
 
 0:Continuing.
 0:
@@ -89,8 +91,13 @@ File [deliberately-missing-file.mdb] not found. Please check the file exists and
 0:simple () at simple-mpi.f90:17
 0:17  if (process_rank == 0) then
 
+1:Continuing.
+1:
+1:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
+1:simple () at simple-mpi.f90:15
+1:15  var = 10.*process_rank
+
 Closing processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
-warning: no debug processes running. Please relaunch the debugger
 
 exiting mdb...
 """
