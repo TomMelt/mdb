@@ -24,7 +24,7 @@ Technically `gdb` supports other languages as well, but this is the intersection
 
 # Usage
 
-Please see the [quick start guide](https://mdb.readthedocs.io/en/latest/quickstart.html#quick-start) in the documentation for a
+Please see the [quick start guide](https://mdb.readthedocs.io/en/latest/quick-start.html#quick-start) in the documentation for a
 walk-through of a simple debug session. The guide covers basic debug commands and information on how to launch the debugger.
 
 # Installation
