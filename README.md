@@ -6,6 +6,21 @@
 
 An MPI debugger built on [`gdb`](https://www.sourceware.org/gdb/).
 
+# Security Notice
+
+This is a temporary warning, until issue #23 is resolved. Due to an underlying issue with with `gdbserver` it is **not
+recommended** to run `mdb` on multi-user systems connected to a public network e.g., most HPC systems.
+
+> Warning: gdbserver does not have any built-in security. Do not run gdbserver connected to any public network; a GDB connection
+> to gdbserver provides access to the target system with the same privileges as the user running gdbserver.
+
+(source [gdb manual](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Server.html))
+
+I am working on a fix which involves replacing the `gdbserver` backend with my own `tls`/`ssl`-encrypted server to manage
+connections and directly use `gdb` as a backend instead.
+
+I am planning to use randomly-generated tokens (similar to `jupyter notebook`) to secure the connection.
+
 # Documentation
 
 For help with installation, a quick-start tutorial (with example debug session) and an API reference please check out `mdb`'s
