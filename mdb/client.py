@@ -1,50 +1,44 @@
-import asyncio
-import json
+import socket
 import ssl
 from os.path import expanduser
 
-EXCHANGE_HOST = "127.0.0.1"
-EXCHANGE_PORT = 8888
-END_STR = "_MDB_END_"
-PACKET_SIZE = 128
-
-ctx = ssl.create_default_context(
-    purpose=ssl.Purpose.SERVER_AUTH, cafile=expanduser("~/.mdb/cert.pem")
-)
-ctx.check_hostname = False
+from clientserver import ClientServer
 
 
-async def tcp_echo_client(message):
-    print(f"sending: {message!r}")
-    message = message + END_STR
+class Client(ClientServer):
 
-    reader, writer = await asyncio.open_connection(
-        EXCHANGE_HOST, EXCHANGE_PORT, ssl=ctx
-    )
+    """Docstring for Server."""
 
-    writer.write(message.encode())
-    await writer.drain()
+    def __init__(self):
+        super().__init__()
 
-    buffer = b""
-    while True:
-        data = await reader.read(PACKET_SIZE)
-        if data[-len(END_STR) :] == END_STR.encode():
-            buffer += data[: -len(END_STR)]
-            break
-        buffer += data
-    response = buffer.decode()
-    print(f"Received: {response!r}")
+    def _init_tls(self):
+        print("using client tls")
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.load_cert_chain(
+            expanduser("~/.mdb/cert.pem"), expanduser("~/.mdb/key.rsa")
+        )
+        context.load_verify_locations(expanduser("~/.mdb/cert.pem"))
+        self.context = context
 
-    writer.close()
-    await writer.wait_closed()
+    def connect(self, hostname, port):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        ssl_sock = self.context.wrap_socket(sock, server_hostname=hostname)
+        print(f"connecting to {hostname}:{port} ")
+        ssl_sock.connect((hostname, port))
+        print("connected")
+        self.ssl_sock = ssl_sock
+
+    def close(self):
+        self.ssl_sock.close()
 
 
-command = {
-    "command": "info",
-    "version": "1.0.0",
-    "destination": "mdb",
-    "list": list(range(124)),
-}
+if __name__ == "__main__":
+    opts = {"hostname": "localhost", "port": 2000}
+    client = Client()
 
-message = json.dumps(command)
-asyncio.run(tcp_echo_client(message))
+    message = {"gdb": "command to run", "list": list(range(22))}
+    client.connect(**opts)
+    client.send_message(message)
+    message = client.recv_message()
+    client.close()
