@@ -1,34 +1,8 @@
 import asyncio
-import socket
-import json
 import ssl
 from os.path import expanduser
 
-
-class AsyncConnection:
-    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        self.reader = reader
-        self.writer = writer
-
-        self.end_str = "_MDB_END_"
-        self.buffer_size = 128
-
-    async def recv_message(self):
-        message = await self.reader.read(self.buffer_size)
-        print(f"-> received: {message}")
-        return message
-
-    async def send_message(self, message):
-        print(f"-> sending : {message}")
-        message_str = json.dumps(message)
-        message_str += self.end_str
-        self.writer.write(message_str.encode())
-
-    async def handle_connection(self):
-        message = await self.recv_message()
-        print(f"got: {message}")
-        message = {"result": "oh noooooo"}
-        await self.send_message(message)
+from clientserver import AsyncConnection
 
 
 class AsyncExchangeServer:
@@ -47,8 +21,8 @@ class AsyncExchangeServer:
         print("using server tls")
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         context.load_cert_chain(
-            expanduser("../python-ssl/certs/cert.pem"),
-            expanduser("../python-ssl/certs/key.rsa"),
+            expanduser("~/.mdb/cert.pem"),
+            expanduser("~/.mdb/key.rsa"),
         )
         self.context = context
 
@@ -82,7 +56,7 @@ class AsyncExchangeServer:
         loop.run_forever()
 
 
-from server import ExchangeServer
+# from server import ExchangeServer
 
 opts = {"hostname": "localhost", "port": 2000}
 server = AsyncExchangeServer(opts=opts)

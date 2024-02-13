@@ -1,31 +1,26 @@
+import asyncio
 import json
 
 
-class ClientServer:
-    def __init__(self):
-        self.end_str = "_MDB_END_"
-        self.buffer_size = 128
-        self._init_tls()
-        self.ssl_sock = None
+class AsyncConnection:
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        self.reader = reader
+        self.writer = writer
+        self.end_bytes = b"_MDB_END_"
 
-    def _init_tls(self):
-        pass
-
-    def send_message(self, message):
-        # print(f"-> sending : {message}")
-        message_str = json.dumps(message)
-        message_str += self.end_str
-        self.ssl_sock.send(message_str.encode())
-
-    def recv_message(self):
-        buffer = b""
-        while True:
-            data = self.ssl_sock.recv(self.buffer_size)
-            if data[-len(self.end_str) :] == self.end_str.encode():
-                buffer += data[: -len(self.end_str)]
-                break
-            buffer += data
-        message_str = buffer.decode()
-        message = json.loads(message_str)
-        # print(f"-> received: {message}")
+    async def recv_message(self):
+        message = await self.reader.readuntil(separator=self.end_bytes)
+        message = message[: -len(self.end_bytes)]
+        message = json.loads(message.decode())
+        print(f"-> received: {message}")
         return message
+
+    async def send_message(self, message):
+        print(f"-> sending : {message}")
+        message = json.dumps(message).encode()
+        message += self.end_bytes
+        self.writer.write(message)
+
+    async def handle_connection(self):
+        message = await self.recv_message()
+        await self.send_message(message)
