@@ -12,8 +12,10 @@ openssl req -x509 -newkey rsa:4096 -keyout key.rsa -out cert.pem -sha256 -days 3
 
 Now you can try running the server (which is very manual atm)
 
+I run the commands from the same directory as the `exchange_server.py` file
+
 1. in the 1st window/pane run `python exchange_server.py`
-2. in the 2nd window/pane run `python python debug_server.py`
+2. in the 2nd window/pane run `python debug_server.py`
 3. finally in the 3rd pane run `python client.py` (you can keep re-running this command as many times as you like)
 
 The final command should output the gdb version. I get the following output:
