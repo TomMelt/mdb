@@ -12,7 +12,7 @@ class ClientServer:
         pass
 
     def send_message(self, message):
-        print(f"-> sending : {message}")
+        # print(f"-> sending : {message}")
         message_str = json.dumps(message)
         message_str += self.end_str
         self.ssl_sock.send(message_str.encode())
@@ -27,5 +27,5 @@ class ClientServer:
             buffer += data
         message_str = buffer.decode()
         message = json.loads(message_str)
-        print(f"-> received: {message}")
+        # print(f"-> received: {message}")
         return message

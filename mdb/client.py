@@ -37,8 +37,9 @@ if __name__ == "__main__":
     opts = {"hostname": "localhost", "port": 2000}
     client = Client()
 
-    message = {"gdb": "command to run", "list": list(range(22))}
+    message = {"command": "show version", "list": list(range(22))}
     client.connect(**opts)
     client.send_message(message)
     message = client.recv_message()
+    print(message["result"])
     client.close()

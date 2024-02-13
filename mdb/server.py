@@ -6,6 +6,7 @@ import pexpect  # type: ignore
 from backend import GDBBackend
 from client import Client
 from clientserver import ClientServer
+from utils import strip_bracketted_paste, strip_control_characters
 
 N = 1
 
@@ -46,14 +47,21 @@ class DebugServer(Server):
             msg = f"Backend [{backend}] is not implemented yet."
             raise NotImplementedError(msg)
 
+        self.rank = opts["rank"]
         self.prompt = backend.prompt_string
         self.dbg_proc = None
 
     def handle_connection(self):
-        command = self.recv_message()
+        message = self.recv_message()
+        command = message["command"]
         print(f"running {command}")
-        output = {"output": "run successful"}
-        self.send_message(output)
+        self.dbg_proc.sendline(command)
+        self.dbg_proc.expect(self.prompt)
+        result = self.dbg_proc.before.decode("utf-8")
+        result = strip_bracketted_paste(result)
+        result = strip_control_characters(result)
+        message = {"result": result}
+        self.send_message(message)
 
     def init_debug_proc(self):
         """
