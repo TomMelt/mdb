@@ -2,6 +2,8 @@ import socket
 import ssl
 from os.path import expanduser
 
+import pexpect  # type: ignore
+from backend import GDBBackend
 from client import Client
 from clientserver import ClientServer
 
@@ -38,11 +40,34 @@ class DebugServer(Server):
     def __init__(self, opts):
         super().__init__(opts=opts)
 
-    def run_command(self):
+        if opts["backend"].lower() == "gdb":
+            backend = GDBBackend()
+        else:
+            msg = f"Backend [{backend}] is not implemented yet."
+            raise NotImplementedError(msg)
+
+        self.prompt = backend.prompt_string
+        self.dbg_proc = None
+
+    def handle_connection(self):
         command = self.recv_message()
         print(f"running {command}")
         output = {"output": "run successful"}
         self.send_message(output)
+
+    def init_debug_proc(self):
+        """
+        initialize pexpect debug process
+        """
+        dbg_proc = pexpect.spawn("gdb -q", timeout=None)
+        dbg_proc.expect(self.prompt)
+        dbg_proc.sendline("set pagination off")
+        dbg_proc.expect(self.prompt)
+        dbg_proc.sendline("set confirm off")
+        dbg_proc.expect(self.prompt)
+        dbg_proc.sendline("start")
+        dbg_proc.expect(self.prompt)
+        self.dbg_proc = dbg_proc
 
     def notify_exchange(self, hostname, port):
         opts = {"hostname": hostname, "port": port}
@@ -64,7 +89,7 @@ class DebugServer(Server):
             ssl_sock, fromaddr = bindsocket.accept()
             try:
                 self.ssl_sock = self.context.wrap_socket(ssl_sock, server_side=True)
-                self.run_command()
+                self.handle_connection()
             except Exception as e:
                 print(f"Error: {e}")
             finally:
