@@ -3,7 +3,7 @@ import ssl
 from abc import ABC, abstractmethod
 from os.path import expanduser
 
-from clientserver import AsyncConnection
+from async_connection import AsyncConnection
 
 
 class AsyncClient(ABC):
