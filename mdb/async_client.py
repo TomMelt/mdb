@@ -3,9 +3,10 @@ import os
 import asyncio
 import ssl
 from abc import ABC, abstractmethod
-from os.path import expanduser
 
 from async_connection import AsyncConnection
+
+from utils import ssl_cert_path, ssl_key_path
 
 
 class AsyncClient(ABC):
@@ -16,13 +17,12 @@ class AsyncClient(ABC):
         self.conn = None
 
     def _init_tls(self):
-        # fergus: i made no changes here other than paths
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         context.load_cert_chain(
-            expanduser("~/.mdb/cert.pem"),
-            expanduser("~/.mdb/key.rsa"),
+            ssl_cert_path(),
+            ssl_key_path(),
         )
-        context.load_verify_locations(expanduser("~/.mdb/cert.pem"))
+        context.load_verify_locations(ssl_cert_path())
 
         # insecure debug mode
         if os.environ.get("MDB_DISABLE_HOSTNAME_VERIFY", None):

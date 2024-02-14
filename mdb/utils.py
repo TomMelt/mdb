@@ -3,6 +3,8 @@
 
 import re
 
+from os.path import expanduser
+
 
 def strip_bracketted_paste(text: str) -> str:
     """Strip bracketted paste escape sequence from text
@@ -70,3 +72,11 @@ def print_tabular_output(strings: list[str], cols: int = 32) -> None:
         text: list[str] = list(map(lambda x: f"{x: >{max_width}}", current_row))
         print(" ".join(text))
     return
+
+
+def ssl_cert_path() -> str:
+    return expanduser("~/.mdb/cert.pem")
+
+
+def ssl_key_path() -> str:
+    return expanduser("~/.mdb/key.rsa")
