@@ -49,6 +49,15 @@ class DebugClient(AsyncClient):
 
         await self.conn.send_message(dict(result=result))
 
+    async def run(self):
+        """
+        Main loop of the asynchronous debugger wrapper.
+        """
+        await self.connect_to_exchange()
+        await self.init_debug_proc()
+        await self.wait_for_command()
+        await self.close()
+
 
 if __name__ == "__main__":
     opts = {
@@ -61,7 +70,5 @@ if __name__ == "__main__":
     client = DebugClient(opts)
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(client.connect_to_exchange())
-    loop.run_until_complete(client.init_debug_proc())
-    loop.run_until_complete(client.wait_for_command())
-    loop.run_until_complete(client.close())
+    loop.run_until_complete(client.run())
+    loop.close()
