@@ -55,8 +55,12 @@ class DebugClient(AsyncClient):
         """
         await self.connect_to_exchange()
         await self.init_debug_proc()
-        await self.wait_for_command()
-        await self.close()
+
+        while True:
+            print("Ready")
+            await self.wait_for_command()
+
+        # await self.close()
 
 
 if __name__ == "__main__":

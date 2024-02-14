@@ -88,7 +88,11 @@ class mdbClient(AsyncClient):
         await self.connect_to_exchange()
 
         # get input, for now just example hard coded
-        await self.run_command("info proc")
+        while True:
+            inp = input("> ")
+            if inp == "q":
+                break
+            await self.run_command(inp)
 
         # then at the end maybe close? this isn't essential since we can also
         # just let the socket drop and it will clean itself up
