@@ -54,6 +54,12 @@ class AsyncExchangeServer:
         # either pass in an event loop, or make one
         loop = asyncio.get_event_loop()
 
+        # TODO: to get better control of the server, we can wrap our own
+        # transport layer and then add a system of hooks for logging or other
+        # events. For example, if a debug client loses connection, the exchange
+        # server should let the user know somehow. By using the library
+        # `start_server`, we lose some of that control, but lets us move
+        # faster.
         task = asyncio.start_server(
             self.handle_connection,
             self.hostname,
