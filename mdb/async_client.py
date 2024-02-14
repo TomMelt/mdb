@@ -1,3 +1,5 @@
+import os
+
 import asyncio
 import ssl
 from abc import ABC, abstractmethod
@@ -21,8 +23,12 @@ class AsyncClient(ABC):
             expanduser("~/.mdb/key.rsa"),
         )
         context.load_verify_locations(expanduser("~/.mdb/cert.pem"))
-        # context.check_hostname = False
-        # context.verify_mode = ssl.CERT_NONE
+
+        # insecure debug mode
+        if os.environ.get("MDB_DISABLE_HOSTNAME_VERIFY", None):
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
         self.context = context
 
     async def init_connection(self):
