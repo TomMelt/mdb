@@ -64,5 +64,4 @@ if __name__ == "__main__":
     loop.run_until_complete(client.connect_to_exchange())
     loop.run_until_complete(client.init_debug_proc())
     loop.run_until_complete(client.wait_for_command())
-    loop.run_forever()
     loop.run_until_complete(client.close())
