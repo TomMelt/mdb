@@ -1,8 +1,9 @@
 import asyncio
 import ssl
-from os.path import expanduser
 
 from async_connection import AsyncConnection
+
+from utils import ssl_cert_path, ssl_key_path
 
 
 class AsyncExchangeServer:
@@ -21,8 +22,8 @@ class AsyncExchangeServer:
         print("using server tls")
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         context.load_cert_chain(
-            expanduser("~/.mdb/cert.pem"),
-            expanduser("~/.mdb/key.rsa"),
+            ssl_cert_path(),
+            ssl_key_path(),
         )
         self.context = context
 
