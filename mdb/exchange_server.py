@@ -39,7 +39,15 @@ class AsyncExchangeServer:
 
         # here you'd distinguish the connection too, to work out if it needs
         # to be pushed to `self.servers` or not, etc
-        _ = connection_type
+        if connection_type == "debug":
+            self.servers.append(conn)
+
+        if connection_type == "client":
+            command = await conn.recv_message()
+            for server in self.servers:
+                await server.send_message(command)
+                response = await server.recv_message()
+                await conn.send_message(response)
 
     def listen(self):
         # either pass in an event loop, or make one

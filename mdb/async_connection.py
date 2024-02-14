@@ -6,6 +6,7 @@ class AsyncConnection:
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         self.reader = reader
         self.writer = writer
+        self.type = ""
         self.end_bytes = b"_MDB_END_"
 
     async def recv_message(self):
@@ -23,4 +24,11 @@ class AsyncConnection:
 
     async def handle_connection(self):
         message = await self.recv_message()
+        try:
+            self.type = message["type"]
+        except KeyError:
+            print("key [type] not found.")
+
+        message = {"success": True}
         await self.send_message(message)
+        return self.type

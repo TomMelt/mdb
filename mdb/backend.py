@@ -7,7 +7,12 @@ class DebugBackend(ABC):
 
     @property
     @abstractmethod
-    def binary_name(self):
+    def name(self):
+        pass
+
+    @property
+    @abstractmethod
+    def debug_command(self):
         pass
 
     @property
@@ -15,18 +20,45 @@ class DebugBackend(ABC):
     def prompt_string(self):
         pass
 
+    @property
+    @abstractmethod
+    def start_commands(self):
+        pass
+
 
 class GDBBackend(DebugBackend):
     @property
-    def binary_name(self):
+    def name(self):
         return "gdb"
+
+    @property
+    def debug_command(self):
+        return "gdb -q "
 
     @property
     def prompt_string(self):
         return r"\(gdb\)"
 
+    @property
+    def start_commands(self):
+        commands = ["set pagination off", "set confirm off", "start"]
+        return commands
+
 
 class LLVMBackend(DebugBackend):
     @property
-    def binary_name(self):
+    def name(self):
         return "lldb"
+
+    @property
+    def debug_command(self):
+        return "lldb"
+
+    @property
+    def prompt_string(self):
+        return r"\(lldb\)"
+
+    @property
+    def start_commands(self):
+        commands = ["br s -r main", "run"]
+        return commands
