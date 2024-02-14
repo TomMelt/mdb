@@ -81,6 +81,19 @@ class mdbClient(AsyncClient):
         message = await self.conn.recv_message()
         print(message["result"])
 
+    async def run(self):
+        """
+        Main loop of the asynchronous client.
+        """
+        await self.connect_to_exchange()
+
+        # get input, for now just example hard coded
+        await self.run_command("info proc")
+
+        # then at the end maybe close? this isn't essential since we can also
+        # just let the socket drop and it will clean itself up
+        await self.close()
+
 
 if __name__ == "__main__":
     opts = {
@@ -93,7 +106,5 @@ if __name__ == "__main__":
     client = mdbClient(opts)
 
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(client.connect_to_exchange())
-    loop.run_until_complete(client.run_command("info proc"))
-    loop.run_until_complete(client.close())
+    loop.run_until_complete(client.run())
     loop.close()
