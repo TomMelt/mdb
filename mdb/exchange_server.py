@@ -42,13 +42,19 @@ class AsyncExchangeServer:
         # to be pushed to `self.servers` or not, etc
         if connection_type == "debug":
             self.servers.append(conn)
+            return  # keep connection open
 
         if connection_type == "client":
-            command = await conn.recv_message()
-            for server in self.servers:
-                await server.send_message(command)
-                response = await server.recv_message()
-                await conn.send_message(response)
+            while True:
+                print("waiting for user...")
+                command = await conn.recv_message()
+                for server in self.servers:
+                    await server.send_message(command)
+                    response = await server.recv_message()
+                    await conn.send_message(response)
+
+        # do this incase we somehow fall through
+        conn.writer.close()
 
     def listen(self):
         # either pass in an event loop, or make one
