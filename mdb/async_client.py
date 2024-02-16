@@ -1,10 +1,11 @@
 import asyncio
+import logging
 import os
 import ssl
 from abc import ABC, abstractmethod
 
 from .async_connection import AsyncConnection
-from .utils import prepend_ranks, ssl_cert_path, ssl_key_path
+from .utils import ssl_cert_path, ssl_key_path
 
 
 class AsyncClient(ABC):
@@ -42,85 +43,28 @@ class AsyncClient(ABC):
 
     async def connect_to_exchange(self):
         status = False
+        attempts = 0
         while not status:
+            if attempts == 10:
+                msg = f"couldn't connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
+                raise ConnectionError(msg)
             try:
                 await self.init_connection()
                 await self.conn.send_message(self.my_type)
                 message = await self.conn.recv_message()
                 status = message["success"]
                 if status:
-                    return status
+                    return message
                 else:
                     msg = f"Failed to connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
                     raise ConnectionError(msg)
             except ConnectionRefusedError:
+                await asyncio.sleep(1)
+                logging.info(f"Attempt {attempts} to connect to exchange server.")
+                logging.info("sleeping for 1s")
+                attempts += 1
                 pass
 
     async def close(self):
         self.conn.writer.close()
         await self.conn.writer.wait_closed()
-
-
-class mdbClient(AsyncClient):
-    def __init__(self, opts):
-        super().__init__(opts=opts)
-
-    @property
-    def my_type(self):
-        info = {
-            "type": "client",
-            "sockname": list(self.conn.writer.get_extra_info("sockname")),
-            "version": "0.0.1",
-        }
-        return info
-
-    async def run_command(self, command):
-        message = {
-            "type": "client",
-            "command": command,
-            "version": "0.0.1",
-        }
-        await self.conn.send_message(message)
-
-        response = await self.conn.recv_message()
-
-        output = response["result"]
-        output = sorted(output, key=lambda result: result["rank"])
-        lines = []
-        for result in output:
-            lines.append(prepend_ranks(output=result["result"], rank=result["rank"]))
-        combined_output = "".join(lines)
-        print(combined_output)
-
-    async def run(self):
-        """
-        Main loop of the asynchronous client.
-        """
-        await self.connect_to_exchange()
-
-        # get input, for now just example hard coded
-        print("waiting for input")
-        while True:
-            inp = input("> ")
-            if inp == "q":
-                break
-            await self.run_command(inp)
-
-        # then at the end maybe close? this isn't essential since we can also
-        # just let the socket drop and it will clean itself up
-        await self.close()
-
-
-if __name__ == "__main__":
-    opts = {
-        "exchange_hostname": "localhost",
-        "exchange_port": 2000,
-        "rank": 1,
-        "backend": "gdb",
-        "target": "examples/simple-mpi.exe",
-    }
-    client = mdbClient(opts)
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(client.run())
-    loop.close()

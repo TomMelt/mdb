@@ -107,33 +107,18 @@ def launch(
     if select is None:
         select = f"0-{ranks - 1}"
 
-    opts = {
+    exchange_opts = {
         "hostname": hostname,
         "port": port,
+        "number_of_ranks": ranks,
     }
-    server = AsyncExchangeServer(opts=opts)
-    task = server.start_server()
+    server = AsyncExchangeServer(opts=exchange_opts)
 
     loop = asyncio.get_event_loop()
-    loop.create_task(task)
-
-    proc = asyncio.create_subprocess_exec(*shlex.split("mpirun --app .mdb.conf"))
-
-    loop.create_task(proc)
-
-    print("something else")
-
-    # for rank in range(1, 16):
-    #     opts = {
-    #         "exchange_hostname": "localhost",
-    #         "exchange_port": 2000,
-    #         "rank": rank,
-    #         "backend": "gdb",
-    #         "target": "examples/simple-mpi.exe",
-    #         "args": "",
-    #     }
-    #     dbg_client = DebugClient(opts)
-    #     loop.create_task(dbg_client.run())
+    loop.create_task(server.start_server())
+    loop.create_task(
+        asyncio.create_subprocess_exec(*shlex.split("mpirun --app .mdb.conf"))
+    )
     loop.run_forever()
 
     # server_opts: Server_opts = dict(

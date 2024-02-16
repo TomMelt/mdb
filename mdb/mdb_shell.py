@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import cmd
 import itertools
 import os
@@ -90,9 +91,7 @@ def buffered_input_filter(
 
 
 class mdbShell(cmd.Cmd):
-    intro: str = (
-        'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
-    )
+    intro: str = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
     hist_file: str = os.path.expanduser("~/.mdb_history")
     hist_filesize: int = 10000
     broadcast_mode: bool = False
@@ -234,37 +233,40 @@ class mdbShell(cmd.Cmd):
             (mdb) command 0,3-5 [command]
         """
 
-        def send_command(command: str, rank: int) -> str:
-            c = self.client.dbg_procs[rank]
-            c.sendline(command)
-            c.expect(GDBPROMPT)
-            output = str(c.before.decode("utf-8"))
-            output = strip_bracketted_paste(output)
-            # prepend rank number to each line of output (excluding first and last)
-            lines = [
-                f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]
-            ]
-            output = "".join(lines)
-            return output
+        # def send_command(command: str, rank: int) -> str:
+        #     c = self.client.dbg_procs[rank]
+        #     c.sendline(command)
+        #     c.expect(GDBPROMPT)
+        #     output = str(c.before.decode("utf-8"))
+        #     output = strip_bracketted_paste(output)
+        #     # prepend rank number to each line of output (excluding first and last)
+        #     lines = [
+        #         f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]
+        #     ]
+        #     output = "".join(lines)
+        #     return output
 
-        command = line
-        select = self.select
-        commands = command.split(" ")
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.client.run_command(line))
 
-        if re.match(r"^[0-9,-]+$", commands[0]):
-            select = parse_ranks(commands[0])
-            command = " ".join(commands[1:])
+        # command = line
+        # select = self.select
+        # commands = command.split(" ")
 
-        try:
-            results = self.client.pool.starmap(
-                send_command, zip(itertools.repeat(command), select)
-            )
-            for result in results:
-                print(result, end="")
-                print(72 * "-")
+        # if re.match(r"^[0-9,-]+$", commands[0]):
+        #     select = parse_ranks(commands[0])
+        #     command = " ".join(commands[1:])
 
-        except pexpect.EOF:
-            self.client.close_procs()
+        # try:
+        #     results = self.client.pool.starmap(
+        #         send_command, zip(itertools.repeat(command), select)
+        #     )
+        #     for result in results:
+        #         print(result, end="")
+        #         print(72 * "-")
+
+        # except pexpect.EOF:
+        #     self.client.close_procs()
 
         return
 
@@ -444,24 +446,24 @@ class mdbShell(cmd.Cmd):
     def precmd(self, line: str) -> str:
         """Override Cmd.precmd() to only run the command if debug processes are open."""
 
-        if self.client.dbg_procs is []:
-            print("warning: no debug processes running. Please relaunch the debugger")
-            return "NULL"
+        # if self.client.dbg_procs is []:
+        #     print("warning: no debug processes running. Please relaunch the debugger")
+        #     return "NULL"
 
-        else:
-            if line in ["quit", "EOF"]:
-                if self.broadcast_mode:
-                    return "broadcast stop"
-                return line
-
-            if line == "broadcast stop":
-                return line
-
+        # else:
+        if line in ["quit", "EOF"]:
             if self.broadcast_mode:
-                line = "command " + line
-                return line
-
+                return "broadcast stop"
             return line
+
+        if line == "broadcast stop":
+            return line
+
+        if self.broadcast_mode:
+            line = "command " + line
+            return line
+
+        return line
 
     def preloop(self) -> None:
         """Override Cmd.preloop() to load mdb history."""

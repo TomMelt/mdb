@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import ssl
 
 from .async_connection import AsyncConnection
@@ -9,12 +10,11 @@ class AsyncExchangeServer:
     def __init__(self, opts):
         # fergus: pasted all the inherited attributes here
         self._init_tls()
-        self.servers = []
+        self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
         self.port = opts["port"]
-        print(f"echange server started :: {self.hostname}:{self.port}")
-        # fergus: added these
-        self.socket = None
+        self.servers = []
+        logging.info(f"echange server started :: {self.hostname}:{self.port}")
 
     def _init_tls(self):
         # fergus: i made no changes here other than paths
@@ -23,6 +23,9 @@ class AsyncExchangeServer:
             ssl_cert_path(),
             ssl_key_path(),
         )
+        # add these two lines to force check of client credentials
+        context.verify_mode = ssl.CERT_REQUIRED
+        context.load_verify_locations(ssl_cert_path())
         self.context = context
 
     async def handle_connection(self, reader, writer):
@@ -30,12 +33,10 @@ class AsyncExchangeServer:
         # connection class that holds onto the connection reader/writer and
         # implements your handler methods
 
-        print("Connection")
         # no try/except clause needed as the asyncio server does that for us
         conn = AsyncConnection(reader, writer)
         connection_type = await conn.handle_connection()
-
-        print("connection_type = \n", connection_type)
+        logging.info(f"exchange server received a {connection_type} connection.")
 
         # here you'd distinguish the connection too, to work out if it needs
         # to be pushed to `self.servers` or not, etc
@@ -43,15 +44,16 @@ class AsyncExchangeServer:
             self.servers.append(conn)
             return  # keep connection open
 
+        async def temp(server):
+            await server.send_message(command)
+            message = await server.recv_message()
+            return message
+
         if connection_type == "client":
             while True:
-                print("waiting for user...")
                 command = await conn.recv_message()
-                output = []
-                for server in self.servers:
-                    await server.send_message(command)
-                    output.append(await server.recv_message())
-
+                tasks = [asyncio.create_task(temp(server)) for server in self.servers]
+                output = await asyncio.gather(*tasks)
                 response = {"result": output}
                 await conn.send_message(response)
 
