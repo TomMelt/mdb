@@ -1,11 +1,14 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
+import asyncio
+import logging
 import signal
 
 import click
 from typing_extensions import TypedDict
 
+from .async_client import mdbClient
 from .mdb_client import Client
 from .mdb_shell import mdbShell
 
@@ -86,6 +89,11 @@ def attach(
 
     $ mdb attach -n 8
     """
+
+    logging.basicConfig(
+        filename="mdb-attach.log", encoding="utf-8", level=logging.DEBUG
+    )
+
     # debug all ranks if "select" is not set
     if select is None:
         select = f"0-{ranks - 1}"
@@ -100,22 +108,33 @@ def attach(
     else:
         script = exec_script.name
 
-    prog_opts: Prog_opts = dict(
-        ranks=ranks,
-        select=select,
-        host=host,
-        port=port,
-        breakpt=breakpt,
-        exec_script=script,
-        plot_lib=plot_lib,
-    )
+    client_opts = {
+        "exchange_hostname": "localhost",
+        "exchange_port": 2000,
+        "backend": "gdb",
+    }
+    client = mdbClient(opts=client_opts)
 
-    client = Client(prog_opts)
-    try:
-        client.connect()
-    except TimeoutError as e:
-        print(f'error: mdb timeout with error message "{e}"')
-        exit(1)
-    mshell = mdbShell(prog_opts, client)
-    signal.signal(signal.SIGINT, mshell.hook_SIGINT)
-    mshell.cmdloop()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(client.run())
+    loop.close()
+
+    # prog_opts: Prog_opts = dict(
+    #     ranks=ranks,
+    #     select=select,
+    #     host=host,
+    #     port=port,
+    #     breakpt=breakpt,
+    #     exec_script=script,
+    #     plot_lib=plot_lib,
+    # )
+
+    # client = Client(prog_opts)
+    # try:
+    #     client.connect()
+    # except TimeoutError as e:
+    #     print(f'error: mdb timeout with error message "{e}"')
+    #     exit(1)
+    # mshell = mdbShell(prog_opts, client)
+    # signal.signal(signal.SIGINT, mshell.hook_SIGINT)
+    # mshell.cmdloop()

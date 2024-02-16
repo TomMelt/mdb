@@ -1,9 +1,8 @@
 import asyncio
 import ssl
 
-from async_connection import AsyncConnection
-
-from utils import ssl_cert_path, ssl_key_path
+from .async_connection import AsyncConnection
+from .utils import ssl_cert_path, ssl_key_path
 
 
 class AsyncExchangeServer:
@@ -13,13 +12,12 @@ class AsyncExchangeServer:
         self.servers = []
         self.hostname = opts["hostname"]
         self.port = opts["port"]
-        print(f"server started :: {self.hostname}:{self.port}")
+        print(f"echange server started :: {self.hostname}:{self.port}")
         # fergus: added these
         self.socket = None
 
     def _init_tls(self):
         # fergus: i made no changes here other than paths
-        print("using server tls")
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         context.load_cert_chain(
             ssl_cert_path(),
@@ -33,10 +31,11 @@ class AsyncExchangeServer:
         # implements your handler methods
 
         print("Connection")
-
         # no try/except clause needed as the asyncio server does that for us
         conn = AsyncConnection(reader, writer)
         connection_type = await conn.handle_connection()
+
+        print("connection_type = \n", connection_type)
 
         # here you'd distinguish the connection too, to work out if it needs
         # to be pushed to `self.servers` or not, etc
@@ -48,13 +47,25 @@ class AsyncExchangeServer:
             while True:
                 print("waiting for user...")
                 command = await conn.recv_message()
+                output = []
                 for server in self.servers:
                     await server.send_message(command)
-                    response = await server.recv_message()
-                    await conn.send_message(response)
+                    output.append(await server.recv_message())
+
+                response = {"result": output}
+                await conn.send_message(response)
 
         # do this incase we somehow fall through
         conn.writer.close()
+
+    def start_server(self):
+        task = asyncio.start_server(
+            self.handle_connection,
+            self.hostname,
+            self.port,
+            ssl=self.context,
+        )
+        return task
 
     def listen(self):
         # either pass in an event loop, or make one
@@ -75,10 +86,3 @@ class AsyncExchangeServer:
 
         loop.run_until_complete(task)
         loop.run_forever()
-
-
-# from server import ExchangeServer
-
-opts = {"hostname": "localhost", "port": 2000}
-server = AsyncExchangeServer(opts=opts)
-server.listen()

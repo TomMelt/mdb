@@ -1,15 +1,16 @@
 import asyncio
 
 import pexpect
-from async_client import AsyncClient
-from backend import GDBBackend
-from utils import strip_bracketted_paste
+
+from .async_client import AsyncClient
+from .backend import GDBBackend
+from .utils import strip_bracketted_paste
 
 
 class DebugClient(AsyncClient):
     def __init__(self, opts):
         super().__init__(opts=opts)
-        self.myrank = opts["rank"]
+        self.myrank = int(opts["rank"])
         self.target = opts["target"]
         self.dbg_proc = None
         if opts["backend"].lower() == "gdb":
@@ -47,7 +48,12 @@ class DebugClient(AsyncClient):
         result = self.dbg_proc.before.decode()
         result = strip_bracketted_paste(result)
 
-        await self.conn.send_message(dict(result=result))
+        message = {
+            "result": result,
+            "rank": self.myrank,
+        }
+
+        await self.conn.send_message(message)
 
     async def run(self):
         """
@@ -57,17 +63,14 @@ class DebugClient(AsyncClient):
         await self.init_debug_proc()
 
         while True:
-            print("Ready")
+            print("waiting for gdb command...")
             await self.wait_for_command()
-
-        # await self.close()
 
 
 if __name__ == "__main__":
     opts = {
         "exchange_hostname": "localhost",
         "exchange_port": 2000,
-        "rank": 1,
         "backend": "gdb",
         "target": "examples/simple-mpi.exe",
     }

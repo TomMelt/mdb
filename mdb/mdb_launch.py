@@ -1,9 +1,15 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
+import asyncio
+import logging
+import shlex
+
 import click
 from typing_extensions import TypedDict
 
+from .debug_client import DebugClient
+from .exchange_server import AsyncExchangeServer
 from .mdb_server import Server
 
 Server_opts = TypedDict(
@@ -11,7 +17,7 @@ Server_opts = TypedDict(
     {
         "ranks": int,
         "select": str,
-        "host": str,
+        "hostname": str,
         "launch_command": str,
         "port": int,
         "config_filename": str,
@@ -37,10 +43,10 @@ Server_opts = TypedDict(
 )
 @click.option(
     "-h",
-    "--host",
+    "--hostname",
     default="localhost",
     show_default=True,
-    help="Host machine name.",
+    help="Hostname machine name.",
 )
 @click.option(
     "--launch-command",
@@ -77,7 +83,7 @@ Server_opts = TypedDict(
 def launch(
     ranks: int,
     select: str | None,
-    host: str,
+    hostname: str,
     launch_command: str,
     port: int,
     config_filename: str,
@@ -90,27 +96,61 @@ def launch(
 
     $ mdb launch -n 8 --auto-restart ./simple-mpi.exe
     """
+
+    logging.basicConfig(
+        filename="mdb-launch.log", encoding="utf-8", level=logging.DEBUG
+    )
+
     args = list(args)
 
     # debug all ranks if "select" is not set
     if select is None:
         select = f"0-{ranks - 1}"
 
-    server_opts: Server_opts = dict(
-        ranks=ranks,
-        select=select,
-        host=host,
-        launch_command=launch_command,
-        port=port,
-        config_filename=config_filename,
-        args=" ".join(args),
-    )
+    opts = {
+        "hostname": hostname,
+        "port": port,
+    }
+    server = AsyncExchangeServer(opts=opts)
+    task = server.start_server()
 
-    server = Server(server_opts)
-    server.write_app_file()
-    keep_running = True
-    while keep_running:
-        server.run()
-        if not auto_restart:
-            keep_running = False
-    return
+    loop = asyncio.get_event_loop()
+    loop.create_task(task)
+
+    proc = asyncio.create_subprocess_exec(*shlex.split("mpirun --app .mdb.conf"))
+
+    loop.create_task(proc)
+
+    print("something else")
+
+    # for rank in range(1, 16):
+    #     opts = {
+    #         "exchange_hostname": "localhost",
+    #         "exchange_port": 2000,
+    #         "rank": rank,
+    #         "backend": "gdb",
+    #         "target": "examples/simple-mpi.exe",
+    #         "args": "",
+    #     }
+    #     dbg_client = DebugClient(opts)
+    #     loop.create_task(dbg_client.run())
+    loop.run_forever()
+
+    # server_opts: Server_opts = dict(
+    #     ranks=ranks,
+    #     select=select,
+    #     hostname=hostname,
+    #     launch_command=launch_command,
+    #     port=port,
+    #     config_filename=config_filename,
+    #     args=" ".join(args),
+    # )
+
+    # server = Server(server_opts)
+    # server.write_app_file()
+    # keep_running = True
+    # while keep_running:
+    #     server.run()
+    #     if not auto_restart:
+    #         keep_running = False
+    # return

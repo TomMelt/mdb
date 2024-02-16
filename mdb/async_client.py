@@ -1,12 +1,10 @@
-import os
-
 import asyncio
+import os
 import ssl
 from abc import ABC, abstractmethod
 
-from async_connection import AsyncConnection
-
-from utils import ssl_cert_path, ssl_key_path
+from .async_connection import AsyncConnection
+from .utils import prepend_ranks, ssl_cert_path, ssl_key_path
 
 
 class AsyncClient(ABC):
@@ -43,14 +41,20 @@ class AsyncClient(ABC):
         pass
 
     async def connect_to_exchange(self):
-        await self.init_connection()
-        await self.conn.send_message(self.my_type)
-        message = await self.conn.recv_message()
-        if message["success"]:
-            return
-        else:
-            msg = f"Failed to connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
-            raise ConnectionError(msg)
+        status = False
+        while not status:
+            try:
+                await self.init_connection()
+                await self.conn.send_message(self.my_type)
+                message = await self.conn.recv_message()
+                status = message["success"]
+                if status:
+                    return status
+                else:
+                    msg = f"Failed to connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
+                    raise ConnectionError(msg)
+            except ConnectionRefusedError:
+                pass
 
     async def close(self):
         self.conn.writer.close()
@@ -78,8 +82,15 @@ class mdbClient(AsyncClient):
         }
         await self.conn.send_message(message)
 
-        message = await self.conn.recv_message()
-        print(message["result"])
+        response = await self.conn.recv_message()
+
+        output = response["result"]
+        output = sorted(output, key=lambda result: result["rank"])
+        lines = []
+        for result in output:
+            lines.append(prepend_ranks(output=result["result"], rank=result["rank"]))
+        combined_output = "".join(lines)
+        print(combined_output)
 
     async def run(self):
         """
@@ -88,6 +99,7 @@ class mdbClient(AsyncClient):
         await self.connect_to_exchange()
 
         # get input, for now just example hard coded
+        print("waiting for input")
         while True:
             inp = input("> ")
             if inp == "q":

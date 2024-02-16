@@ -2,8 +2,14 @@
 # details.
 
 import re
-
 from os.path import expanduser
+
+
+def prepend_ranks(output, rank):
+    output = "".join(
+        [f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]]
+    )
+    return output
 
 
 def strip_bracketted_paste(text: str) -> str:
