@@ -8,9 +8,8 @@ import shlex
 import click
 from typing_extensions import TypedDict
 
-from .debug_client import DebugClient
 from .exchange_server import AsyncExchangeServer
-from .mdb_server import Server
+from .mdb_wrapper import WrapperLauncher
 
 Server_opts = TypedDict(
     "Server_opts",
@@ -18,7 +17,7 @@ Server_opts = TypedDict(
         "ranks": int,
         "select": str,
         "hostname": str,
-        "launch_command": str,
+        "mpi_command": str,
         "port": int,
         "config_filename": str,
         "args": str,
@@ -49,7 +48,7 @@ Server_opts = TypedDict(
     help="Hostname machine name.",
 )
 @click.option(
-    "--launch-command",
+    "--mpi-command",
     default="mpirun",
     show_default=True,
     help="MPI launcher e.g., mpirun, mpiexec, srun etc.",
@@ -60,6 +59,19 @@ Server_opts = TypedDict(
     default=2000,
     show_default=True,
     help="Starting port address. Each rank's port is assigned as [port_address + rank].",
+)
+@click.option(
+    "-b",
+    "--backend",
+    default="gdb",
+    help="Debug backend e.g., gdb, lldb etc.",
+)
+@click.option(
+    "-t",
+    "--target",
+    type=click.File("r"),
+    required=True,
+    help="Target binary to debug.",
 )
 @click.option(
     "--config-filename",
@@ -77,15 +89,17 @@ Server_opts = TypedDict(
 )
 @click.argument(
     "args",
-    required=True,
+    required=False,
     nargs=-1,
 )
 def launch(
     ranks: int,
     select: str | None,
     hostname: str,
-    launch_command: str,
+    mpi_command: str,
     port: int,
+    backend: str,
+    target: click.File,
     config_filename: str,
     auto_restart: bool,
     args: tuple[str] | list[str],
@@ -107,6 +121,21 @@ def launch(
     if select is None:
         select = f"0-{ranks - 1}"
 
+    wl_opts = {
+        "ranks": ranks,
+        "select": select,
+        "hostname": hostname,
+        "backend": backend,
+        "mpi_command": mpi_command,
+        "target": target.name,
+        "port": port,
+        "config_filename": config_filename,
+        "args": " ".join(args),
+    }
+
+    wrapper_launcher = WrapperLauncher(wl_opts)
+    wrapper_launcher.write_app_file()
+
     exchange_opts = {
         "hostname": hostname,
         "port": port,
@@ -121,21 +150,9 @@ def launch(
     )
     loop.run_forever()
 
-    # server_opts: Server_opts = dict(
-    #     ranks=ranks,
-    #     select=select,
-    #     hostname=hostname,
-    #     launch_command=launch_command,
-    #     port=port,
-    #     config_filename=config_filename,
-    #     args=" ".join(args),
-    # )
-
-    # server = Server(server_opts)
-    # server.write_app_file()
-    # keep_running = True
-    # while keep_running:
-    #     server.run()
-    #     if not auto_restart:
-    #         keep_running = False
-    # return
+    keep_running = True
+    while keep_running:
+        server.run()
+        if not auto_restart:
+            keep_running = False
+    return

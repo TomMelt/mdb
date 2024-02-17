@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import logging
 import shlex
 import subprocess as sub
 from typing import TYPE_CHECKING
@@ -12,19 +13,18 @@ from .utils import parse_ranks
 if TYPE_CHECKING:
     from .mdb_launch import Server_opts
 
-_supported_modes = ["intel", "open mpi"]
 
 
-class Server:
-    mpi_mode: str = "unsupported"
+class WrapperLauncher:
 
     def __init__(self, prog_opts: Server_opts) -> None:
+        self.mpi_mode: str = ""
         self.ranks: int = prog_opts["ranks"]
-        self.host: str = prog_opts["host"]
-        self.launch_command: str = prog_opts["launch_command"]
-        self.start_port: int = prog_opts["port"]
+        self.hostname: str = prog_opts["hostname"]
+        self.mpi_command: str = prog_opts["mpi_command"]
         self.select: set[int] = parse_ranks(prog_opts["select"])
         self.config_filename: str = prog_opts["config_filename"]
+        self.backend: str = prog_opts["backend"]
         self.args: str = prog_opts["args"]
         self.set_mpi_mode()
         return
@@ -37,14 +37,11 @@ class Server:
         """
 
         lines = []
-        host = self.host
-        start_port = self.start_port
-        args = self.args
         for i in range(self.ranks):
             if i in self.select:
-                line = f"-n 1 gdbserver {host}:{start_port + i} {args}"
+                line = f"-n 1 mdb wrapper -m {rank} -h {self.hostname} -p {self.port} -b {self.backend} -t {self.target} {self.args}"
             else:
-                line = f"-n 1 {args}"
+                line = f"-n 1 {self.target} {self.args}"
             lines.append(line)
 
         with open(self.config_filename, "w") as appfile:
@@ -52,7 +49,7 @@ class Server:
 
         return
 
-    def run(self) -> None:
+    def launch_command(self) -> str:
         """run a gdb server on the current rank.
 
         Args:
@@ -63,17 +60,16 @@ class Server:
         Returns:
             None
         """
-        print("Server is running...")
         config_filename = self.config_filename
         launcher = self.launch_command
+        command = 
         if self.mpi_mode == "intel":
-            sub.run(shlex.split(f"{launcher} --configfile {config_filename}"))
+            f"{launcher} --configfile {config_filename}"
         elif self.mpi_mode == "open mpi":
             sub.run(shlex.split(f"{launcher} --app {config_filename}"))
         else:
-            print("error: MPI mode not supported.")
+            logging.error("error: MPI mode not supported.")
             exit(1)
-        print("Server is closing...")
         return
 
     def set_mpi_mode(self) -> None:
