@@ -45,7 +45,7 @@ class GDBBackend(DebugBackend):
         return commands
 
 
-class LLVMBackend(DebugBackend):
+class LLDBBackend(DebugBackend):
     @property
     def name(self):
         return "lldb"
@@ -60,5 +60,5 @@ class LLVMBackend(DebugBackend):
 
     @property
     def start_commands(self):
-        commands = ["br s -r main", "run"]
+        commands = []
         return commands

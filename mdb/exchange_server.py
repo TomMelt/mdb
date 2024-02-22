@@ -13,6 +13,7 @@ class AsyncExchangeServer:
         self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
         self.port = opts["port"]
+        self.backend = opts["backend"]
         self.servers = []
         logging.info(f"echange server started :: {self.hostname}:{self.port}")
 
@@ -50,10 +51,17 @@ class AsyncExchangeServer:
             return message
 
         if connection_type == "client":
+            message = {
+                "ranks": self.number_of_ranks,
+                "backend": self.backend,
+            }
+            await conn.send_message(message)
             while True:
                 command = await conn.recv_message()
                 tasks = [asyncio.create_task(temp(server)) for server in self.servers]
+                print("waiting for output...")
                 output = await asyncio.gather(*tasks)
+                print("Output received...")
                 response = {"result": output}
                 await conn.send_message(response)
 

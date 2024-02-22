@@ -6,18 +6,12 @@ from __future__ import annotations
 from .async_client import AsyncClient
 from .utils import prepend_ranks
 
-# from typing import TYPE_CHECKING
-# if TYPE_CHECKING:
-#     from .mdb_attach import Prog_opts
-
-# def clear_stdout(self) -> None:
-#     pass
-
 
 class Client(AsyncClient):
     def __init__(self, opts):
         super().__init__(opts=opts)
         self.number_of_ranks = 0
+        self.backend = None
 
     @property
     def my_type(self):
@@ -37,7 +31,6 @@ class Client(AsyncClient):
         await self.conn.send_message(message)
 
         response = await self.conn.recv_message()
-
         output = response["result"]
         output = sorted(output, key=lambda result: result["rank"])
         lines = []
@@ -51,17 +44,6 @@ class Client(AsyncClient):
         Connect to exchange server.
         """
         await self.connect_to_exchange()
-
-    # async def run(self):
-    #     """
-    #     Main loop of the asynchronous client.
-    #     """
-    #     await self.connect_to_exchange()
-
-    #     # get input, for now just example hard coded
-    #     print("waiting for input")
-    #     while True:
-    #         inp = input("> ")
-    #         if inp == "q":
-    #             break
-    #         await self.run_command(inp)
+        message = await self.conn.recv_message()
+        self.number_of_ranks = message["ranks"]
+        self.backend = message["backend"]

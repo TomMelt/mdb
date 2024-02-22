@@ -2,6 +2,7 @@
 # details.
 
 import asyncio
+import functools
 import logging
 import signal
 
@@ -11,8 +12,8 @@ from typing_extensions import TypedDict
 from .mdb_client import Client
 from .mdb_shell import mdbShell
 
-Prog_opts = TypedDict(
-    "Prog_opts",
+ShellOpts = TypedDict(
+    "ShellOpts",
     {
         "ranks": int,
         "select": str,
@@ -93,23 +94,50 @@ def attach(
     }
     client = Client(opts=client_opts)
 
-    prog_opts: Prog_opts = dict(
-        select=select,
-        ranks=4,
-        exec_script=script,
-        plot_lib=plot_lib,
-    )
-
     loop = asyncio.get_event_loop()
 
     try:
         # loop = asyncio.get_event_loop()
-        loop.run_until_complete(client.connect_to_exchange())
+        loop.run_until_complete(client.connect())
     except ConnectionError as e:
         print(e)
         exit(1)
 
-    mshell = mdbShell(prog_opts, client)
-    signal.signal(signal.SIGINT, mshell.hook_SIGINT)
+    ranks = client.number_of_ranks
+
+    # debug all ranks if "select" is not set
+    if select is None:
+        select = f"0-{ranks - 1}"
+
+    shell_opts: ShellOpts = {
+        "select": select,
+        "ranks": ranks,
+        "exec_script": script,
+        "plot_lib": plot_lib,
+        "backend": client.backend,
+    }
+
+    # def interrupt(args):
+    #     print("args = \n", args)
+    #     getattr(signal, signame),
+    #     functools.partial(ask_exit, signame, loop))
+
+    def ask_exit(signame, loop):
+        print("got signal %s: exit" % signame)
+        # print("asyncio.all_tasks(loop) = \n", asyncio.all_tasks(loop))
+        interruptclient = Client(opts=client_opts)
+        loop.create_task(interruptclient.connect())
+        # loop.create_task(interruptclient.run_command("interrupt"))
+        loop.create_task(interruptclient.run_command("interrupt"))
+        # asyncio.create_task(interruptclient.run_command("interrupt"))
+
+    mshell = mdbShell(shell_opts, client)
+
+    # loop.add_signal_handler(signal.SIGINT, interrupt, "something")
+    for signame in {"SIGINT", "SIGTERM"}:
+        loop.add_signal_handler(
+            getattr(signal, signame), functools.partial(ask_exit, signame, loop)
+        )
+
     mshell.cmdloop()
     loop.close()

@@ -1,9 +1,10 @@
 import asyncio
+import logging
 
 import pexpect
 
 from .async_client import AsyncClient
-from .backend import GDBBackend
+from .backend import GDBBackend, LLDBBackend
 from .utils import strip_bracketted_paste
 
 
@@ -15,6 +16,8 @@ class DebugClient(AsyncClient):
         self.dbg_proc = None
         if opts["backend"].lower() == "gdb":
             self.backend = GDBBackend()
+        elif opts["backend"].lower() == "lldb":
+            self.backend = LLDBBackend()
 
     @property
     def my_type(self):
@@ -38,22 +41,30 @@ class DebugClient(AsyncClient):
         print(f"{backend.name} initialized")
         self.dbg_proc = dbg_proc
 
+    def interact(self, message):
+        if message["rank"] == self.myrank:
+            logging.info(f"running interact mode on rank {self.myrank}.")
+            self.dbg_proc.interact()
+
     async def wait_for_command(self):
         message = await self.conn.recv_message()
         command = message["command"]
-        print("running command :: ", command)
-        self.dbg_proc.sendline(command)
-        await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
+        if command == "interrupt":
+            print("HEEEEEEEEEEYYYYYYYYYYYYYYYYYY!!!!!!!!!!!")
+        else:
+            print("running command :: ", command)
+            self.dbg_proc.sendline(command)
+            await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
 
-        result = self.dbg_proc.before.decode()
-        result = strip_bracketted_paste(result)
+            result = self.dbg_proc.before.decode()
+            result = strip_bracketted_paste(result)
 
-        message = {
-            "result": result,
-            "rank": self.myrank,
-        }
+            message = {
+                "result": result,
+                "rank": self.myrank,
+            }
 
-        await self.conn.send_message(message)
+            await self.conn.send_message(message)
 
     async def run(self):
         """
@@ -63,7 +74,7 @@ class DebugClient(AsyncClient):
         await self.init_debug_proc()
 
         while True:
-            print("waiting for gdb command...")
+            logging.info(f"waiting for {self.backend} command...")
             await self.wait_for_command()
 
 

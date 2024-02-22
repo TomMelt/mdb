@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any, Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pexpect  # type: ignore
 
 from .utils import (
     parse_ranks,
@@ -30,7 +29,7 @@ from .utils import (
 if TYPE_CHECKING:
     from pexpect import spawn
 
-    from .mdb_attach import Prog_opts
+    from .mdb_attach import ShellOpts
     from .mdb_client import Client
 
 INTERACT_ESCAPE = chr(29)  # ctrl+]
@@ -51,16 +50,16 @@ def buffered_input_filter(
     substitutions for control characters:
 
         - ``Ctrl-d`` will send ``INTERACT_ESCAPE_CHARACTER`` to end the
-          interaction instead of ``quit`` to the gdb shell.
+          interaction instead of ``quit`` to the debug backend.
 
     The ``handle_input`` argument is only called after each newline or carriage
-    return, and should return characters to be sent to the gdb shell else an
-    empty string.
+    return, and should return characters to be sent to the debug backend else
+    an empty string.
 
     Note that if ``handle_input`` is to modify the string in any way other than
     by sending new characters to the shell, it must also include the backspace
     characters needed to remove (parts of) the current string and include the
-    newline character to execute the command in gdb.
+    newline character to execute the command in debug backend.
 
     Args:
         handle_input: function that takes a ``str`` and returns a ``str``.
@@ -91,19 +90,20 @@ def buffered_input_filter(
 
 
 class mdbShell(cmd.Cmd):
-    intro: str = 'mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
+    intro: str = 'mdb - mpi debugger - built on various backends. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
     hist_file: str = os.path.expanduser("~/.mdb_history")
     hist_filesize: int = 10000
     broadcast_mode: bool = False
 
-    def __init__(self, prog_opts: Prog_opts, client: Client) -> None:
-        self.ranks = prog_opts["ranks"]
-        self.select_str: str = prog_opts["select"]
-        self.select = parse_ranks(prog_opts["select"])
+    def __init__(self, shell_opts: ShellOpts, client: Client) -> None:
+        self.ranks = shell_opts["ranks"]
+        self.select_str: str = shell_opts["select"]
+        self.select = parse_ranks(shell_opts["select"])
+        self.backend = shell_opts["backend"]
         self.prompt = f"(mdb {self.select_str}) "
         self.client = client
-        self.exec_script = prog_opts["exec_script"]
-        self.plot_lib = prog_opts["plot_lib"]
+        self.exec_script = shell_opts["exec_script"]
+        self.plot_lib = shell_opts["plot_lib"]
         if self.plot_lib == "termgraph":
             try:
                 run(["termgraph", "--help"], capture_output=True)
@@ -111,50 +111,6 @@ class mdbShell(cmd.Cmd):
                 print("warning: termgraph not found. Defaulting to matplotlib.")
                 self.plot_lib = "matplotlib"
         super().__init__()
-
-    def do_interact(self, line: str) -> None:
-        """
-        Description:
-        Jump into interactive mode for a specific rank.
-
-        Example:
-        The following command will debug the 2nd process (proc id 1)
-
-            (mdb) interact 1
-        """
-        try:
-            rank: int = int(line)
-        except ValueError:
-            print(
-                f"warning: unrecognized rank {line}. Must specify an integer for the rank."
-            )
-            return
-
-        if rank not in self.select:
-            print(
-                f"warning: rank {rank} is not one of the selected ranks {self.select_str}."
-            )
-            return
-
-        def input_filter(inp: str) -> str:
-            if inp == "exit" or inp == "q" or inp == "quit":
-                return INTERACT_ESCAPE
-            return ""
-
-        c = self.client.dbg_procs[rank]
-        sys.stdout.write("\r(gdb) ")
-        c.interact(
-            escape_character=INTERACT_ESCAPE,
-            input_filter=buffered_input_filter(input_filter),
-        )
-
-        # clear whatever might still be in the input buffer
-        c.send(INTERACT_CANCEL)
-
-        # write newline incase there was a command in progress when interaction quit
-        # to avoid overflowing the (mdb) prompt with the end of the command
-        sys.stdout.write("\n")
-        return
 
     def do_info(self, line: str) -> None:
         """
@@ -184,6 +140,9 @@ class mdbShell(cmd.Cmd):
                     except ValueError:
                         print(f"cannot convert variable [{var}] to a float.")
             return rank, result
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.client.run_command(line))
 
         var = line
         results: tuple[float] | np.ndarray[float, Any]
@@ -224,49 +183,17 @@ class mdbShell(cmd.Cmd):
         specify which ranks to run the command on.
 
         Example:
-        The following command will run gdb command [command] on every process.
+        The following command will run {self.backend} command [command] on every process.
 
             (mdb) command [command]
 
-        The following command will run gdb command [command] on processes 0,3,4 and 5.
+        The following command will run {self.backend} command [command] on processes 0,3,4 and 5.
 
             (mdb) command 0,3-5 [command]
         """
 
-        # def send_command(command: str, rank: int) -> str:
-        #     c = self.client.dbg_procs[rank]
-        #     c.sendline(command)
-        #     c.expect(GDBPROMPT)
-        #     output = str(c.before.decode("utf-8"))
-        #     output = strip_bracketted_paste(output)
-        #     # prepend rank number to each line of output (excluding first and last)
-        #     lines = [
-        #         f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]
-        #     ]
-        #     output = "".join(lines)
-        #     return output
-
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.client.run_command(line))
-
-        # command = line
-        # select = self.select
-        # commands = command.split(" ")
-
-        # if re.match(r"^[0-9,-]+$", commands[0]):
-        #     select = parse_ranks(commands[0])
-        #     command = " ".join(commands[1:])
-
-        # try:
-        #     results = self.client.pool.starmap(
-        #         send_command, zip(itertools.repeat(command), select)
-        #     )
-        #     for result in results:
-        #         print(result, end="")
-        #         print(72 * "-")
-
-        # except pexpect.EOF:
-        #     self.client.close_procs()
 
         return
 
@@ -477,35 +404,35 @@ class mdbShell(cmd.Cmd):
         return
 
     def postloop(self) -> None:
-        """Override Cmd.postloop() to save mdb history and close gdb processes."""
+        """Override Cmd.postloop() to save mdb history."""
 
         readline.set_history_length(self.hist_filesize)
         readline.write_history_file(self.hist_file)
         return
 
-    def hook_SIGINT(self, *args: Any) -> None:
-        """Run this function when a signal is caught."""
+        # def hook_SIGINT(self, *args: Any) -> None:
+        #     """Run this function when a signal is caught."""
 
-        pool = Pool(self.ranks)
+        #     pool = Pool(self.ranks)
 
-        def send_sigint(proc: spawn) -> None:
-            os.kill(proc.pid, signal.SIGINT)
-            return
+        #     def send_sigint(proc: spawn) -> None:
+        #         os.kill(proc.pid, signal.SIGINT)
+        #         return
 
-        pool.map(send_sigint, self.client.dbg_procs)
+        #     pool.map(send_sigint, self.client.dbg_procs)
 
-        def send_interrupt(rank: int) -> None:
-            c = self.client.dbg_procs[rank]
-            c.sendline("interrupt")
-            return
+        # def send_interrupt(rank: int) -> None:
+        #     c = self.client.dbg_procs[rank]
+        #     c.sendline("interrupt")
+        #     return
 
-        pool.map(send_interrupt, self.select)
+        # pool.map(send_interrupt, self.select)
 
-        pool.close()
+        # pool.close()
 
-        # clear the interrupt message from each pexpect stdout stream.
-        self.client.clear_stdout()
-        return
+        # # clear the interrupt message from each pexpect stdout stream.
+        # self.client.clear_stdout()
+        # return
 
     def default(self, line: str) -> bool:  # type: ignore[override]
         """Method called on an input line when the command prefix is not recognized."""

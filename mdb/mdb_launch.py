@@ -140,6 +140,7 @@ def launch(
         "hostname": hostname,
         "port": port,
         "number_of_ranks": ranks,
+        "backend": backend,
     }
     server = AsyncExchangeServer(opts=exchange_opts)
 
