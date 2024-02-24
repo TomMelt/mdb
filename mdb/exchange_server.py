@@ -81,7 +81,7 @@ class AsyncExchangeServer:
         # the problem here is we don't know if another message is going to come
         # from the client before the debugger has had the time to send
         # something back, and we can't assume all sends will be followed by
-        # receives in order so instead. It is valid for the client to make that
+        # receives in order. It is valid for the client to make that
         # assumption, but not for the exchange server
 
         # to handle this, every time a message comes in from the client, we send it to all debuggers
