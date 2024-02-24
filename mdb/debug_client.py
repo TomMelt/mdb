@@ -12,13 +12,10 @@ from .utils import strip_bracketted_paste
 
 class DebugClient(AsyncClient):
     def __init__(self, opts):
-        # initialize the logger
-
         super().__init__(opts=opts)
         self.myrank = int(opts["rank"])
         self.target = opts["target"]
         self.dbg_proc = None
-
         if opts["backend"].lower() == "gdb":
             self.backend = GDBBackend()
         elif opts["backend"].lower() == "lldb":
