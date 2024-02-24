@@ -112,8 +112,10 @@ def launch(
     """
 
     logging.basicConfig(
-        filename="mdb-launch.log", encoding="utf-8", level=logging.DEBUG
+        encoding="utf-8",
+        level=logging.DEBUG,
     )
+    logger = logging.getLogger(__name__)
 
     args = list(args)
 
@@ -146,9 +148,11 @@ def launch(
 
     loop = asyncio.get_event_loop()
     loop.create_task(server.start_server())
-    loop.create_task(
-        asyncio.create_subprocess_exec(*shlex.split("mpirun --app .mdb.conf"))
-    )
+
+    cmd = "mpirun --app .mdb.conf"
+    logger.debug("Spawning debugger instances: %s", cmd)
+    loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
+
     loop.run_forever()
 
     keep_running = True

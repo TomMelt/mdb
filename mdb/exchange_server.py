@@ -1,21 +1,23 @@
 import asyncio
 import logging
+
 import ssl
 
 from .async_connection import AsyncConnection
 from .utils import ssl_cert_path, ssl_key_path
 
+logger = logging.getLogger(__name__)
+
 
 class AsyncExchangeServer:
     def __init__(self, opts):
-        # fergus: pasted all the inherited attributes here
         self._init_tls()
         self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
         self.port = opts["port"]
         self.backend = opts["backend"]
         self.servers = []
-        logging.info(f"echange server started :: {self.hostname}:{self.port}")
+        logger.info(f"echange server started :: {self.hostname}:{self.port}")
 
     def _init_tls(self):
         # fergus: i made no changes here other than paths
@@ -37,7 +39,7 @@ class AsyncExchangeServer:
         # no try/except clause needed as the asyncio server does that for us
         conn = AsyncConnection(reader, writer)
         connection_type = await conn.handle_connection()
-        logging.info(f"exchange server received a {connection_type} connection.")
+        logger.info(f"exchange server received a {connection_type} connection.")
 
         # here you'd distinguish the connection too, to work out if it needs
         # to be pushed to `self.servers` or not, etc

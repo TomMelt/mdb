@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+
 import subprocess
 
 import click
@@ -92,6 +93,10 @@ def wrapper(
         "target": target.name,
         "args": args,
     }
+
+    # configure the global logger
+    logging.basicConfig(filename=f"rank.{my_rank}.log", level=logging.DEBUG)
+
     dbg_client = DebugClient(opts)
 
     loop = asyncio.get_event_loop()
