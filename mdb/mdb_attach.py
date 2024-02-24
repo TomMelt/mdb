@@ -122,21 +122,19 @@ def attach(
     #     getattr(signal, signame),
     #     functools.partial(ask_exit, signame, loop))
 
-    def ask_exit(signame, loop):
-        print("got signal %s: exit" % signame)
-        # print("asyncio.all_tasks(loop) = \n", asyncio.all_tasks(loop))
-        interruptclient = Client(opts=client_opts)
-        loop.create_task(interruptclient.connect())
-        # loop.create_task(interruptclient.run_command("interrupt"))
-        loop.create_task(interruptclient.run_command("interrupt"))
-        # asyncio.create_task(interruptclient.run_command("interrupt"))
-
     mshell = mdbShell(shell_opts, client)
+
+    def ask_exit(signame):
+        # we tell mshell to send a command and not listen for a response, since
+        # there is already a task in the event queue that is waiting for a
+        # response
+        asyncio.create_task(mshell.client.send_interrupt(signame))
 
     # loop.add_signal_handler(signal.SIGINT, interrupt, "something")
     for signame in {"SIGINT", "SIGTERM"}:
         loop.add_signal_handler(
-            getattr(signal, signame), functools.partial(ask_exit, signame, loop)
+            getattr(signal, signame),
+            functools.partial(ask_exit, signame),
         )
 
     mshell.cmdloop()
