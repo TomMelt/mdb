@@ -22,7 +22,14 @@ class Client(AsyncClient):
         }
         return info
 
-    async def run_command(self, command):
+    async def send_interrupt(self, signame):
+        print("Sending ", signame)
+        # interrupt will cause the debuggers to send back a status as to
+        # whether interrupt was success, so we need to read that from the
+        # message queue
+        await self.send_command("interrupt")
+
+    async def send_command(self, command):
         message = {
             "type": "client",
             "command": command,
@@ -30,14 +37,20 @@ class Client(AsyncClient):
         }
         await self.conn.send_message(message)
 
-        response = await self.conn.recv_message()
+    def handle_response(self, response):
         output = response["result"]
         output = sorted(output, key=lambda result: result["rank"])
         lines = []
         for result in output:
             lines.append(prepend_ranks(output=result["result"], rank=result["rank"]))
         combined_output = (72 * "*" + "\n").join(lines)
+        # actually do the output
         print(combined_output)
+
+    async def run_command(self, command):
+        await self.send_command(command)
+        response = await self.conn.recv_message()
+        self.handle_response(response)
 
     async def connect(self):
         """
