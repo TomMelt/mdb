@@ -3,6 +3,8 @@ import json
 import logging
 import os
 
+logger = logging.getLogger(__name__)
+
 
 class AsyncConnection:
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -15,14 +17,14 @@ class AsyncConnection:
     async def recv_message(self):
         message = await self.reader.readuntil(separator=self.end_bytes)
         message = message[: -len(self.end_bytes)]
+        logger.info("received %s", len(message))
         message = json.loads(message.decode())
-        logging.info(f"-> received: {message}")
         return message
 
     async def send_message(self, message):
-        logging.info(f"-> sending : {message}")
         message = json.dumps(message).encode()
         message += self.end_bytes
+        logger.info("sending %s", len(message))
         self.writer.write(message)
 
     async def handle_connection(self):
@@ -33,11 +35,11 @@ class AsyncConnection:
             print("key [type] not found.")
 
         if self.type == "debug":
-            logging.info(
+            logger.info(
                 f'connection from {message["sockname"]} on rank {message["rank"]}'
             )
         elif self.type == "client":
-            logging.info(f'connection from {message["sockname"]}')
+            logger.info(f'connection from {message["sockname"]}')
 
         message = {"success": True}
         await self.send_message(message)
