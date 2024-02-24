@@ -45,33 +45,43 @@ class DebugClient(AsyncClient):
         for command in backend.start_commands:
             dbg_proc.sendline(command)
             await dbg_proc.expect(backend.prompt_string, async_=True)
-        print(f"{backend.name} initialized")
+
+        logger.debug("Backend init finished: %s", backend.name)
         self.dbg_proc = dbg_proc
 
     def interact(self, message):
         if message["rank"] == self.myrank:
-            logging.info(f"running interact mode on rank {self.myrank}.")
+            logger.info("Running interact mode on rank %s", self.myrank)
             self.dbg_proc.interact()
 
-    async def wait_for_command(self):
-        message = await self.conn.recv_message()
-        command = message["command"]
+    async def execute_command(self, command, prev: asyncio.Task):
         if command == "interrupt":
-            print("HEEEEEEEEEEYYYYYYYYYYYYYYYYYY!!!!!!!!!!!")
+            logger.warning("Interrupt received")
+            # stop whatever is current running, so it doesn't try to reply
+            success = prev.cancel()
+            # send intterupt to the process
+            self.dbg_proc.sendintr()
+            await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
+            # report on how that all went
+            reply = {
+                "result": f"Interrupted: {success}",
+                "rank": self.myrank,
+            }
+
         else:
-            print("running command :: ", command)
+            logger.debug("Running command: '%s'", command)
             self.dbg_proc.sendline(command)
             await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
 
             result = self.dbg_proc.before.decode()
             result = strip_bracketted_paste(result)
-
-            message = {
+            reply = {
                 "result": result,
                 "rank": self.myrank,
             }
 
-            await self.conn.send_message(message)
+        logger.debug("Replying to: '%s'", command)
+        await self.conn.send_message(reply)
 
     async def run(self):
         """
@@ -80,9 +90,15 @@ class DebugClient(AsyncClient):
         await self.connect_to_exchange()
         await self.init_debug_proc()
 
+        previous_task = None
+
         while True:
-            logging.info(f"waiting for {self.backend} command...")
-            await self.wait_for_command()
+            # as soon as we get a command, run it so we can go back to waiting
+            # for the next command (else we can't capture interrupts correctly)
+            message = await self.conn.recv_message()
+            previous_task = asyncio.create_task(
+                self.execute_command(message["command"], previous_task)
+            )
 
 
 if __name__ == "__main__":
