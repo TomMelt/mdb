@@ -56,6 +56,12 @@ class DebugClient(AsyncClient):
             logger.warning("Interrupt received")
             # stop whatever is current running, so it doesn't try to reply
             success = prev.cancel()
+
+            if not success:
+                # nothing needed cancelling, so no reply needed
+                logger.debug("No task to interrupt")
+                return
+
             # send intterupt to the process
             self.dbg_proc.sendintr()
             await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
