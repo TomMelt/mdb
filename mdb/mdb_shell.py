@@ -14,6 +14,7 @@ from subprocess import run
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from .utils import (
     parse_ranks,
@@ -52,39 +53,14 @@ def extract_float(line):
         try:
             result = float(match.group(1))
         except ValueError:
-            print(f"cannot convert variable [{var}] to a float.")
-
+            print(f"cannot convert variable [{result}] to a float.")
     return result
 
 
-def info(response, var):
-    results = list(map(lambda x: x["result"]))
-    ranks = list(map(lambda x: x["rank"]))
-
-    print(
-        f"name: {var}\nmin : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn   : {len(results)}"
-    )
-
-    # if self.plot_lib == "termgraph":
-    plt_data_str = "\n".join(
-        [", ".join([str(x), str(y)]) for x, y in zip(ranks, results)]
-    )
-    run(
-        shlex.split("termgraph --color green"),
-        input=plt_data_str,
-        encoding="utf-8",
-    )
-    # else:
-    #     fig, ax = plt.subplots()
-    #     ax.bar(ranks, results)
-    #     ax.set_xlabel("rank")
-    #     ax.set_ylabel("value")
-    #     ax.set_title(var)
-    #     plt.show()
-
-
 class mdbShell(cmd.Cmd):
-    intro: str = 'mdb - mpi debugger - built on various backends. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
+    intro: str = (
+        'mdb - mpi debugger - built on various backends. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".'
+    )
     hist_file: str = os.path.expanduser("~/.mdb_history")
     hist_filesize: int = 10000
     broadcast_mode: bool = False
@@ -106,7 +82,7 @@ class mdbShell(cmd.Cmd):
                 self.plot_lib = "matplotlib"
         super().__init__()
 
-    def do_stats(self, line: str) -> None:
+    def do_plot(self, line: str) -> None:
         """
         Description:
         Print basic statistics (min, mean, max) and produce a bar chart for a
@@ -116,13 +92,37 @@ class mdbShell(cmd.Cmd):
         Example:
         The following command will plot a graph of variable [var] on all selected processes.
 
-            (mdb) stats [var]
+            (mdb) plot [var]
         """
 
+        var = line
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self.client.run_command(f"print {line}"))
+        response = loop.run_until_complete(self.client.run_command(f"print {var}"))
         response = sort_debug_response(response)
-        info(response=response, var=line)
+
+        ranks = np.array(list(map(lambda r: r["rank"], response)))
+        data = np.array(list(map(lambda r: extract_float(r["result"]), response)))
+
+        print("min  = ", np.min(data))
+        print("max  = ", np.max(data))
+        print("mean = ", np.mean(data))
+
+        if self.plot_lib == "termgraph":
+            plt_data_str = "\n".join(
+                [", ".join([str(x), str(y)]) for x, y in zip(ranks, data)]
+            )
+            run(
+                shlex.split("termgraph --color green"),
+                input=plt_data_str,
+                encoding="utf-8",
+            )
+        else:
+            fig, ax = plt.subplots()
+            ax.bar(ranks, data)
+            ax.set_xlabel("rank")
+            ax.set_ylabel("value")
+            ax.set_title(var)
+            plt.show()
 
     def do_command(self, line: str) -> None:
         """
