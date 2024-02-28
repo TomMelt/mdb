@@ -1,13 +1,16 @@
+# Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
+# details.
+
 import asyncio
 import logging
-
-logger = logging.getLogger(__name__)
 
 import pexpect
 
 from .async_client import AsyncClient
 from .backend import GDBBackend, LLDBBackend
 from .utils import strip_bracketted_paste
+
+logger = logging.getLogger(__name__)
 
 
 class DebugClient(AsyncClient):
@@ -45,11 +48,6 @@ class DebugClient(AsyncClient):
 
         logger.debug("Backend init finished: %s", backend.name)
         self.dbg_proc = dbg_proc
-
-    def interact(self, message):
-        if message["rank"] == self.myrank:
-            logger.info("Running interact mode on rank %s", self.myrank)
-            self.dbg_proc.interact()
 
     async def execute_command(self, command, prev: asyncio.Task):
         if command == "interrupt":
@@ -102,17 +100,3 @@ class DebugClient(AsyncClient):
             previous_task = asyncio.create_task(
                 self.execute_command(message["command"], previous_task)
             )
-
-
-if __name__ == "__main__":
-    opts = {
-        "exchange_hostname": "localhost",
-        "exchange_port": 2000,
-        "backend": "gdb",
-        "target": "examples/simple-mpi.exe",
-    }
-    client = DebugClient(opts)
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(client.run())
-    loop.close()

@@ -1,7 +1,10 @@
+# Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
+# details.
+
 import asyncio
 import logging
-
 import ssl
+import sys
 
 from .async_connection import AsyncConnection
 from .utils import ssl_cert_path, ssl_key_path

@@ -5,88 +5,82 @@ from __future__ import annotations
 
 import asyncio
 import cmd
-import itertools
 import os
 import re
 import readline
-import signal
-import sys
-from multiprocessing.dummy import Pool
+import shlex
 from shlex import split
 from subprocess import run
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 from .utils import (
     parse_ranks,
+    prepend_ranks,
     print_tabular_output,
     strip_bracketted_paste,
     strip_control_characters,
 )
 
 if TYPE_CHECKING:
-    from pexpect import spawn
-
     from .mdb_attach import ShellOpts
     from .mdb_client import Client
 
-INTERACT_ESCAPE = chr(29)  # ctrl+]
-INTERACT_CANCEL = chr(3)  # ctrl+c
-INTERACT_EOF = chr(4)  # ctrl+d
-GDBPROMPT = r"\(gdb\)"
+
 plt.style.use("dark_background")
 
 
-def buffered_input_filter(
-    handle_input: Callable[[str], str]
-) -> Callable[[bytes], bytes]:
-    """Wrap functions to generate arguments for ``pexpect.interact`` filters.
+def sort_debug_response(response):
+    output = response["result"]
+    output = sorted(output, key=lambda result: result["rank"])
+    return output
 
-    Wraps a callback function with a buffer so that instead of receiving each
-    character as it is typed, the filter function is given the current command
-    string. The wrapper also augments/overrides the interaction with common
-    substitutions for control characters:
 
-        - ``Ctrl-d`` will send ``INTERACT_ESCAPE_CHARACTER`` to end the
-          interaction instead of ``quit`` to the debug backend.
+def pretty_print_response(response):
+    lines = []
+    for result in response:
+        lines.append(prepend_ranks(output=result["result"], rank=result["rank"]))
+    combined_output = (72 * "*" + "\n").join(lines)
+    print(combined_output)
 
-    The ``handle_input`` argument is only called after each newline or carriage
-    return, and should return characters to be sent to the debug backend else
-    an empty string.
 
-    Note that if ``handle_input`` is to modify the string in any way other than
-    by sending new characters to the shell, it must also include the backspace
-    characters needed to remove (parts of) the current string and include the
-    newline character to execute the command in debug backend.
+def extract_float(line):
+    float_regex = r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
+    match = re.search(float_regex, line)
+    if match:
+        try:
+            result = float(match.group(1))
+        except ValueError:
+            print(f"cannot convert variable [{var}] to a float.")
 
-    Args:
-        handle_input: function that takes a ``str`` and returns a ``str``.
+    return result
 
-    Returns:
-        function that takes ``bytes`` and returns ``bytes``.
-    """
 
-    # closure memory
-    buffer: list[str] = []
+def info(response, var):
+    results = list(map(lambda x: x["result"]))
+    ranks = list(map(lambda x: x["rank"]))
 
-    def input_filter(s: bytes) -> bytes:
-        c = s.decode()
-        if c == "\n" or c == "\r":
-            response = handle_input("".join(buffer))
-            # clear the buffer for next command
-            buffer.clear()
-            if response:
-                return response.encode()
-        elif c == INTERACT_EOF:  # catch ctrl-d
-            return INTERACT_ESCAPE.encode()
-        else:
-            buffer.append(c)
+    print(
+        f"name: {var}\nmin : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn   : {len(results)}"
+    )
 
-        return s
-
-    return input_filter
+    # if self.plot_lib == "termgraph":
+    plt_data_str = "\n".join(
+        [", ".join([str(x), str(y)]) for x, y in zip(ranks, results)]
+    )
+    run(
+        shlex.split("termgraph --color green"),
+        input=plt_data_str,
+        encoding="utf-8",
+    )
+    # else:
+    #     fig, ax = plt.subplots()
+    #     ax.bar(ranks, results)
+    #     ax.set_xlabel("rank")
+    #     ax.set_ylabel("value")
+    #     ax.set_title(var)
+    #     plt.show()
 
 
 class mdbShell(cmd.Cmd):
@@ -112,7 +106,7 @@ class mdbShell(cmd.Cmd):
                 self.plot_lib = "matplotlib"
         super().__init__()
 
-    def do_info(self, line: str) -> None:
+    def do_stats(self, line: str) -> None:
         """
         Description:
         Print basic statistics (min, mean, max) and produce a bar chart for a
@@ -120,61 +114,15 @@ class mdbShell(cmd.Cmd):
         float/integer variables.
 
         Example:
-        The following command will print variable [var] on all selected processes.
+        The following command will plot a graph of variable [var] on all selected processes.
 
-            (mdb) pprint [var]
+            (mdb) stats [var]
         """
 
-        def send_print(var: str, rank: int) -> tuple[int, float]:
-            c = self.client.dbg_procs[rank]
-            c.sendline(f"print {var}")
-            c.expect(GDBPROMPT)
-            output = c.before.decode("utf-8")
-            result = 0.0
-            for line in output.split("\n"):
-                float_regex = r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
-                match = re.search(float_regex, line)
-                if match:
-                    try:
-                        result = float(match.group(1))
-                    except ValueError:
-                        print(f"cannot convert variable [{var}] to a float.")
-            return rank, result
-
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.client.run_command(line))
-
-        var = line
-        results: tuple[float] | np.ndarray[float, Any]
-        ranks, results = zip(
-            *self.client.pool.starmap(
-                send_print, zip(itertools.repeat(var), self.select)
-            )
-        )
-        results = np.array(results)
-
-        print(
-            f"name: {var}\nmin : {results.min()}\nmax : {results.max()}\nmean: {results.mean()}\nn   : {len(results)}"
-        )
-
-        if self.plot_lib == "termgraph":
-            plt_data_str = "\n".join(
-                [", ".join([str(x), str(y)]) for x, y in zip(ranks, results)]
-            )
-            run(
-                split("termgraph --color green"),
-                input=plt_data_str,
-                encoding="utf-8",
-            )
-        else:
-            fig, ax = plt.subplots()
-            ax.bar(ranks, results)
-            ax.set_xlabel("rank")
-            ax.set_ylabel("value")
-            ax.set_title(var)
-            plt.show()
-
-        return
+        response = loop.run_until_complete(self.client.run_command(f"print {line}"))
+        response = sort_debug_response(response)
+        info(response=response, var=line)
 
     def do_command(self, line: str) -> None:
         """
@@ -193,7 +141,9 @@ class mdbShell(cmd.Cmd):
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.client.run_command(line))
+        response = loop.run_until_complete(self.client.run_command(line))
+        response = sort_debug_response(response)
+        pretty_print_response(response)
 
         return
 
@@ -208,8 +158,10 @@ class mdbShell(cmd.Cmd):
             (mdb) quit
         """
 
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.client.run_command("shutdown"))
+        loop.run_until_complete(self.client.close())
         print("\nexiting mdb...")
-        self.client.close_procs()
         return True
 
     def do_shell(self, line: str) -> None:
@@ -311,7 +263,7 @@ class mdbShell(cmd.Cmd):
             # regex to find program counter in gdb backtrace output
             hex_regex = r"#0\s+0[xX][0-9a-fA-F]+"
             c.sendline("backtrace 1")
-            c.expect(GDBPROMPT)
+            c.expect(self.prompt)
             output = c.before.decode("utf-8")
             output = strip_bracketted_paste(output)
             output = strip_control_characters(output)
@@ -373,11 +325,6 @@ class mdbShell(cmd.Cmd):
     def precmd(self, line: str) -> str:
         """Override Cmd.precmd() to only run the command if debug processes are open."""
 
-        # if self.client.dbg_procs is []:
-        #     print("warning: no debug processes running. Please relaunch the debugger")
-        #     return "NULL"
-
-        # else:
         if line in ["quit", "EOF"]:
             if self.broadcast_mode:
                 return "broadcast stop"
@@ -409,30 +356,6 @@ class mdbShell(cmd.Cmd):
         readline.set_history_length(self.hist_filesize)
         readline.write_history_file(self.hist_file)
         return
-
-        # def hook_SIGINT(self, *args: Any) -> None:
-        #     """Run this function when a signal is caught."""
-
-        #     pool = Pool(self.ranks)
-
-        #     def send_sigint(proc: spawn) -> None:
-        #         os.kill(proc.pid, signal.SIGINT)
-        #         return
-
-        #     pool.map(send_sigint, self.client.dbg_procs)
-
-        # def send_interrupt(rank: int) -> None:
-        #     c = self.client.dbg_procs[rank]
-        #     c.sendline("interrupt")
-        #     return
-
-        # pool.map(send_interrupt, self.select)
-
-        # pool.close()
-
-        # # clear the interrupt message from each pexpect stdout stream.
-        # self.client.clear_stdout()
-        # return
 
     def default(self, line: str) -> bool:  # type: ignore[override]
         """Method called on an input line when the command prefix is not recognized."""

@@ -4,6 +4,9 @@
 import asyncio
 import logging
 import shlex
+from os import mkdir
+from os.path import exists, expanduser, join
+from subprocess import run
 
 import click
 from typing_extensions import TypedDict
@@ -117,6 +120,19 @@ def launch(
     )
     logger = logging.getLogger(__name__)
 
+    MDB_HOME = expanduser("~/.mdb")
+    MDB_CERT_PATH = join(MDB_HOME, "cert.pem")
+    MDB_KEY_PATH = join(MDB_HOME, "key.rsa")
+
+    if not exists(MDB_HOME):
+        mkdir(MDB_HOME)
+
+    if not (exists(MDB_CERT_PATH) or exists(MDB_KEY_PATH)):
+        subj = "/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN=localhost"
+        opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
+        cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
+        run(shlex.split(cmd))
+
     args = list(args)
 
     # debug all ranks if "select" is not set
@@ -154,10 +170,3 @@ def launch(
     loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
 
     loop.run_forever()
-
-    keep_running = True
-    while keep_running:
-        server.run()
-        if not auto_restart:
-            keep_running = False
-    return
