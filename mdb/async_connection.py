@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +11,6 @@ class AsyncConnection:
         self.writer = writer
         self.type = ""
         self.end_bytes = b"_MDB_END_"
-        self.debug = bool(int(os.environ.get("MDB_DEBUG_MESSAGES", 0)))
 
     async def recv_message(self):
         message = await self.reader.readuntil(separator=self.end_bytes)
@@ -34,12 +32,7 @@ class AsyncConnection:
         except KeyError:
             print("key [type] not found.")
 
-        if self.type == "debug":
-            logger.info(
-                f'connection from {message["sockname"]} on rank {message["rank"]}'
-            )
-        elif self.type == "client":
-            logger.info(f'connection from {message["sockname"]}')
+        logger.info(f'connection from {message["type"]} client')
 
         message = {"success": True}
         await self.send_message(message)

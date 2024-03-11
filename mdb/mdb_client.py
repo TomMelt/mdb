@@ -28,16 +28,18 @@ class Client(AsyncClient):
         # message queue
         await self.send_command("interrupt")
 
-    async def send_command(self, command):
+    async def send_command(self, command, select):
         message = {
             "type": "client",
+            "select": list(select),
             "command": command,
             "version": "0.0.1",
         }
+        print("message = \n", message)
         await self.conn.send_message(message)
 
-    async def run_command(self, command):
-        await self.send_command(command)
+    async def run_command(self, command, select):
+        await self.send_command(command, select)
         response = await self.conn.recv_message()
         return response
 

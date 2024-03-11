@@ -16,10 +16,13 @@ from typing import TYPE_CHECKING
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .backend import GDBBackend, LLDBBackend
 from .utils import (
+    extract_float,
     parse_ranks,
-    prepend_ranks,
+    pretty_print_response,
     print_tabular_output,
+    sort_debug_response,
     strip_bracketted_paste,
     strip_control_characters,
 )
@@ -30,31 +33,6 @@ if TYPE_CHECKING:
 
 
 plt.style.use("dark_background")
-
-
-def sort_debug_response(response):
-    output = response["result"]
-    output = sorted(output, key=lambda result: result["rank"])
-    return output
-
-
-def pretty_print_response(response):
-    lines = []
-    for result in response:
-        lines.append(prepend_ranks(output=result["result"], rank=result["rank"]))
-    combined_output = (72 * "*" + "\n").join(lines)
-    print(combined_output)
-
-
-def extract_float(line):
-    float_regex = r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
-    match = re.search(float_regex, line)
-    if match:
-        try:
-            result = float(match.group(1))
-        except ValueError:
-            print(f"cannot convert variable [{result}] to a float.")
-    return result
 
 
 class mdbShell(cmd.Cmd):
@@ -69,7 +47,10 @@ class mdbShell(cmd.Cmd):
         self.ranks = shell_opts["ranks"]
         self.select_str: str = shell_opts["select"]
         self.select = parse_ranks(shell_opts["select"])
-        self.backend = shell_opts["backend"]
+        if shell_opts["backend"].lower() == "gdb":
+            self.backend = GDBBackend()
+        elif shell_opts["backend"].lower() == "lldb":
+            self.backend = LLDBBackend()
         self.prompt = f"(mdb {self.select_str}) "
         self.client = client
         self.exec_script = shell_opts["exec_script"]
@@ -97,11 +78,19 @@ class mdbShell(cmd.Cmd):
 
         var = line
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self.client.run_command(f"print {var}"))
+        response = loop.run_until_complete(
+            self.client.run_command(f"print {var}", self.select)
+        )
         response = sort_debug_response(response)
 
         ranks = np.array(list(map(lambda r: r["rank"], response)))
-        data = np.array(list(map(lambda r: extract_float(r["result"]), response)))
+        data = np.array(
+            list(
+                map(
+                    lambda r: extract_float(r["result"], backend=self.backend), response
+                )
+            )
+        )
 
         print("min  = ", np.min(data))
         print("max  = ", np.max(data))
@@ -131,17 +120,25 @@ class mdbShell(cmd.Cmd):
         specify which ranks to run the command on.
 
         Example:
-        The following command will run {self.backend} command [command] on every process.
+        The following command will run {self.backend.name} command [command] on every process.
 
             (mdb) command [command]
 
-        The following command will run {self.backend} command [command] on processes 0,3,4 and 5.
+        The following command will run {self.backend.name} command [command] on processes 0,3,4 and 5.
 
             (mdb) command 0,3-5 [command]
         """
 
+        command = line
+        select = self.select
+        commands = command.split(" ")
+
+        if re.match(r"^[0-9,-]+$", commands[0]):
+            select = parse_ranks(commands[0])
+            command = " ".join(commands[1:])
+
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self.client.run_command(line))
+        response = loop.run_until_complete(self.client.run_command(command, select))
         response = sort_debug_response(response)
         pretty_print_response(response)
 
@@ -159,7 +156,7 @@ class mdbShell(cmd.Cmd):
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.client.run_command("shutdown"))
+        loop.run_until_complete(self.client.run_command("shutdown", select=self.select))
         loop.run_until_complete(self.client.close())
         print("\nexiting mdb...")
         return True
@@ -212,7 +209,6 @@ class mdbShell(cmd.Cmd):
             (mdb) select 0,2-4
         """
         self.select_str = line
-        self.hook_SIGINT()
         self.prompt = f"(mdb {self.select_str}) "
         self.select = parse_ranks(self.select_str)
         return

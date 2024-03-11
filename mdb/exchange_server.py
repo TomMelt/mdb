@@ -4,7 +4,6 @@
 import asyncio
 import logging
 import ssl
-import sys
 
 from .async_connection import AsyncConnection
 from .utils import ssl_cert_path, ssl_key_path
@@ -19,7 +18,7 @@ class AsyncExchangeServer:
         self.hostname = opts["hostname"]
         self.port = opts["port"]
         self.backend = opts["backend"]
-        self.servers = []
+        self.debuggers = []
         logger.info(f"echange server started :: {self.hostname}:{self.port}")
 
     def _init_tls(self):
@@ -48,9 +47,10 @@ class AsyncExchangeServer:
         loop = asyncio.get_event_loop()
 
         # here you'd distinguish the connection too, to work out if it needs
-        # to be pushed to `self.servers` or not, etc
+        # to be pushed to `self.debuggers` or not, etc
+
         if connection_type == "debug":
-            self.servers.append(conn)
+            self.debuggers.append(conn)
             return  # keep connection open
 
         if connection_type == "client":
@@ -73,7 +73,7 @@ class AsyncExchangeServer:
         while True:
             tasks = [
                 asyncio.create_task(debugger.recv_message())
-                for debugger in self.servers
+                for debugger in self.debuggers
             ]
             output = await asyncio.gather(*tasks)
             response = {"result": output}
@@ -94,8 +94,14 @@ class AsyncExchangeServer:
 
         while True:
             command = await conn.recv_message()
+            # try:
+            #     command = await conn.recv_message()
+            # except asyncio.exceptions.IncompleteReadError:
+            #     loop = asyncio.get_event_loop()
+            #     loop.stop()
+            #     break
             logger.debug("Received from client: %s", command)
-            for debugger in self.servers:
+            for debugger in self.debuggers:
                 await debugger.send_message(command)
 
     def start_server(self):

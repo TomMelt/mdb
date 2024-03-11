@@ -5,6 +5,31 @@ import re
 from os.path import expanduser
 
 
+def sort_debug_response(response):
+    output = response["result"]
+    output = sorted(output, key=lambda result: result["rank"])
+    return output
+
+
+def pretty_print_response(response):
+    lines = []
+    for result in response:
+        lines.append(prepend_ranks(output=result["result"], rank=result["rank"]))
+    combined_output = (72 * "*" + "\n").join(lines)
+    print(combined_output)
+
+
+def extract_float(line, backend):
+    float_regex = backend.float_regex
+    match = re.search(float_regex, line)
+    if match:
+        try:
+            result = float(match.group(1))
+        except ValueError:
+            print(f"cannot convert variable [{result}] to a float.")
+    return result
+
+
 def prepend_ranks(output, rank):
     output = "".join(
         [f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]]

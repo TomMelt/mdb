@@ -49,7 +49,8 @@ class DebugClient(AsyncClient):
         logger.debug("Backend init finished: %s", backend.name)
         self.dbg_proc = dbg_proc
 
-    async def execute_command(self, command, prev: asyncio.Task):
+    async def execute_command(self, message, prev: asyncio.Task):
+        command = message["command"]
         if command == "interrupt":
             logger.warning("Interrupt received")
             # stop whatever is current running, so it doesn't try to reply
@@ -71,11 +72,13 @@ class DebugClient(AsyncClient):
 
         else:
             logger.debug("Running command: '%s'", command)
-            self.dbg_proc.sendline(command)
-            await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
-
-            result = self.dbg_proc.before.decode()
-            result = strip_bracketted_paste(result)
+            if self.myrank in message["select"]:
+                self.dbg_proc.sendline(command)
+                await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
+                result = self.dbg_proc.before.decode()
+                result = strip_bracketted_paste(result)
+            else:
+                result = ""
             reply = {
                 "result": result,
                 "rank": self.myrank,
@@ -98,5 +101,5 @@ class DebugClient(AsyncClient):
             # for the next command (else we can't capture interrupts correctly)
             message = await self.conn.recv_message()
             previous_task = asyncio.create_task(
-                self.execute_command(message["command"], previous_task)
+                self.execute_command(message, previous_task)
             )
