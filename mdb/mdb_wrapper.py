@@ -19,7 +19,7 @@ Server_opts = TypedDict(
         "host": str,
         "launch_command": str,
         "port": int,
-        "config_filename": str,
+        "appfile": str,
         "args": str,
     },
 )
@@ -112,7 +112,7 @@ class WrapperLauncher:
         self.target: str = prog_opts["target"]
         self.mpi_command: str = prog_opts["mpi_command"]
         self.select: set[int] = parse_ranks(prog_opts["select"])
-        self.config_filename: str = prog_opts["config_filename"]
+        self.appfile: str = prog_opts["appfile"]
         self.backend: str = prog_opts["backend"]
         self.args: str = prog_opts["args"]
         self.set_mpi_mode()
@@ -133,7 +133,7 @@ class WrapperLauncher:
                 line = f"-n 1 {self.target} {self.args}"
             lines.append(line)
 
-        with open(self.config_filename, "w") as appfile:
+        with open(self.appfile, "w") as appfile:
             appfile.write("\n".join(lines))
 
         return
@@ -149,12 +149,12 @@ class WrapperLauncher:
         Returns:
             None
         """
-        config_filename = self.config_filename
+        appfile = self.appfile
         launcher = self.mpi_command
         if self.mpi_mode == "intel":
-            return f"{launcher} --configfile {config_filename}"
+            return f"{launcher} --configfile {appfile}"
         elif self.mpi_mode == "open mpi":
-            return f"{launcher} --app {config_filename}"
+            return f"{launcher} --app {appfile}"
         else:
             logging.error("error: MPI mode not supported.")
             exit(1)

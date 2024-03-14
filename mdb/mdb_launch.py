@@ -23,7 +23,7 @@ Server_opts = TypedDict(
         "hostname": str,
         "mpi_command": str,
         "port": int,
-        "config_filename": str,
+        "appfile": str,
         "args": str,
     },
 )
@@ -78,16 +78,22 @@ Server_opts = TypedDict(
     help="Target binary to debug.",
 )
 @click.option(
-    "--config-filename",
-    default=".mdb.conf",
+    "--mdb-home",
+    default="~/.mdb",
     show_default=True,
-    help="filename for the mpirun configuration.",
+    help="filename for the mpirun appfile.",
 )
 @click.option(
     "-r",
     "--auto-restart",
     is_flag=True,
     default=False,
+    show_default=True,
+    help="Allow mdb launcher to automatically relaunch the job if the debug session ends.",
+)
+@click.option(
+    "--log-level",
+    default="WARN",
     show_default=True,
     help="Allow mdb launcher to automatically relaunch the job if the debug session ends.",
 )
@@ -104,8 +110,9 @@ def launch(
     port: int,
     backend: str,
     target: click.File,
-    config_filename: str,
     auto_restart: bool,
+    log_level: str,
+    mdb_home: str,
     args: tuple[str] | list[str],
 ) -> None:
     """Launch mdb debug server.
@@ -115,13 +122,14 @@ def launch(
     $ mdb launch -n 8 --auto-restart ./simple-mpi.exe
     """
 
-    logging.basicConfig(
-        encoding="utf-8",
-        level=logging.DEBUG,
-    )
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError("Invalid log level: %s" % log_level)
+
+    logging.basicConfig(encoding="utf-8", level=numeric_level)
     logger = logging.getLogger(__name__)
 
-    MDB_HOME = expanduser("~/.mdb")
+    MDB_HOME = expanduser(mdb_home)
     MDB_CERT_PATH = join(MDB_HOME, "cert.pem")
     MDB_KEY_PATH = join(MDB_HOME, "key.rsa")
 
@@ -148,7 +156,7 @@ def launch(
         "mpi_command": mpi_command,
         "target": target.name,
         "port": port,
-        "config_filename": config_filename,
+        "appfile": ".mdb.appfile",
         "args": " ".join(args),
     }
 
