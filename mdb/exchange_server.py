@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import signal
 import ssl
 
 from .async_connection import AsyncConnection
@@ -18,6 +19,7 @@ class AsyncExchangeServer:
         self.hostname = opts["hostname"]
         self.port = opts["port"]
         self.backend = opts["backend"]
+        self.launch_task = opts["launch_task"]
         self.debuggers = []
         logger.info(f"echange server started :: {self.hostname}:{self.port}")
 
@@ -93,8 +95,13 @@ class AsyncExchangeServer:
         asyncio.create_task(self._forward_all_debuggers_to_client(conn))
 
         while True:
-            command = await conn.recv_message()
-            logger.debug("Received from client: %s", command)
+            try:
+                command = await conn.recv_message()
+                logger.debug("Received from client: %s", command)
+            except asyncio.exceptions.IncompleteReadError:
+                logger.info("shutting down exchange server")
+                await self.shutdown(signal.SIGINT)
+                break
             for debugger in self.debuggers:
                 await debugger.send_message(command)
 
@@ -126,3 +133,17 @@ class AsyncExchangeServer:
 
         loop.run_until_complete(task)
         loop.run_forever()
+
+    async def shutdown(self, signal):
+        """Cleanup tasks tied to the service's shutdown."""
+        loop = asyncio.get_event_loop()
+        logger.info(f"mdb launcher received signal {signal.name}")
+        try:
+            proc = self.launch_task.result()
+            logger.info(f"terminating process [{proc.pid}]")
+            proc.terminate()
+            proc.kill()
+            logger.info(f"process [{proc.pid}] terminated")
+        except Exception as e:
+            print(e)
+        loop.stop()

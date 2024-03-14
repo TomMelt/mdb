@@ -155,37 +155,23 @@ def launch(
     wrapper_launcher = WrapperLauncher(wl_opts)
     wrapper_launcher.write_app_file()
 
-    exchange_opts = {
-        "hostname": hostname,
-        "port": port,
-        "number_of_ranks": ranks,
-        "backend": backend,
-    }
-    server = AsyncExchangeServer(opts=exchange_opts)
-
-    async def shutdown(signal, loop, launch_task):
-        """Cleanup tasks tied to the service's shutdown."""
-        logger.info(f"mdb launcher received signal {signal.name}")
-        try:
-            proc = launch_task.result()
-            logger.info(f"terminating process [{proc.pid}]")
-            proc.terminate()
-            logger.info(f"process [{proc.pid}] terminated")
-        except Exception as e:
-            print(e)
-        loop.stop()
-
     loop = asyncio.get_event_loop()
-
-    loop.create_task(server.start_server())
 
     cmd = wrapper_launcher.launch_command()
     logger.debug(f"launch command: {cmd}")
     launch_task = loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
 
+    exchange_opts = {
+        "hostname": hostname,
+        "port": port,
+        "number_of_ranks": ranks,
+        "backend": backend,
+        "launch_task": launch_task,
+    }
+    server = AsyncExchangeServer(opts=exchange_opts)
+    loop.create_task(server.start_server())
+
     for s in [signal.SIGINT, signal.SIGTERM]:
-        loop.add_signal_handler(
-            s, lambda s=s: asyncio.create_task(shutdown(s, loop, launch_task))
-        )
+        loop.add_signal_handler(s, lambda s=s: asyncio.create_task(server.shutdown(s)))
 
     loop.run_forever()
