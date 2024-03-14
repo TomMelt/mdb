@@ -74,7 +74,9 @@ class DebugClient(AsyncClient):
             logger.debug("Running command: '%s'", command)
             if self.myrank in message["select"]:
                 self.dbg_proc.sendline(command)
-                await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
+                await self.dbg_proc.expect(
+                    [self.backend.prompt_string, pexpect.EOF], async_=True
+                )
                 result = self.dbg_proc.before.decode()
                 result = strip_bracketted_paste(result)
             else:

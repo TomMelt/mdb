@@ -62,7 +62,7 @@ def strip_control_characters(text: str) -> str:
     return re.sub(r"\x1b\[[\d;]*m", "", text)
 
 
-def parse_ranks(ranks: str) -> set[int]:
+def parse_ranks(ranks: str) -> list[int]:
     """Parse a string of ranks into a set of integers. E.g.,
     ``parse_ranks("1,3-5")`` would return the following: ``set(1,3,4,5)``.
 
@@ -81,7 +81,7 @@ def parse_ranks(ranks: str) -> set[int]:
         ranks,
     )
 
-    return set([int(s) for s in ranks.split(",")])
+    return list(set([int(s) for s in ranks.split(",")]))
 
 
 def print_tabular_output(strings: list[str], cols: int = 32) -> None:

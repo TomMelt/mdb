@@ -156,7 +156,6 @@ class mdbShell(cmd.Cmd):
         """
 
         loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.client.run_command("shutdown", select=self.select))
         loop.run_until_complete(self.client.close())
         print("\nexiting mdb...")
         return True
@@ -208,7 +207,10 @@ class mdbShell(cmd.Cmd):
 
             (mdb) select 0,2-4
         """
-        self.select_str = line
+        if line == "":
+            self.select_str = f"0-{self.ranks - 1}"
+        else:
+            self.select_str = line
         self.prompt = f"(mdb {self.select_str}) "
         self.select = parse_ranks(self.select_str)
         return
