@@ -94,12 +94,6 @@ class AsyncExchangeServer:
 
         while True:
             command = await conn.recv_message()
-            # try:
-            #     command = await conn.recv_message()
-            # except asyncio.exceptions.IncompleteReadError:
-            #     loop = asyncio.get_event_loop()
-            #     loop.stop()
-            #     break
             logger.debug("Received from client: %s", command)
             for debugger in self.debuggers:
                 await debugger.send_message(command)
