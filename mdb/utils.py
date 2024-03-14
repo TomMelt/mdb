@@ -5,7 +5,15 @@ import re
 from os.path import expanduser
 
 
-def sort_debug_response(response):
+def sort_debug_response(response: dict):
+    """Sort debug output by process rank.
+
+    Args:
+        response: dict containing the
+
+    Returns:
+        The string with bracketted paste escape sequence removed.
+    """
     output = response["result"]
     output = sorted(output, key=lambda result: result["rank"])
     return output

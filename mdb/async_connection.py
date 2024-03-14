@@ -15,14 +15,14 @@ class AsyncConnection:
     async def recv_message(self):
         message = await self.reader.readuntil(separator=self.end_bytes)
         message = message[: -len(self.end_bytes)]
-        logger.info("received %s", len(message))
+        logger.debug("received %s", len(message))
         message = json.loads(message.decode())
         return message
 
     async def send_message(self, message):
         message = json.dumps(message).encode()
         message += self.end_bytes
-        logger.info("sending %s", len(message))
+        logger.debug("sending %s", len(message))
         self.writer.write(message)
 
     async def handle_connection(self):

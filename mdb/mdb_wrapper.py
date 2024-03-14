@@ -82,8 +82,6 @@ def wrapper(
 
     args = list(args)
 
-    print("target = \n", target.name)
-
     opts = {
         "exchange_hostname": exchange_hostname,
         "exchange_port": exchange_port,
