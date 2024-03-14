@@ -4,6 +4,7 @@
 import asyncio
 import logging
 import shlex
+import signal
 from os import mkdir
 from os.path import exists, expanduser, join
 from subprocess import run
@@ -162,11 +163,35 @@ def launch(
     }
     server = AsyncExchangeServer(opts=exchange_opts)
 
+    async def shutdown(signal, loop):
+        """Cleanup tasks tied to the service's shutdown."""
+        logger.info(f"Received exit signal {signal.name}...")
+        tasks = [
+            t for t in asyncio.all_tasks(loop=loop) if t is not asyncio.current_task()
+        ]
+
+        for i, t in enumerate(asyncio.all_tasks(loop=loop)):
+            logger.info(f"task {i} is :: {t}")
+
+        [task.cancel() for task in tasks]
+
+        logger.info(f"Cancelling {len(tasks)} outstanding tasks")
+        await asyncio.gather(*tasks)
+        await asyncio.sleep(1)
+        loop.stop()
+
     loop = asyncio.get_event_loop()
+
     loop.create_task(server.start_server())
 
     cmd = "mpirun --app .mdb.conf"
     logger.debug("Spawning debugger instances: %s", cmd)
     loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
+
+    for s in [signal.SIGINT, signal.SIGTERM]:
+        loop.add_signal_handler(s, lambda s=s: asyncio.create_task(shutdown(s, loop)))
+
+    for i, t in enumerate(asyncio.all_tasks(loop=loop)):
+        print(f"task {i} is :: {t}")
 
     loop.run_forever()
