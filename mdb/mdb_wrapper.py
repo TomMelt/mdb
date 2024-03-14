@@ -150,7 +150,7 @@ class WrapperLauncher:
             None
         """
         config_filename = self.config_filename
-        launcher = self.launch_command
+        launcher = self.mpi_command
         if self.mpi_mode == "intel":
             return f"{launcher} --configfile {config_filename}"
         elif self.mpi_mode == "open mpi":

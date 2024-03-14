@@ -163,35 +163,29 @@ def launch(
     }
     server = AsyncExchangeServer(opts=exchange_opts)
 
-    async def shutdown(signal, loop):
+    async def shutdown(signal, loop, launch_task):
         """Cleanup tasks tied to the service's shutdown."""
-        logger.info(f"Received exit signal {signal.name}...")
-        tasks = [
-            t for t in asyncio.all_tasks(loop=loop) if t is not asyncio.current_task()
-        ]
-
-        for i, t in enumerate(asyncio.all_tasks(loop=loop)):
-            logger.info(f"task {i} is :: {t}")
-
-        [task.cancel() for task in tasks]
-
-        logger.info(f"Cancelling {len(tasks)} outstanding tasks")
-        await asyncio.gather(*tasks)
-        await asyncio.sleep(1)
+        logger.info(f"mdb launcher received signal {signal.name}")
+        try:
+            proc = launch_task.result()
+            logger.info(f"terminating process [{proc.pid}]")
+            proc.terminate()
+            logger.info(f"process [{proc.pid}] terminated")
+        except Exception as e:
+            print(e)
         loop.stop()
 
     loop = asyncio.get_event_loop()
 
     loop.create_task(server.start_server())
 
-    cmd = "mpirun --app .mdb.conf"
-    logger.debug("Spawning debugger instances: %s", cmd)
-    loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
+    cmd = wrapper_launcher.launch_command()
+    logger.debug(f"launch command: {cmd}")
+    launch_task = loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
 
     for s in [signal.SIGINT, signal.SIGTERM]:
-        loop.add_signal_handler(s, lambda s=s: asyncio.create_task(shutdown(s, loop)))
-
-    for i, t in enumerate(asyncio.all_tasks(loop=loop)):
-        print(f"task {i} is :: {t}")
+        loop.add_signal_handler(
+            s, lambda s=s: asyncio.create_task(shutdown(s, loop, launch_task))
+        )
 
     loop.run_forever()
