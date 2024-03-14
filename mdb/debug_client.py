@@ -73,12 +73,15 @@ class DebugClient(AsyncClient):
         else:
             logger.debug("Running command: '%s'", command)
             if self.myrank in message["select"]:
-                self.dbg_proc.sendline(command)
-                await self.dbg_proc.expect(
-                    [self.backend.prompt_string, pexpect.EOF], async_=True
-                )
-                result = self.dbg_proc.before.decode()
-                result = strip_bracketted_paste(result)
+                if not self.dbg_proc.closed:
+                    self.dbg_proc.sendline(command)
+                    await self.dbg_proc.expect(
+                        [self.backend.prompt_string, pexpect.EOF], async_=True
+                    )
+                    result = self.dbg_proc.before.decode()
+                    result = strip_bracketted_paste(result)
+                else:
+                    result = "\r\nDebug process is closed. Please re-launch mdb.\r\n"
             else:
                 result = ""
             reply = {
