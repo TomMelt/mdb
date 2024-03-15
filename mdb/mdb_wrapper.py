@@ -21,6 +21,7 @@ Server_opts = TypedDict(
         "port": int,
         "appfile": str,
         "args": str,
+        "backend": str,
     },
 )
 

@@ -22,6 +22,7 @@ ShellOpts = TypedDict(
         "breakpt": str,
         "exec_script": str,
         "plot_lib": str,
+        "backend": str,
     },
 )
 
