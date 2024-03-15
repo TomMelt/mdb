@@ -95,6 +95,7 @@ def wrapper(
     logging.basicConfig(filename=f"rank.{my_rank}.log", level=logging.DEBUG)
 
     dbg_client = DebugClient(opts)
+    print("debug client initialized")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(dbg_client.run())

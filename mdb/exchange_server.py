@@ -7,6 +7,7 @@ import signal
 import ssl
 
 from .async_connection import AsyncConnection
+from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
 from .utils import ssl_cert_path, ssl_key_path
 
 logger = logging.getLogger(__name__)
@@ -42,8 +43,15 @@ class AsyncExchangeServer:
 
         # no try/except clause needed as the asyncio server does that for us
         conn = AsyncConnection(reader, writer)
-        connection_type = await conn.handle_connection()
-        logger.info(f"exchange server received a {connection_type} connection.")
+        try:
+            msg = await conn.recv_message()
+        except Exception as e:
+            print(e)
+        logger.info(
+            "exchange server received {%s} from {%s}.",
+            msg.msg_type,
+            msg.data["from"],
+        )
 
         # checkhov's loop
         loop = asyncio.get_event_loop()
@@ -51,17 +59,18 @@ class AsyncExchangeServer:
         # here you'd distinguish the connection too, to work out if it needs
         # to be pushed to `self.debuggers` or not, etc
 
-        if connection_type == "debug":
+        if msg.data["from"] == DEBUG_CLIENT:
             self.debuggers.append(conn)
+            await conn.send_message(Message.debug_conn_response())
             return  # keep connection open
 
-        if connection_type == "client":
+        if msg.data["from"] == MDB_CLIENT:
             # tell the client about the setup
-            message = {
-                "ranks": self.number_of_ranks,
-                "backend": self.backend,
-            }
-            await conn.send_message(message)
+            await conn.send_message(
+                Message.mdb_conn_response(
+                    no_of_ranks=self.number_of_ranks, backend=self.backend
+                )
+            )
             # schedule the loop to run
             loop.create_task(self.client_loop(conn))
             # but allow this function to return so it's not just stuck on the
@@ -77,10 +86,11 @@ class AsyncExchangeServer:
                 asyncio.create_task(debugger.recv_message())
                 for debugger in self.debuggers
             ]
-            output = await asyncio.gather(*tasks)
-            response = {"result": output}
+            messages = await asyncio.gather(*tasks)
             logger.debug("Sending results to client")
-            await conn.send_message(response)
+            await conn.send_message(
+                Message.exchange_command_response(messages=messages)
+            )
 
     async def client_loop(self, conn):
         # the problem here is we don't know if another message is going to come

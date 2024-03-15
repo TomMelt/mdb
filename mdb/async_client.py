@@ -8,7 +8,10 @@ import ssl
 from abc import ABC, abstractmethod
 
 from .async_connection import AsyncConnection
+from .messages import Message
 from .utils import ssl_cert_path, ssl_key_path
+
+logger = logging.getLogger(__name__)
 
 
 class AsyncClient(ABC):
@@ -39,12 +42,7 @@ class AsyncClient(ABC):
         )
         self.conn = AsyncConnection(reader, writer)
 
-    @property
-    @abstractmethod
-    def my_type(self):
-        pass
-
-    async def connect_to_exchange(self):
+    async def connect_to_exchange(self, msg: "Message") -> "Message":
         status = False
         attempts = 0
         while not status:
@@ -53,20 +51,15 @@ class AsyncClient(ABC):
                 raise ConnectionError(msg)
             try:
                 await self.init_connection()
-                await self.conn.send_message(self.my_type)
-                message = await self.conn.recv_message()
-                status = message["success"]
-                if status:
-                    return message
-                else:
-                    msg = f"Failed to connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
-                    raise ConnectionError(msg)
+                logger.info("connected to exchange")
+                await self.conn.send_message(msg)
+                msg = await self.conn.recv_message()
+                return msg
             except ConnectionRefusedError:
                 await asyncio.sleep(1)
                 logging.info(f"Attempt {attempts} to connect to exchange server.")
                 logging.info("sleeping for 1s")
                 attempts += 1
-                pass
 
     async def close(self):
         self.conn.writer.close()

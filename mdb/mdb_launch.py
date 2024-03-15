@@ -95,7 +95,7 @@ Server_opts = TypedDict(
     "--log-level",
     default="WARN",
     show_default=True,
-    help="Allow mdb launcher to automatically relaunch the job if the debug session ends.",
+    help="Choose minimum level of debug messages: [DEBUG, INFO, WARN, ERROR, CRITICAL]",
 )
 @click.argument(
     "args",

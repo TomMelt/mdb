@@ -8,6 +8,7 @@ import pexpect
 
 from .async_client import AsyncClient
 from .backend import GDBBackend, LLDBBackend
+from .messages import Message
 from .utils import strip_bracketted_paste
 
 logger = logging.getLogger(__name__)
@@ -26,16 +27,6 @@ class DebugClient(AsyncClient):
 
         logger.debug("Selected backend: %s", self.backend.name)
 
-    @property
-    def my_type(self):
-        info = {
-            "type": "debug",
-            "rank": self.myrank,
-            "sockname": list(self.conn.writer.get_extra_info("sockname")),
-            "version": "0.0.1",
-        }
-        return info
-
     async def init_debug_proc(self):
         backend = self.backend
         dbg_proc = pexpect.spawn(
@@ -49,8 +40,10 @@ class DebugClient(AsyncClient):
         logger.debug("Backend init finished: %s", backend.name)
         self.dbg_proc = dbg_proc
 
-    async def execute_command(self, message, prev: asyncio.Task):
-        command = message["command"]
+    async def execute_command(self, message: Message, prev: asyncio.Task):
+        command = message.data["command"]
+        select = message.data["select"]
+        output = ""
         if command == "interrupt":
             logger.warning("Interrupt received")
             # stop whatever is current running, so it doesn't try to reply
@@ -59,52 +52,47 @@ class DebugClient(AsyncClient):
             if not success:
                 # nothing needed cancelling, so no reply needed
                 logger.debug("No task to interrupt")
-                return
 
             # send intterupt to the process
             self.dbg_proc.sendintr()
             await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
             # report on how that all went
-            reply = {
-                "result": f"Interrupted: {success}",
-                "rank": self.myrank,
-            }
+            output = f"\r\nInterrupted: {success}\r\n"
 
         else:
             logger.debug("Running command: '%s'", command)
-            if self.myrank in message["select"]:
+            logger.debug("self.myrank = %d", self.myrank)
+            if self.myrank in select:
                 if not self.dbg_proc.closed:
                     self.dbg_proc.sendline(command)
+                    logger.debug("command running: '%s'", command)
                     await self.dbg_proc.expect(
                         [self.backend.prompt_string, pexpect.EOF], async_=True
                     )
-                    result = self.dbg_proc.before.decode()
-                    result = strip_bracketted_paste(result)
+                    output = self.dbg_proc.before.decode()
+                    output = strip_bracketted_paste(output)
+                    result = {self.myrank: output}
                 else:
-                    result = "\r\nDebug process is closed. Please re-launch mdb.\r\n"
-            else:
-                result = ""
-            reply = {
-                "result": result,
-                "rank": self.myrank,
-            }
+                    output = "\r\nDebug process is closed. Please re-launch mdb.\r\n"
 
-        logger.debug("Replying to: '%s'", command)
-        await self.conn.send_message(reply)
+        result = {self.myrank: output}
+        await self.conn.send_message(Message.debug_command_response(result=result))
 
     async def run(self):
         """
         Main loop of the asynchronous debugger wrapper.
         """
-        await self.connect_to_exchange()
+        msg = await self.connect_to_exchange(Message.debug_conn_request())
+        logger.info("connected to exchange")
         await self.init_debug_proc()
+        logger.info("debug proc initialized")
 
         previous_task = None
 
         while True:
             # as soon as we get a command, run it so we can go back to waiting
             # for the next command (else we can't capture interrupts correctly)
-            message = await self.conn.recv_message()
+            msg = await self.conn.recv_message()
             previous_task = asyncio.create_task(
-                self.execute_command(message, previous_task)
+                self.execute_command(msg, previous_task)
             )

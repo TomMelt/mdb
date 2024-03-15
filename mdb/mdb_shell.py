@@ -77,17 +77,19 @@ class mdbShell(cmd.Cmd):
         """
 
         var = line
+
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(
+        command_response = loop.run_until_complete(
             self.client.run_command(f"print {var}", self.select)
         )
-        response = sort_debug_response(response)
+        response = sort_debug_response(command_response.data["results"])
 
-        ranks = np.array(list(map(lambda r: r["rank"], response)))
+        ranks = np.array(list(response.keys()))
         data = np.array(
             list(
                 map(
-                    lambda r: extract_float(r["result"], backend=self.backend), response
+                    lambda v: extract_float(v, backend=self.backend),
+                    response.values(),
                 )
             )
         )
@@ -138,8 +140,10 @@ class mdbShell(cmd.Cmd):
             command = " ".join(commands[1:])
 
         loop = asyncio.get_event_loop()
-        response = loop.run_until_complete(self.client.run_command(command, select))
-        response = sort_debug_response(response)
+        command_response = loop.run_until_complete(
+            self.client.run_command(command, select)
+        )
+        response = sort_debug_response(command_response.data["results"])
         pretty_print_response(response)
 
         return

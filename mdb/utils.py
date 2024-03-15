@@ -5,7 +5,7 @@ import re
 from os.path import expanduser
 
 
-def sort_debug_response(response: dict):
+def sort_debug_response(results: dict[int, str]) -> dict[int, str]:
     """Sort debug output by process rank.
 
     Args:
@@ -14,15 +14,13 @@ def sort_debug_response(response: dict):
     Returns:
         The string with bracketted paste escape sequence removed.
     """
-    output = response["result"]
-    output = sorted(output, key=lambda result: result["rank"])
-    return output
+    return dict(sorted(results.items()))
 
 
 def pretty_print_response(response):
     lines = []
-    for result in response:
-        lines.append(prepend_ranks(output=result["result"], rank=result["rank"]))
+    for rank, result in response.items():
+        lines.append(prepend_ranks(rank=rank, output=result))
     combined_output = (72 * "*" + "\n").join(lines)
     print(combined_output)
 

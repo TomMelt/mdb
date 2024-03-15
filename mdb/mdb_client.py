@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from .async_client import AsyncClient
+from .messages import Message
 
 
 class Client(AsyncClient):
@@ -11,15 +12,6 @@ class Client(AsyncClient):
         super().__init__(opts=opts)
         self.number_of_ranks = 0
         self.backend = None
-
-    @property
-    def my_type(self):
-        info = {
-            "type": "client",
-            "sockname": list(self.conn.writer.get_extra_info("sockname")),
-            "version": "0.0.1",
-        }
-        return info
 
     async def send_interrupt(self, signame):
         print("Sending ", signame)
@@ -33,21 +25,21 @@ class Client(AsyncClient):
             "type": "client",
             "select": select,
             "command": command,
-            "version": "0.0.1",
         }
-        print("message = \n", message)
         await self.conn.send_message(message)
 
-    async def run_command(self, command, select):
-        await self.send_command(command, select)
-        response = await self.conn.recv_message()
-        return response
+    async def run_command(self, command, select) -> "Message":
+        await self.conn.send_message(
+            Message.mdb_command_request(command=command, select=select)
+        )
+        command_response = await self.conn.recv_message()
+        return command_response
 
-    async def connect(self):
+    async def connect(self) -> None:
         """
         Connect to exchange server.
         """
-        await self.connect_to_exchange()
-        message = await self.conn.recv_message()
-        self.number_of_ranks = message["ranks"]
-        self.backend = message["backend"]
+        msg = await self.connect_to_exchange(Message.mdb_conn_request())
+        self.number_of_ranks = msg.data["no_of_ranks"]
+        self.backend = msg.data["backend"]
+        return

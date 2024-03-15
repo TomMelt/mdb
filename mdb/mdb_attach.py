@@ -55,6 +55,12 @@ ShellOpts = TypedDict(
     help="Execute a set of mdb commands contained in a script file.",
 )
 @click.option(
+    "--log-level",
+    default="WARN",
+    show_default=True,
+    help="Choose minimum level of debug messages: [DEBUG, INFO, WARN, ERROR, CRITICAL]",
+)
+@click.option(
     "--plot-lib",
     default="termgraph",
     show_default=True,
@@ -65,6 +71,7 @@ def attach(
     port: int,
     select: str,
     exec_script: click.File,
+    log_level: str,
     plot_lib: str,
 ) -> None:
     """Attach to mdb debug server.
@@ -74,9 +81,14 @@ def attach(
     $ mdb attach -x script.mdb
     """
 
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError("Invalid log level: %s" % log_level)
+
     logging.basicConfig(
-        filename="mdb-attach.log", encoding="utf-8", level=logging.DEBUG
+        filename="mdb-attach.log", encoding="utf-8", level=numeric_level
     )
+    logger = logging.getLogger(__name__)
 
     supported_plot_libs = ["termgraph", "matplotlib"]
     if plot_lib not in supported_plot_libs:
@@ -97,10 +109,9 @@ def attach(
     loop = asyncio.get_event_loop()
 
     try:
-        # loop = asyncio.get_event_loop()
         loop.run_until_complete(client.connect())
     except ConnectionError as e:
-        print(e)
+        logger.error(e)
         exit(1)
 
     ranks = client.number_of_ranks
@@ -117,11 +128,6 @@ def attach(
         "backend": client.backend,
     }
 
-    # def interrupt(args):
-    #     print("args = \n", args)
-    #     getattr(signal, signame),
-    #     functools.partial(ask_exit, signame, loop))
-
     mshell = mdbShell(shell_opts, client)
 
     def ask_exit(signame):
@@ -130,7 +136,6 @@ def attach(
         # response
         asyncio.create_task(mshell.client.send_interrupt(signame))
 
-    # loop.add_signal_handler(signal.SIGINT, interrupt, "something")
     for signame in {"SIGINT", "SIGTERM"}:
         loop.add_signal_handler(
             getattr(signal, signame),
