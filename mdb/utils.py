@@ -3,6 +3,10 @@
 
 import re
 from os.path import expanduser
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .backend import DebugBackend
 
 
 def sort_debug_response(results: dict[int, str]) -> dict[int, str]:
@@ -17,30 +21,29 @@ def sort_debug_response(results: dict[int, str]) -> dict[int, str]:
     return dict(sorted(results.items()))
 
 
-def pretty_print_response(response):
+def pretty_print_response(response: dict[int, str]) -> None:
     lines = []
     for rank, result in response.items():
-        lines.append(prepend_ranks(rank=rank, output=result))
+        lines.append(prepend_ranks(rank=rank, result=result))
     combined_output = (72 * "*" + "\n").join(lines)
     print(combined_output)
 
 
-def extract_float(line, backend):
+def extract_float(line: str, backend: "DebugBackend") -> float:
     float_regex = backend.float_regex
-    match = re.search(float_regex, line)
-    if match:
+    m = re.search(float_regex, line)
+    if m:
         try:
-            result = float(match.group(1))
+            result = float(m.group(1))
         except ValueError:
             print(f"cannot convert variable [{result}] to a float.")
     return result
 
 
-def prepend_ranks(output, rank):
-    output = "".join(
-        [f"{rank}:\t" + line + "\r\n" for line in output.split("\r\n")[1:-1]]
+def prepend_ranks(rank: int, result: str) -> str:
+    return "".join(
+        [f"{rank}:\t" + line + "\r\n" for line in result.split("\r\n")[1:-1]]
     )
-    return output
 
 
 def strip_bracketted_paste(text: str) -> str:
@@ -88,27 +91,6 @@ def parse_ranks(ranks: str) -> list[int]:
     )
 
     return list(set([int(s) for s in ranks.split(",")]))
-
-
-def print_tabular_output(strings: list[str], cols: int = 32) -> None:
-    """Print tabular text for a list of strings. Coloumns will all be the same
-    length determined by the width of the largest string.
-
-    Args:
-        strings: list of strings to be formatted into columns.
-        cols (optional): number of columns in output. Defaults to 32.
-
-    Returns:
-        None.
-    """
-
-    max_width: int = max(map(len, strings))
-    num_rows: int = (len(strings) - 1) // cols + 1
-    for i in range(num_rows):
-        current_row: list[str] = strings[i * cols : (i + 1) * cols]
-        text: list[str] = list(map(lambda x: f"{x: >{max_width}}", current_row))
-        print(" ".join(text))
-    return
 
 
 def ssl_cert_path() -> str:

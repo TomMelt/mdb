@@ -16,15 +16,12 @@ from typing import TYPE_CHECKING
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .backend import GDBBackend, LLDBBackend
+from .backend import backends
 from .utils import (
     extract_float,
     parse_ranks,
     pretty_print_response,
-    print_tabular_output,
     sort_debug_response,
-    strip_bracketted_paste,
-    strip_control_characters,
 )
 
 if TYPE_CHECKING:
@@ -47,10 +44,9 @@ class mdbShell(cmd.Cmd):
         self.ranks = shell_opts["ranks"]
         self.select_str: str = shell_opts["select"]
         self.select = parse_ranks(shell_opts["select"])
-        if shell_opts["backend"].lower() == "gdb":
-            self.backend = GDBBackend()
-        elif shell_opts["backend"].lower() == "lldb":
-            self.backend = LLDBBackend()
+        for backend in backends:
+            if backend().name == shell_opts["backend_name"].lower():
+                self.backend = backend()
         self.prompt = f"(mdb {self.select_str}) "
         self.client = client
         self.exec_script = shell_opts["exec_script"]
@@ -179,28 +175,6 @@ class mdbShell(cmd.Cmd):
         run(split(line))
         return
 
-    def do_update_winsize(self, line: str) -> None:
-        """
-        Description:
-        Update the each processes terminal window size to match the current
-        terminal window size mdb is running in. This is handy if you resize
-        your terminal and use [interact] with gdb's tui mode.
-
-        Example:
-        Update winsize after resizing your terminal window
-
-            (mdb) update_winsize
-        """
-
-        def update_winsize(rank: int) -> None:
-            cols, rows = os.get_terminal_size()
-            c = self.client.dbg_procs[rank]
-            c.setwinsize(rows=rows, cols=cols)
-            return
-
-        self.client.pool.map(update_winsize, self.select)
-        return
-
     def do_select(self, line: str) -> None:
         """
         Description:
@@ -246,53 +220,6 @@ class mdbShell(cmd.Cmd):
             print(
                 f"File [{file}] not found. Please check the file exists and try again."
             )
-
-    def do_status(self, line: str) -> None:
-        """
-        Description:
-        Display status of each processes. Status will be red if at a breakpoint
-        and green if not.
-
-        Example:
-        Display status of all processes.
-
-            (mdb) status
-        """
-
-        def status(rank: int) -> bool:
-            c = self.client.dbg_procs[rank]
-
-            # regex to find program counter in gdb backtrace output
-            hex_regex = r"#0\s+0[xX][0-9a-fA-F]+"
-            c.sendline("backtrace 1")
-            c.expect(self.prompt)
-            output = c.before.decode("utf-8")
-            output = strip_bracketted_paste(output)
-            output = strip_control_characters(output)
-            match = re.search(hex_regex, output)
-            # if program counter hex is not found then the process is at a breakpoint
-            if match:
-                return False
-            else:
-                return True
-
-        at_breakpoint: list[bool] = self.client.pool.map(
-            status, list(range(self.ranks))
-        )
-
-        def status_to_color(rank: int, at_breakpoint: bool) -> str:
-            if at_breakpoint:
-                return f"\x1b[31m{rank}\x1b[m"
-            else:
-                return f"\x1b[32m{rank}\x1b[m"
-
-        current_status = list(
-            map(status_to_color, list(range(self.ranks)), at_breakpoint)
-        )
-
-        print_tabular_output(current_status, cols=32)
-
-        return
 
     def do_broadcast(self, line: str) -> None:
         """

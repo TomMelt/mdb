@@ -11,17 +11,18 @@ from typing_extensions import TypedDict
 from .debug_client import DebugClient
 from .utils import parse_ranks
 
-Server_opts = TypedDict(
-    "Server_opts",
+Wrapper_opts = TypedDict(
+    "Wrapper_opts",
     {
-        "ranks": int,
-        "select": str,
-        "host": str,
-        "launch_command": str,
-        "port": int,
         "appfile": str,
         "args": str,
         "backend": str,
+        "hostname": str,
+        "mpi_command": str,
+        "port": int,
+        "ranks": int,
+        "select": str,
+        "target": str,
     },
 )
 
@@ -104,17 +105,17 @@ def wrapper(
 
 
 class WrapperLauncher:
-    def __init__(self, prog_opts: Server_opts) -> None:
-        self.mpi_mode: str = ""
-        self.ranks: int = prog_opts["ranks"]
-        self.hostname: str = prog_opts["hostname"]
-        self.port: str = prog_opts["port"]
-        self.target: str = prog_opts["target"]
-        self.mpi_command: str = prog_opts["mpi_command"]
-        self.select: set[int] = parse_ranks(prog_opts["select"])
-        self.appfile: str = prog_opts["appfile"]
-        self.backend: str = prog_opts["backend"]
-        self.args: str = prog_opts["args"]
+    def __init__(self, prog_opts: Wrapper_opts) -> None:
+        self.mpi_mode = ""
+        self.ranks = prog_opts["ranks"]
+        self.hostname = prog_opts["hostname"]
+        self.port = prog_opts["port"]
+        self.target = prog_opts["target"]
+        self.mpi_command = prog_opts["mpi_command"]
+        self.select = parse_ranks(prog_opts["select"])
+        self.appfile = prog_opts["appfile"]
+        self.backend = prog_opts["backend"]
+        self.args = prog_opts["args"]
         self.set_mpi_mode()
         return
 

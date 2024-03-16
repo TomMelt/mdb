@@ -3,11 +3,12 @@
 
 import asyncio
 import logging
+from typing import Any, Optional
 
-import pexpect
+import pexpect  # type: ignore
 
 from .async_client import AsyncClient
-from .backend import GDBBackend, LLDBBackend
+from .backend import DebugBackend, GDBBackend, LLDBBackend
 from .messages import Message
 from .utils import strip_bracketted_paste
 
@@ -15,19 +16,18 @@ logger = logging.getLogger(__name__)
 
 
 class DebugClient(AsyncClient):
-    def __init__(self, opts):
+    def __init__(self, opts: dict[str, Any]):
         super().__init__(opts=opts)
         self.myrank = int(opts["rank"])
         self.target = opts["target"]
-        self.dbg_proc = None
         if opts["backend"].lower() == "gdb":
-            self.backend = GDBBackend()
+            self.backend: DebugBackend = GDBBackend()
         elif opts["backend"].lower() == "lldb":
             self.backend = LLDBBackend()
 
         logger.debug("Selected backend: %s", self.backend.name)
 
-    async def init_debug_proc(self):
+    async def init_debug_proc(self) -> None:
         backend = self.backend
         dbg_proc = pexpect.spawn(
             " ".join([backend.debug_command, self.target]), timeout=None
@@ -40,14 +40,17 @@ class DebugClient(AsyncClient):
         logger.debug("Backend init finished: %s", backend.name)
         self.dbg_proc = dbg_proc
 
-    async def execute_command(self, message: Message, prev: asyncio.Task):
+    async def execute_command(
+        self, message: Message, prev: Optional[asyncio.Task[Any]]
+    ) -> None:
         command = message.data["command"]
         select = message.data["select"]
         output = ""
         if command == "interrupt":
             logger.warning("Interrupt received")
             # stop whatever is current running, so it doesn't try to reply
-            success = prev.cancel()
+            if prev is not None:
+                success = prev.cancel()
 
             if not success:
                 # nothing needed cancelling, so no reply needed
@@ -78,7 +81,7 @@ class DebugClient(AsyncClient):
         result = {self.myrank: output}
         await self.conn.send_message(Message.debug_command_response(result=result))
 
-    async def run(self):
+    async def run(self) -> None:
         """
         Main loop of the asynchronous debugger wrapper.
         """

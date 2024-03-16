@@ -15,14 +15,11 @@ from .mdb_shell import mdbShell
 ShellOpts = TypedDict(
     "ShellOpts",
     {
-        "ranks": int,
-        "select": str,
-        "host": str,
-        "port": int,
-        "breakpt": str,
+        "backend_name": str,
         "exec_script": str,
         "plot_lib": str,
-        "backend": str,
+        "ranks": int,
+        "select": str,
     },
 )
 
@@ -122,20 +119,20 @@ def attach(
         select = f"0-{ranks - 1}"
 
     shell_opts: ShellOpts = {
-        "select": select,
-        "ranks": ranks,
+        "backend_name": client.backend_name,
         "exec_script": script,
         "plot_lib": plot_lib,
-        "backend": client.backend,
+        "ranks": ranks,
+        "select": select,
     }
 
     mshell = mdbShell(shell_opts, client)
 
-    def ask_exit(signame):
+    def ask_exit(signame: str) -> None:
         # we tell mshell to send a command and not listen for a response, since
         # there is already a task in the event queue that is waiting for a
         # response
-        asyncio.create_task(mshell.client.send_interrupt(signame))
+        asyncio.create_task(mshell.client.send_interrupt(signame=signame))
 
     for signame in {"SIGINT", "SIGTERM"}:
         loop.add_signal_handler(

@@ -13,7 +13,7 @@ import click
 from typing_extensions import TypedDict
 
 from .exchange_server import AsyncExchangeServer
-from .mdb_wrapper import WrapperLauncher
+from .mdb_wrapper import Wrapper_opts, WrapperLauncher
 
 Server_opts = TypedDict(
     "Server_opts",
@@ -148,16 +148,16 @@ def launch(
     if select is None:
         select = f"0-{ranks - 1}"
 
-    wl_opts = {
-        "ranks": ranks,
-        "select": select,
-        "hostname": hostname,
-        "backend": backend,
-        "mpi_command": mpi_command,
-        "target": target.name,
-        "port": port,
+    wl_opts: Wrapper_opts = {
         "appfile": ".mdb.appfile",
         "args": " ".join(args),
+        "backend": backend,
+        "hostname": hostname,
+        "mpi_command": mpi_command,
+        "port": port,
+        "ranks": ranks,
+        "select": select,
+        "target": target.name,
     }
 
     wrapper_launcher = WrapperLauncher(wl_opts)

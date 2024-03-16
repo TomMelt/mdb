@@ -5,6 +5,7 @@ import asyncio
 import logging
 import signal
 import ssl
+from typing import Any, Coroutine
 
 from .async_connection import AsyncConnection
 from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
@@ -14,17 +15,17 @@ logger = logging.getLogger(__name__)
 
 
 class AsyncExchangeServer:
-    def __init__(self, opts):
+    def __init__(self, opts: dict[str, Any]):
         self._init_tls()
         self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
         self.port = opts["port"]
-        self.backend = opts["backend"]
+        self.backend_name = opts["backend"]
         self.launch_task = opts["launch_task"]
-        self.debuggers = []
+        self.debuggers: list[AsyncConnection] = []
         logger.info(f"echange server started :: {self.hostname}:{self.port}")
 
-    def _init_tls(self):
+    def _init_tls(self) -> None:
         # fergus: i made no changes here other than paths
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         context.load_cert_chain(
@@ -36,7 +37,9 @@ class AsyncExchangeServer:
         context.load_verify_locations(ssl_cert_path())
         self.context = context
 
-    async def handle_connection(self, reader, writer):
+    async def handle_connection(
+        self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
         # fergus: what you probably want to do here is have a seperate
         # connection class that holds onto the connection reader/writer and
         # implements your handler methods
@@ -68,7 +71,7 @@ class AsyncExchangeServer:
             # tell the client about the setup
             await conn.send_message(
                 Message.mdb_conn_response(
-                    no_of_ranks=self.number_of_ranks, backend=self.backend
+                    no_of_ranks=self.number_of_ranks, backend_name=self.backend_name
                 )
             )
             # schedule the loop to run
@@ -80,7 +83,7 @@ class AsyncExchangeServer:
         # do this incase we somehow fall through
         conn.writer.close()
 
-    async def _forward_all_debuggers_to_client(self, conn):
+    async def _forward_all_debuggers_to_client(self, conn: AsyncConnection) -> None:
         while True:
             tasks = [
                 asyncio.create_task(debugger.recv_message())
@@ -92,7 +95,7 @@ class AsyncExchangeServer:
                 Message.exchange_command_response(messages=messages)
             )
 
-    async def client_loop(self, conn):
+    async def client_loop(self, conn: AsyncConnection) -> None:
         # the problem here is we don't know if another message is going to come
         # from the client before the debugger has had the time to send
         # something back, and we can't assume all sends will be followed by
@@ -110,12 +113,12 @@ class AsyncExchangeServer:
                 logger.debug("Received from client: %s", command)
             except asyncio.exceptions.IncompleteReadError:
                 logger.info("shutting down exchange server")
-                await self.shutdown(signal.SIGINT)
+                await self.shutdown(signal.SIGINT.name)
                 break
             for debugger in self.debuggers:
                 await debugger.send_message(command)
 
-    def start_server(self):
+    def start_server(self) -> Coroutine[Any, Any, Any]:
         task = asyncio.start_server(
             self.handle_connection,
             self.hostname,
@@ -124,7 +127,7 @@ class AsyncExchangeServer:
         )
         return task
 
-    def listen(self):
+    def listen(self) -> None:
         # either pass in an event loop, or make one
         loop = asyncio.get_event_loop()
 
@@ -144,10 +147,10 @@ class AsyncExchangeServer:
         loop.run_until_complete(task)
         loop.run_forever()
 
-    async def shutdown(self, signal):
+    async def shutdown(self, signame: str) -> None:
         """Cleanup tasks tied to the service's shutdown."""
         loop = asyncio.get_event_loop()
-        logger.info(f"mdb launcher received signal {signal.name}")
+        logger.info(f"mdb launcher received signal {signame}")
         try:
             proc = self.launch_task.result()
             logger.info(f"terminating process [{proc.pid}]")

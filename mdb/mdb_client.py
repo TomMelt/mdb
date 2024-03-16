@@ -3,32 +3,27 @@
 
 from __future__ import annotations
 
+import logging
+from typing import Any
+
 from .async_client import AsyncClient
 from .messages import Message
 
+logger = logging.getLogger(__name__)
+
 
 class Client(AsyncClient):
-    def __init__(self, opts):
+    def __init__(self, opts: dict[str, Any]):
         super().__init__(opts=opts)
-        self.number_of_ranks = 0
-        self.backend = None
 
-    async def send_interrupt(self, signame):
-        print("Sending ", signame)
+    async def send_interrupt(self, signame: str) -> None:
+        logger.info("Sending interrupt [%s]", signame)
         # interrupt will cause the debuggers to send back a status as to
         # whether interrupt was success, so we need to read that from the
         # message queue
-        await self.send_command("interrupt")
+        await self.conn.send_message(Message.mdb_interrupt_request())
 
-    async def send_command(self, command, select=None):
-        message = {
-            "type": "client",
-            "select": select,
-            "command": command,
-        }
-        await self.conn.send_message(message)
-
-    async def run_command(self, command, select) -> "Message":
+    async def run_command(self, command: str, select: list[int]) -> "Message":
         await self.conn.send_message(
             Message.mdb_command_request(command=command, select=select)
         )
@@ -41,5 +36,5 @@ class Client(AsyncClient):
         """
         msg = await self.connect_to_exchange(Message.mdb_conn_request())
         self.number_of_ranks = msg.data["no_of_ranks"]
-        self.backend = msg.data["backend"]
+        self.backend_name = msg.data["backend_name"]
         return

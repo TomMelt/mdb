@@ -3,20 +3,8 @@
 
 from abc import ABC, abstractmethod
 
-# main_list = [sdsdasd asdasd]
-
-# def register_backend(backend):
-#     main_list.append(backend)
-
-# add getter function for main_list
-# add setter function for main_list (register)
-
 
 class DebugBackend(ABC):
-    # name: str
-
-    def __init__(self) -> None:
-        pass
 
     @property
     @abstractmethod
@@ -45,7 +33,6 @@ class DebugBackend(ABC):
 
 
 class GDBBackend(DebugBackend):
-    # name = "gdb"
 
     @property
     def name(self) -> str:
@@ -89,3 +76,6 @@ class LLDBBackend(DebugBackend):
     @property
     def float_regex(self) -> str:
         raise NotImplementedError
+
+
+backends = [LLDBBackend, GDBBackend]

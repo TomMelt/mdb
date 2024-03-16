@@ -1,3 +1,6 @@
+# Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
+# details.
+
 import os
 import re
 import shlex

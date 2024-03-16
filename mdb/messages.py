@@ -1,9 +1,9 @@
+# Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
+# details.
+
 import json
 from dataclasses import dataclass
 from typing import Any
-
-# if TYPE_CHECKING:
-#     from .messages import Message
 
 MDB_CLIENT = "mdb client"
 DEBUG_CLIENT = "debug client"
@@ -17,6 +17,7 @@ class Message:
     msg_type: str
     data: dict[str, Any]
 
+    @staticmethod
     def from_json(text: bytes) -> "Message":
         msg = json.loads(text.decode()[: -len(END_BYTES)])
         return Message(msg["msg_type"], msg["data"])
@@ -46,19 +47,19 @@ class Message:
         )
 
     @staticmethod
-    def mdb_conn_response(no_of_ranks: int, backend: str) -> "Message":
+    def mdb_conn_response(no_of_ranks: int, backend_name: str) -> "Message":
         return Message(
             "mdb conn response",
             {
                 "from": EXCHANGE,
                 "to": MDB_CLIENT,
                 "no_of_ranks": no_of_ranks,
-                "backend": backend,
+                "backend_name": backend_name,
             },
         )
 
     @staticmethod
-    def mdb_command_request(command: str, select: list) -> "Message":
+    def mdb_command_request(command: str, select: list[int]) -> "Message":
         return Message(
             "mdb command request",
             {
@@ -66,6 +67,17 @@ class Message:
                 "to": EXCHANGE,
                 "command": command,
                 "select": select,
+            },
+        )
+
+    @staticmethod
+    def mdb_interrupt_request() -> "Message":
+        return Message(
+            "mdb interrupt request",
+            {
+                "from": MDB_CLIENT,
+                "to": EXCHANGE,
+                "command": "interrupt",
             },
         )
 
