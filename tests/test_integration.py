@@ -154,6 +154,8 @@ def test_mdb_simple() -> None:
         capture_output=True,
     )
 
+    os.environ["MDB_LAUNCH_LOG_LEVEL"] = "DEBUG"
+
     # run the mdb launcher in the background
     Popen(
         shlex.split("mdb launch -b gdb -t examples/simple-mpi.exe -n 2"),
