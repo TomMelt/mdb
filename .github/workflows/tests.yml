@@ -17,12 +17,13 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y gdb libopenmpi-dev
+        sudo apt install -y gdb libopenmpi-dev libssl-dev
     - name: Build example mpi program
       run: |
         make -C examples/
     - name: Install mdb and additional python packages
       run: |
+        which openssl
         pip install -e .[develop,termgraph]
     - name: Run tests
       run: |
