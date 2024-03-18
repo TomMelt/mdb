@@ -31,76 +31,87 @@ command quit
 quit
 """
 
-ans_text = """Connecting processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
-hello
-mdb - mpi debugger - built on gdb. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".
-0:process 165478
-0:cmdline = './examples/simple-mpi.exe'
+ans_text = """hello
+mdb - mpi debugger - built on various backends. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".
+0:process 43665
+0:cmdline = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
 0:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
 0:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-------------------------------------------------------------------------
-1:process 165481
-1:cmdline = './examples/simple-mpi.exe'
+************************************************************************
+1:process 43664
+1:cmdline = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
 1:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
 1:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-------------------------------------------------------------------------
+
 0:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
-------------------------------------------------------------------------
+************************************************************************
 1:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
-------------------------------------------------------------------------
+
 0:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
-------------------------------------------------------------------------
+************************************************************************
 1:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
-------------------------------------------------------------------------
+
 0:Continuing.
-0:[New Thread 165478.165519]
-0:[New Thread 165478.165521]
+0:[New Thread 0x7ffff6e0c640 (LWP 43670)]
+0:[New Thread 0x7ffff660b640 (LWP 43673)]
 0:
 0:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
 0:15  var = 10.*process_rank
-------------------------------------------------------------------------
+************************************************************************
 1:Continuing.
-1:[New Thread 165481.165518]
-1:[New Thread 165481.165520]
+1:[New Thread 0x7ffff6e0c640 (LWP 43671)]
+1:[New Thread 0x7ffff660b640 (LWP 43672)]
 1:
 1:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
 1:15  var = 10.*process_rank
-------------------------------------------------------------------------
+
 0:Continuing.
 0:
 0:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
 0:17  if (process_rank == 0) then
-------------------------------------------------------------------------
+************************************************************************
+
 0:#0  simple () at simple-mpi.f90:17
-------------------------------------------------------------------------
+************************************************************************
 1:#0  simple () at simple-mpi.f90:15
-------------------------------------------------------------------------
+
 unrecognized command [made-up-command]. Type help to find out list of possible commands.
+************************************************************************
 1:Continuing.
 1:
-1:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
-1:simple () at simple-mpi.f90:15
-1:15  var = 10.*process_rank
-------------------------------------------------------------------------
+1:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
+1:17  if (process_rank == 0) then
+
 File [deliberately-missing-file.mdb] not found. Please check the file exists and try again.
-0 1
+unrecognized command [status]. Type help to find out list of possible commands.
 0:$1 = 25
-------------------------------------------------------------------------
+************************************************************************
 1:$1 = 25
-------------------------------------------------------------------------
+
 0:Continuing.
-0:
-0:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
-0:simple () at simple-mpi.f90:17
-0:17  if (process_rank == 0) then
-------------------------------------------------------------------------
+0: process 0 sleeping for 3s...
+0:           1 s...
+0:           2 s...
+0:           3 s...
+0: in level 1
+0: in level 2
+0: internal process:            0 of            2
+0: var =    0.00000000    
+0:[Thread 0x7ffff660b640 (LWP 43673) exited]
+0:[Thread 0x7ffff6e0c640 (LWP 43670) exited]
+0:[Inferior 1 (process 43665) exited normally]
+************************************************************************
 1:Continuing.
-1:
-1:Thread 1 "simple-mpi.exe" received signal SIGINT, Interrupt.
-1:simple () at simple-mpi.f90:15
-1:15  var = 10.*process_rank
-------------------------------------------------------------------------
-Closing processes... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2
+1: in level 1
+1: in level 2
+1: internal process:            1 of            2
+1: var =    10.0000000    
+1:[Thread 0x7ffff660b640 (LWP 43672) exited]
+1:[Thread 0x7ffff6e0c640 (LWP 43671) exited]
+1:[Inferior 1 (process 43664) exited normally]
+
+************************************************************************
+
 
 exiting mdb...
 """
@@ -109,6 +120,8 @@ exiting mdb...
 def strip_runtime_specific_output(text: str) -> str:
     # remove process ids
     text = re.sub(r"process \d+", "process [proc id]", text)
+    # remove LWP
+    text = re.sub(r"(LWP \d+)", "(LWP XXX)", text)
     # remove thread ids
     text = re.sub(r"Thread \d+.\d+", "Thread [thread id]", text)
     # remove absolute cwd
@@ -143,9 +156,7 @@ def test_mdb_simple() -> None:
 
     # run the mdb launcher in the background
     Popen(
-        shlex.split(
-            "mdb launch -n 2 --launch-command='mpirun --oversubscribe' ./examples/simple-mpi.exe"
-        ),
+        shlex.split("mdb launch -b gdb -t examples/simple-mpi.exe -n 2"),
         stdin=None,
         stdout=None,
         stderr=None,
@@ -157,7 +168,7 @@ def test_mdb_simple() -> None:
 
     # run mdb attach and collect the stdout
     result = run(
-        shlex.split("mdb attach -n 2 -x integration.mdb -b MAIN__"),
+        shlex.split("mdb attach -x integration.mdb"),
         capture_output=True,
     )
 
@@ -170,8 +181,8 @@ def test_mdb_simple() -> None:
     result_txt = re.sub("\t", "", result_txt)
 
     # uncomment this block to write test output
-    # with open("answer.txt", "w") as outfile:
-    #     outfile.write(result_txt)
+    with open("answer.txt", "w") as outfile:
+        outfile.write(result_txt)
 
     # remove run specific outputs
     result_txt = standardize_output(result_txt)
@@ -179,18 +190,41 @@ def test_mdb_simple() -> None:
     assert result_txt == standardize_output(ans_text)
 
 
-ans_text2 = """Connecting processes...                                          0/2
-error: mdb timeout with error message "localhost:2000: Connection timed out."
+ans_text2 = """DEBUG:asyncio:Using selector: EpollSelector
+INFO:root:Attempt 0 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 1 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 2 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 3 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 4 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 5 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 6 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 7 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 8 to connect to exchange server.
+INFO:root:sleeping for 1s
+INFO:root:Attempt 9 to connect to exchange server.
+INFO:root:sleeping for 1s
+ERROR:mdb.mdb_attach:couldn't connect to exchange server at localhost:2000.
 """
 
 
 def test_mdb_timeout() -> None:
-    # run mdb attach without start mdb launch
-    result = run(
-        shlex.split("mdb attach -n 2 -b MAIN__"),
-        capture_output=True,
-    )
 
-    result_txt = result.stdout.decode("utf-8")
+    os.environ["MDB_ATTACH_LOG_LEVEL"] = "DEBUG"
+
+    # remove existing log file
+    os.remove("mdb-attach.log")
+    # run mdb attach without start mdb launch
+    run(shlex.split("mdb attach"))
+
+    with open("mdb-attach.log") as logfile:
+        result_txt = "".join(logfile.readlines())
 
     assert result_txt == ans_text2
