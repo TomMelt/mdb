@@ -96,7 +96,7 @@ unrecognized command [status]. Type help to find out list of possible commands.
 0: in level 1
 0: in level 2
 0: internal process:            0 of            2
-0: var =    0.00000000    
+0: var =    0.00000000
 0:[Thread 0x7ffff660b640 (LWP 43673) exited]
 0:[Thread 0x7ffff6e0c640 (LWP 43670) exited]
 0:[Inferior 1 (process 43665) exited normally]
@@ -105,7 +105,7 @@ unrecognized command [status]. Type help to find out list of possible commands.
 1: in level 1
 1: in level 2
 1: internal process:            1 of            2
-1: var =    10.0000000    
+1: var =    10.0000000
 1:[Thread 0x7ffff660b640 (LWP 43672) exited]
 1:[Thread 0x7ffff6e0c640 (LWP 43671) exited]
 1:[Inferior 1 (process 43664) exited normally]
@@ -130,6 +130,8 @@ def strip_runtime_specific_output(text: str) -> str:
     text = re.sub(r"exe = '[\/\w]+/simple-mpi.exe'", "exe = simple-mpi.exe", text)
     # remove program address
     text = re.sub(r"at 0[xX][0-9a-fA-F]+:", "at [hex address]", text)
+    # remove trailing whitespace (causes
+    text = re.sub(r"\s+\n", "\n", text)
     return text
 
 
@@ -154,7 +156,7 @@ def test_mdb_simple() -> None:
         capture_output=True,
     )
 
-    os.environ["MDB_LAUNCH_LOG_LEVEL"] = "DEBUG"
+    # os.environ["MDB_LAUNCH_LOG_LEVEL"] = "DEBUG"
 
     # run the mdb launcher in the background
     Popen(
@@ -183,8 +185,8 @@ def test_mdb_simple() -> None:
     result_txt = re.sub("\t", "", result_txt)
 
     # uncomment this block to write test output
-    with open("answer.txt", "w") as outfile:
-        outfile.write(result_txt)
+    # with open("answer.txt", "w") as outfile:
+    #     outfile.write(result_txt)
 
     # remove run specific outputs
     result_txt = standardize_output(result_txt)

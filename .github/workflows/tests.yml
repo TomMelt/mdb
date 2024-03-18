@@ -23,8 +23,10 @@ jobs:
         make -C examples/
     - name: Install mdb and additional python packages
       run: |
+        mkdir -p ~/.mdb
+        openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -keyout ~/.mdb/key.rsa -out ~/.mdb/cert.pem -nodes -subj "/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN=localhost"
         ls ~/.mdb
-        MDB_LAUNCH_LOG_LEVEL="DEBUG" MDB_LAUNCH_RANKS=1 mdb launch -b gdb -t examples/simple-mpi.exe
+        MDB_LAUNCH_LOG_LEVEL="DEBUG" mdb launch -b gdb -t examples/simple-mpi.exe -n 2
         pip install -e .[develop,termgraph]
     - name: Run tests
       run: |
