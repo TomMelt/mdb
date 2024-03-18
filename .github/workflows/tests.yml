@@ -26,8 +26,8 @@ jobs:
         mkdir -p ~/.mdb
         openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -keyout ~/.mdb/key.rsa -out ~/.mdb/cert.pem -nodes -subj "/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN=localhost"
         ls ~/.mdb
-        MDB_LAUNCH_LOG_LEVEL="DEBUG" mdb launch -b gdb -t examples/simple-mpi.exe -n 2
         pip install -e .[develop,termgraph]
+        MDB_LAUNCH_LOG_LEVEL="DEBUG" mdb launch -b gdb -t examples/simple-mpi.exe -n 2
     - name: Run tests
       run: |
         pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv tests/
