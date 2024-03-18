@@ -1,0 +1,23 @@
+Screen {
+    background: $surface-darken-1;
+}
+
+#mdb_command_prompt {
+    background: black;
+    max-height: 3;
+    border: solid white;
+}
+
+#mdb_output {
+    border: solid white;
+    overflow: auto scroll;
+}
+
+#code-view {
+    border: solid white;
+    overflow: auto scroll;
+    min-width: 100%;
+}
+#code {
+    width: auto;
+}
