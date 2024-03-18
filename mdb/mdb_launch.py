@@ -5,6 +5,7 @@ import asyncio
 import logging
 import shlex
 import signal
+from asyncio import Task
 from os import mkdir
 from os.path import exists, expanduser, join
 from subprocess import run
@@ -180,6 +181,10 @@ def launch(
     loop.create_task(server.start_server())
 
     for s in [signal.SIGINT, signal.SIGTERM]:
-        loop.add_signal_handler(s, lambda s=s: asyncio.create_task(server.shutdown(s)))
+
+        def shutdown_func() -> Task[None]:
+            return asyncio.create_task(server.shutdown(s.name))
+
+        loop.add_signal_handler(s, shutdown_func)
 
     loop.run_forever()
