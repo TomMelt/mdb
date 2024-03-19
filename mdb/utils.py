@@ -31,6 +31,7 @@ def pretty_print_response(response: dict[int, str]) -> None:
 
 def extract_float(line: str, backend: "DebugBackend") -> float:
     float_regex = backend.float_regex
+    line = strip_control_characters(line)
     m = re.search(float_regex, line)
     if m:
         try:

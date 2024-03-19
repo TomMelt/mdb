@@ -123,13 +123,17 @@ def strip_runtime_specific_output(text: str) -> str:
     # remove LWP
     text = re.sub(r"(LWP \d+)", "(LWP XXX)", text)
     # remove thread ids
-    text = re.sub(r"Thread \d+.\d+", "Thread [thread id]", text)
+    text = re.sub(r"Thread 0[xX][0-9a-fA-F]+", "Thread [thread id]", text)
+    # remove absolute cwd
+    text = re.sub(
+        r"cmdline = '[\/\w]+/simple-mpi.exe'", "cmdline = simple-mpi.exe", text
+    )
     # remove absolute cwd
     text = re.sub(r"cwd = '[\/\w]+'", "cwd = [mdb root]", text)
     # remove absolute exe
     text = re.sub(r"exe = '[\/\w]+/simple-mpi.exe'", "exe = simple-mpi.exe", text)
     # remove program address
-    text = re.sub(r"at 0[xX][0-9a-fA-F]+:", "at [hex address]", text)
+    text = re.sub(r"at 0[xX][0-9a-fA-F]+", "at [hex address]", text)
     # remove trailing whitespace (causes
     text = re.sub(r"\s+\n", "\n", text)
     return text
