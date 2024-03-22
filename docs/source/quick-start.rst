@@ -94,8 +94,10 @@ default, but for this tutorial I am running (and compiling) with open MPI (and `
    Listening on port 2007
 
 
-**Note**: You can start ``mdb launch`` in ``--auto-restart`` mode so that it will automatically
-relaunch when your MPI program ends.
+
+.. note::
+   You can start ``mdb launch`` in ``--auto-restart`` mode so that it will automatically relaunch
+   when your MPI program ends.
 
 .. _attach_client:
 
@@ -353,9 +355,11 @@ of ranks e.g., n>10, it is probably best to switch to ``matplotlib`` using the `
 Exiting mdb
 -----------
 
-To quit the ``mdb`` debugger, you can either press ``CTRL+D`` or type ``quit``. **Note** ``CTRL+C``
-is forwarded directly to each ``gdb`` processes allowing the user to interrupt execution as would be
-expected in a serial ``gdb`` session.
+To quit the ``mdb`` debugger, you can either press ``CTRL+D`` or type ``quit``.
+
+.. note::
+   ``CTRL+C`` is forwarded directly to each ``gdb`` processes allowing the user to interrupt
+   execution as would be expected in a serial ``gdb`` session.
 
 Scripting the mdb Debug Session
 -------------------------------
