@@ -25,14 +25,14 @@ class Message:
     @staticmethod
     def debug_conn_request() -> "Message":
         return Message(
-            "debug conn request",
+            "debug_conn_request",
             {"from": DEBUG_CLIENT, "to": EXCHANGE},
         )
 
     @staticmethod
     def debug_conn_response() -> "Message":
         return Message(
-            "mdb conn response",
+            "mdb_conn_response",
             {
                 "from": EXCHANGE,
                 "to": DEBUG_CLIENT,
@@ -42,14 +42,14 @@ class Message:
     @staticmethod
     def mdb_conn_request() -> "Message":
         return Message(
-            "mdb conn request",
+            "mdb_conn_request",
             {"from": MDB_CLIENT, "to": EXCHANGE},
         )
 
     @staticmethod
     def mdb_conn_response(no_of_ranks: int, backend_name: str) -> "Message":
         return Message(
-            "mdb conn response",
+            "mdb_conn_response",
             {
                 "from": EXCHANGE,
                 "to": MDB_CLIENT,
@@ -61,7 +61,7 @@ class Message:
     @staticmethod
     def mdb_command_request(command: str, select: list[int]) -> "Message":
         return Message(
-            "mdb command request",
+            "mdb_command_request",
             {
                 "from": MDB_CLIENT,
                 "to": EXCHANGE,
@@ -73,7 +73,7 @@ class Message:
     @staticmethod
     def mdb_interrupt_request() -> "Message":
         return Message(
-            "mdb interrupt request",
+            "mdb_interrupt_request",
             {
                 "from": MDB_CLIENT,
                 "to": EXCHANGE,
@@ -84,7 +84,7 @@ class Message:
     @staticmethod
     def debug_command_response(result: dict[int, str]) -> "Message":
         return Message(
-            "debug command response",
+            "debug_command_response",
             {
                 "from": DEBUG_CLIENT,
                 "to": EXCHANGE,
@@ -98,7 +98,7 @@ class Message:
         for msg in messages:
             results.update(msg.data["result"])
         return Message(
-            "exchange command response",
+            "exchange_command_response",
             {
                 "from": EXCHANGE,
                 "to": MDB_CLIENT,
