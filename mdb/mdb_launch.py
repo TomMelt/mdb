@@ -138,7 +138,7 @@ def launch(
         mkdir(MDB_HOME)
 
     if not (exists(MDB_CERT_PATH) or exists(MDB_KEY_PATH)):
-        subj = "/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN=localhost"
+        subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={hostname}"
         opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
         cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
         run(shlex.split(cmd))
