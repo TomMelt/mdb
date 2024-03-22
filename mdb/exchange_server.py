@@ -26,7 +26,6 @@ class AsyncExchangeServer:
         logger.info(f"echange server started :: {self.hostname}:{self.port}")
 
     def _init_tls(self) -> None:
-        # fergus: i made no changes here other than paths
         context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         context.load_cert_chain(
             ssl_cert_path(),
