@@ -110,6 +110,7 @@ def attach(
         loop.run_until_complete(client.connect())
     except ConnectionError as e:
         logger.error(e)
+        print(e)
         exit(1)
 
     ranks = client.number_of_ranks
