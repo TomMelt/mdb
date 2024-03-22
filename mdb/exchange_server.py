@@ -51,7 +51,7 @@ class AsyncExchangeServer:
             msg.data["from"],
         )
 
-        # checkhov's loop
+        # chekhov's loop
         loop = asyncio.get_event_loop()
 
         # here you'd distinguish the connection too, to work out if it needs
