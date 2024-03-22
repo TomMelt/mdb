@@ -39,10 +39,6 @@ class AsyncExchangeServer:
     async def handle_connection(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:
-        # fergus: what you probably want to do here is have a seperate
-        # connection class that holds onto the connection reader/writer and
-        # implements your handler methods
-
         # no try/except clause needed as the asyncio server does that for us
         conn = AsyncConnection(reader, writer)
         try:
