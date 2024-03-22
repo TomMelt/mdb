@@ -82,7 +82,7 @@ Server_opts = TypedDict(
     "--mdb-home",
     default="~/.mdb",
     show_default=True,
-    help="filename for the mpirun appfile.",
+    help="Directory where mdb SSL/TLS certificate and key are stored.",
 )
 @click.option(
     "-r",
