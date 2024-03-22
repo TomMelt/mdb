@@ -20,7 +20,12 @@ class AsyncConnection:
         self.type = ""
 
     async def recv_message(self) -> "Message":
-        msg = Message.from_json(await self.reader.readuntil(separator=END_BYTES))
+        try:
+             raw_msg = await self.reader.readuntil(separator=END_BYTES)
+        except Exception as e:
+            logger.exception("async read error")
+            raise e
+        msg = Message.from_json(raw_msg)
         logger.debug("msg received [%s]", msg.msg_type)
         return msg
 
