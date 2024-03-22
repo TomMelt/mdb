@@ -9,9 +9,11 @@ Installing mdb
 Windows Support
 ---------------
 
-**Please Note**: ``mdb`` does not run on Windows. This is due to a core dependency ``pexpect`` which
-does not currently support windows for the ``pexpect.spawn`` and ``pexpect.run`` methods (see `here
-<https://pexpect.readthedocs.io/en/stable/overview.html#pexpect-on-windows>`_ for more information).
+.. note::
+   ``mdb`` does not run on Windows. This is due to a core dependency ``pexpect`` which does not
+   currently support windows for the ``pexpect.spawn`` and ``pexpect.run`` methods (see `here
+   <https://pexpect.readthedocs.io/en/stable/overview.html#pexpect-on-windows>`_ for more
+   information).
 
 Standard Installation (UNIX)
 ----------------------------

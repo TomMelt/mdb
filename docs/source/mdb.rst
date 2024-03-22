@@ -1,13 +1,43 @@
-.. Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
-   details.
-
 mdb package
 ===========
 
-.. Submodules
-.. ----------
+.. automodule:: mdb.async_client
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: mdb.async_connection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: mdb.backend
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: mdb.debug_client
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: mdb.exchange_server
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 
 .. automodule:: mdb.mdb
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: mdb.mdb_attach
    :members:
    :undoc-members:
    :show-inheritance:
@@ -19,7 +49,7 @@ mdb package
    :show-inheritance:
 
 
-.. automodule:: mdb.mdb_server
+.. automodule:: mdb.mdb_launch
    :members:
    :undoc-members:
    :show-inheritance:
@@ -31,14 +61,19 @@ mdb package
    :show-inheritance:
 
 
-.. automodule:: mdb.utils
+.. automodule:: mdb.mdb_wrapper
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. Module contents
-.. ---------------
 
-.. .. automodule:: mdb
-..    :members:
-..    :show-inheritance:
+.. automodule:: mdb.messages
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+.. automodule:: mdb.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
