@@ -25,6 +25,10 @@ class AsyncConnection:
         return msg
 
     async def send_message(self, msg: Message) -> None:
-        self.writer.write(msg.to_json())
+        try:
+             self.writer.write(msg.to_json())
+        except Exception as e:
+            logger.exception("async send error")
+            raise e
         logger.debug("sent message [%s]", msg.msg_type)
         return
