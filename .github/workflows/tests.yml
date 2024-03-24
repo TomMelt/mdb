@@ -19,15 +19,12 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y gdb libopenmpi-dev libssl-dev
+        sudo apt install -y gdb libopenmpi-dev libssl-dev clang
     - name: Build example mpi program
       run: |
         make -C examples/
     - name: Install mdb and additional python packages
       run: |
-        mkdir -p ~/.mdb
-        openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -keyout ~/.mdb/key.rsa -out ~/.mdb/cert.pem -nodes -subj "/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN=localhost"
-        ls ~/.mdb
         pip install -e .[develop,termgraph]
     - name: Run tests
       run: |
@@ -35,3 +32,5 @@ jobs:
     - name: Check coverage
       run: |
         python .github/workflows/coverage.py 60
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
