@@ -63,7 +63,7 @@ class LLDBBackend(DebugBackend):
 
     @property
     def debug_command(self) -> str:
-        return "lldb"
+        return "lldb --source-quietly --no-use-colors"
 
     @property
     def prompt_string(self) -> str:
@@ -71,11 +71,11 @@ class LLDBBackend(DebugBackend):
 
     @property
     def start_commands(self) -> list[str]:
-        raise NotImplementedError
+        return ["b main", "run"]
 
     @property
     def float_regex(self) -> str:
-        raise NotImplementedError
+        return r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
 
 
 backends = [LLDBBackend, GDBBackend]
