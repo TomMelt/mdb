@@ -24,7 +24,8 @@ def sort_debug_response(results: dict[int, str]) -> dict[int, str]:
 def pretty_print_response(response: dict[int, str]) -> None:
     lines = []
     for rank, result in response.items():
-        lines.append(prepend_ranks(rank=rank, result=result))
+        if result:
+            lines.append(prepend_ranks(rank=rank, result=result))
     combined_output = (72 * "*" + "\n").join(lines)
     print(combined_output)
 
