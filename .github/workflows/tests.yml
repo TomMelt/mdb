@@ -12,12 +12,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
       with:
         python-version: '3.11'
-    - name: Install gdb gdbserver openmpi
+    - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -yq gdb gdbserver libopenmpi-dev
+        sudo apt install -y gdb libopenmpi-dev libssl-dev clang
     - name: Build example mpi program
       run: |
         make -C examples/
@@ -30,3 +32,5 @@ jobs:
     - name: Check coverage
       run: |
         python .github/workflows/coverage.py 60
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3

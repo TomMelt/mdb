@@ -33,7 +33,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "mdb = mdb.mdb:main",
+            "mdb = mdb.mdb:run_main",
         ],
     },
 )

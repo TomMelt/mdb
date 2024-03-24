@@ -4,9 +4,9 @@ command b simple-mpi.f90:17
 command continue
 command 0-2,5,7 continue
 command bt -1
-info var
+plot var
 command 3,4,6 c
-info var
+plot var
 command c
 command q
 quit

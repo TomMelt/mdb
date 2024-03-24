@@ -29,6 +29,7 @@ MPI is implemented in and that I have had a chance to test.
 
    mdb Command Line Interface (CLI) <mdb-cli>
    gdb Cheat Sheet <gdbcheatsheet>
+   Environment Variables <environment-vars>
    Client-Server Interface <client-server>
 
 .. toctree::
