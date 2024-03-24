@@ -76,7 +76,6 @@ def test_mdb_gdb() -> None:
         shlex.split("pkill -9 mdb"),
         capture_output=True,
     )
-    sleep(1)
 
     # run the mdb launcher in the background
     Popen(
@@ -85,6 +84,8 @@ def test_mdb_gdb() -> None:
         stdout=None,
         stderr=None,
     )
+
+    sleep(1)
 
     # create a simple mdb script for the test
     with open("integration.mdb", mode="w") as script:
@@ -147,7 +148,6 @@ def test_mdb_lldb() -> None:
         shlex.split("pkill -9 mdb"),
         capture_output=True,
     )
-    sleep(1)
 
     # run the mdb launcher in the background
     Popen(
@@ -156,6 +156,8 @@ def test_mdb_lldb() -> None:
         stdout=None,
         stderr=None,
     )
+
+    sleep(1)
 
     # create a simple mdb script for the test
     with open("integration.mdb", mode="w") as script:
