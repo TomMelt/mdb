@@ -21,7 +21,7 @@ class AsyncConnection:
 
     async def recv_message(self) -> "Message":
         try:
-             raw_msg = await self.reader.readuntil(separator=END_BYTES)
+            raw_msg = await self.reader.readuntil(separator=END_BYTES)
         except Exception as e:
             logger.exception("async read error")
             raise e
@@ -31,7 +31,7 @@ class AsyncConnection:
 
     async def send_message(self, msg: Message) -> None:
         try:
-             self.writer.write(msg.to_json())
+            self.writer.write(msg.to_json())
         except Exception as e:
             logger.exception("async send error")
             raise e
