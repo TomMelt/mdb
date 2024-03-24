@@ -10,6 +10,23 @@ from typing import Union
 
 from mdb.utils import strip_bracketted_paste, strip_control_characters
 
+class BackgroundProcess:
+    def __init__(self, command: str):
+        self.command = shlex.split(command)
+
+    def __enter__(self) -> "BackgroundProcess":
+        print("--- LAUNCHING ---")
+        self._running_command = Popen(self.command, stdout=None, stderr=None)
+        self._running_command.__enter__()
+        sleep(1)
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        print("--- EXITING ---")
+        # kill the background command
+        self._running_command.kill()
+        self._running_command.__exit__(exc_type, exc_value, traceback)
+
 
 def strip_runtime_specific_output(text: str) -> str:
     # remove process ids
@@ -46,6 +63,48 @@ def standardize_output(text: str) -> str:
     text = "\n".join(list(filter(filter_mask, text.splitlines())))
     return text
 
+def run_test_for_backend(launch_command: str, name: str, backend_script: str):
+    # kill any stray mdb sessions
+    run(
+        shlex.split("pkill -9 mdb"),
+        capture_output=True,
+    )
+
+    # run the mdb launcher in the background
+    with BackgroundProcess(launch_command):
+        # create a simple mdb script for the test
+        with open("integration.mdb", mode="w") as script:
+            script.write(backend_script)
+
+        # run mdb attach and collect the stdout
+        result = run(
+            shlex.split("mdb attach -x integration.mdb"),
+            capture_output=True,
+        )
+
+        os.remove("integration.mdb")
+
+        # filter out the escape sequences
+        result_txt = result.stdout.decode("utf-8")
+        result_txt = strip_control_characters(strip_bracketted_paste(result_txt))
+        result_txt = re.sub("\r", "", result_txt)
+        result_txt = re.sub("\t", "", result_txt)
+
+        # uncomment this block to write test output
+        with open(f"answer-{name}.stdout", "w") as outfile:
+            outfile.write(result_txt)
+
+        with open(f"tests/output/answer-{name}.stdout", "r") as infile:
+            answer_text = "".join(infile.readlines())
+
+        # remove run specific outputs
+        result_txt = standardize_output(result_txt)
+        answer_text = standardize_output(answer_text)
+
+        # print(result_txt)
+
+        assert result_txt == answer_text
+
 
 script_gdb = """# this is a simple test script
 !echo hello
@@ -68,55 +127,9 @@ command quit
 quit
 """
 
-
 def test_mdb_gdb() -> None:
-
-    # kill any stray mdb sessions
-    run(
-        shlex.split("pkill -9 mdb"),
-        capture_output=True,
-    )
-
-    # run the mdb launcher in the background
-    Popen(
-        shlex.split("mdb launch -b gdb -t examples/simple-mpi.exe -n 2"),
-        stdin=None,
-        stdout=None,
-        stderr=None,
-    )
-
-    sleep(1)
-
-    # create a simple mdb script for the test
-    with open("integration.mdb", mode="w") as script:
-        script.write(script_gdb)
-
-    # run mdb attach and collect the stdout
-    result = run(
-        shlex.split("mdb attach -x integration.mdb"),
-        capture_output=True,
-    )
-
-    os.remove("integration.mdb")
-
-    # filter out the escape sequences
-    result_txt = result.stdout.decode("utf-8")
-    result_txt = strip_control_characters(strip_bracketted_paste(result_txt))
-    result_txt = re.sub("\r", "", result_txt)
-    result_txt = re.sub("\t", "", result_txt)
-
-    # uncomment this block to write test output
-    with open("answer-gdb.stdout", "w") as outfile:
-        outfile.write(result_txt)
-
-    with open("tests/output/answer-gdb.stdout", "r") as infile:
-        answer_text = "".join(infile.readlines())
-
-    # remove run specific outputs
-    result_txt = standardize_output(result_txt)
-    answer_text = standardize_output(answer_text)
-
-    assert result_txt == answer_text
+    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2"
+    run_test_for_backend(launch_command, "gdb", script_gdb)
 
 
 script_lldb = """# this is a simple test script
@@ -142,54 +155,8 @@ quit
 
 
 def test_mdb_lldb() -> None:
-
-    # kill any stray mdb sessions
-    run(
-        shlex.split("pkill -9 mdb"),
-        capture_output=True,
-    )
-
-    # run the mdb launcher in the background
-    Popen(
-        shlex.split("mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2"),
-        stdin=None,
-        stdout=None,
-        stderr=None,
-    )
-
-    sleep(1)
-
-    # create a simple mdb script for the test
-    with open("integration.mdb", mode="w") as script:
-        script.write(script_lldb)
-
-    # run mdb attach and collect the stdout
-    result = run(
-        shlex.split("mdb attach -x integration.mdb"),
-        capture_output=True,
-    )
-
-    os.remove("integration.mdb")
-
-    # filter out the escape sequences
-    result_txt = result.stdout.decode("utf-8")
-    result_txt = strip_control_characters(strip_bracketted_paste(result_txt))
-    result_txt = re.sub("\r", "", result_txt)
-    result_txt = re.sub("\t", "", result_txt)
-
-    # uncomment this block to write test output
-    with open("answer-lldb.stdout", "w") as outfile:
-        outfile.write(result_txt)
-
-    with open("tests/output/answer-lldb.stdout", "r") as infile:
-        answer_text = "".join(infile.readlines())
-
-    # remove run specific outputs
-    result_txt = standardize_output(result_txt)
-    answer_text = standardize_output(answer_text)
-
-    assert result_txt == answer_text
-
+    launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2"
+    run_test_for_backend(launch_command, "lldb", script_lldb)
 
 def test_mdb_timeout() -> None:
 
