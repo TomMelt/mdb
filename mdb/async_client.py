@@ -37,10 +37,14 @@ class AsyncClient(ABC):
         self.context = context
 
     async def init_connection(self) -> None:
-        reader, writer = await asyncio.open_connection(
-            self.exchange_hostname, self.exchange_port, ssl=self.context
-        )
-        self.conn = AsyncConnection(reader, writer)
+        try:
+            reader, writer = await asyncio.open_connection(
+                self.exchange_hostname, self.exchange_port, ssl=self.context
+            )
+            self.conn = AsyncConnection(reader, writer)
+        except Exception as e :
+            logger.exception("init connection error")
+            raise e
 
     async def connect_to_exchange(self, msg: "Message") -> "Message":
         attempts = 0
