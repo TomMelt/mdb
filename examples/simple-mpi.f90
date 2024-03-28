@@ -1,7 +1,7 @@
 program simple
   use mpi
 
-  integer process_rank, size_of_cluster, ierror, tag
+  integer process_rank, size_of_cluster, ierror
   real :: var
   integer :: i
 

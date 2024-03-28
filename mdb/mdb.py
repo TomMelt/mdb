@@ -5,6 +5,7 @@ import click
 
 from .mdb_attach import attach
 from .mdb_launch import launch
+from .mdb_wrapper import wrapper
 
 
 @click.group()
@@ -21,5 +22,15 @@ def main() -> None:
     pass
 
 
+def run_main() -> None:
+    """Wrapper around main function to add click environment variable support
+
+    See [here](https://click.palletsprojects.com/en/8.1.x/options/#values-from-environment-variables) for more info.
+    """
+    main(auto_envvar_prefix="MDB")
+    pass
+
+
 main.add_command(attach)
 main.add_command(launch)
+main.add_command(wrapper)

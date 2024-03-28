@@ -1,20 +1,30 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
+import asyncio
+import logging
+import shlex
+import signal
+from asyncio import Task
+from os import mkdir
+from os.path import exists, expanduser, join
+from subprocess import run
+
 import click
 from typing_extensions import TypedDict
 
-from .mdb_server import Server
+from .exchange_server import AsyncExchangeServer
+from .mdb_wrapper import Wrapper_opts, WrapperLauncher
 
 Server_opts = TypedDict(
     "Server_opts",
     {
         "ranks": int,
         "select": str,
-        "host": str,
-        "launch_command": str,
+        "hostname": str,
+        "mpi_command": str,
         "port": int,
-        "config_filename": str,
+        "appfile": str,
         "args": str,
     },
 )
@@ -37,13 +47,13 @@ Server_opts = TypedDict(
 )
 @click.option(
     "-h",
-    "--host",
+    "--hostname",
     default="localhost",
     show_default=True,
-    help="Host machine name.",
+    help="Hostname machine name.",
 )
 @click.option(
-    "--launch-command",
+    "--mpi-command",
     default="mpirun",
     show_default=True,
     help="MPI launcher e.g., mpirun, mpiexec, srun etc.",
@@ -56,10 +66,23 @@ Server_opts = TypedDict(
     help="Starting port address. Each rank's port is assigned as [port_address + rank].",
 )
 @click.option(
-    "--config-filename",
-    default=".mdb.conf",
+    "-b",
+    "--backend",
+    default="gdb",
+    help="Debug backend e.g., gdb, lldb etc.",
+)
+@click.option(
+    "-t",
+    "--target",
+    type=click.File("r"),
+    required=True,
+    help="Target binary to debug.",
+)
+@click.option(
+    "--mdb-home",
+    default="~/.mdb",
     show_default=True,
-    help="filename for the mpirun configuration.",
+    help="Directory where mdb SSL/TLS certificate and key are stored.",
 )
 @click.option(
     "-r",
@@ -69,19 +92,28 @@ Server_opts = TypedDict(
     show_default=True,
     help="Allow mdb launcher to automatically relaunch the job if the debug session ends.",
 )
+@click.option(
+    "--log-level",
+    default="WARN",
+    show_default=True,
+    help="Choose minimum level of debug messages: [DEBUG, INFO, WARN, ERROR, CRITICAL]",
+)
 @click.argument(
     "args",
-    required=True,
+    required=False,
     nargs=-1,
 )
 def launch(
     ranks: int,
     select: str | None,
-    host: str,
-    launch_command: str,
+    hostname: str,
+    mpi_command: str,
     port: int,
-    config_filename: str,
+    backend: str,
+    target: click.File,
     auto_restart: bool,
+    log_level: str,
+    mdb_home: str,
     args: tuple[str] | list[str],
 ) -> None:
     """Launch mdb debug server.
@@ -90,27 +122,69 @@ def launch(
 
     $ mdb launch -n 8 --auto-restart ./simple-mpi.exe
     """
+
+    numeric_level = getattr(logging, log_level.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError("Invalid log level: %s" % log_level)
+
+    logging.basicConfig(encoding="utf-8", level=numeric_level)
+    logger = logging.getLogger(__name__)
+
+    MDB_HOME = expanduser(mdb_home)
+    MDB_CERT_PATH = join(MDB_HOME, "cert.pem")
+    MDB_KEY_PATH = join(MDB_HOME, "key.rsa")
+
+    if not exists(MDB_HOME):
+        mkdir(MDB_HOME)
+
+    if not (exists(MDB_CERT_PATH) or exists(MDB_KEY_PATH)):
+        subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={hostname}"
+        opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
+        cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
+        run(shlex.split(cmd))
+
     args = list(args)
 
     # debug all ranks if "select" is not set
     if select is None:
         select = f"0-{ranks - 1}"
 
-    server_opts: Server_opts = dict(
-        ranks=ranks,
-        select=select,
-        host=host,
-        launch_command=launch_command,
-        port=port,
-        config_filename=config_filename,
-        args=" ".join(args),
-    )
+    wl_opts: Wrapper_opts = {
+        "appfile": ".mdb.appfile",
+        "args": " ".join(args),
+        "backend": backend,
+        "hostname": hostname,
+        "mpi_command": mpi_command,
+        "port": port,
+        "ranks": ranks,
+        "select": select,
+        "target": target.name,
+    }
 
-    server = Server(server_opts)
-    server.write_app_file()
-    keep_running = True
-    while keep_running:
-        server.run()
-        if not auto_restart:
-            keep_running = False
-    return
+    wrapper_launcher = WrapperLauncher(wl_opts)
+    wrapper_launcher.write_app_file()
+
+    loop = asyncio.get_event_loop()
+
+    cmd = wrapper_launcher.launch_command()
+    logger.debug(f"launch command: {cmd}")
+    launch_task = loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
+
+    exchange_opts = {
+        "hostname": hostname,
+        "port": port,
+        "number_of_ranks": ranks,
+        "backend": backend,
+        "launch_task": launch_task,
+    }
+    server = AsyncExchangeServer(opts=exchange_opts)
+    loop.create_task(server.start_server())
+
+    for s in [signal.SIGINT, signal.SIGTERM]:
+
+        def shutdown_func() -> Task[None]:
+            return asyncio.create_task(server.shutdown(s.name))
+
+        loop.add_signal_handler(s, shutdown_func)
+
+    loop.run_forever()
