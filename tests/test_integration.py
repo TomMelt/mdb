@@ -175,7 +175,7 @@ def test_mdb_timeout() -> None:
     with open("mdb-attach.log") as logfile:
         result_txt = "".join(logfile.readlines())
 
-    with open("tests/output/timeout.log") as logfile:
+    with open("tests/output/timeout-log.out") as logfile:
         answer_text = "".join(logfile.readlines())
 
     assert result_txt == answer_text
