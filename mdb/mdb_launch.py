@@ -99,6 +99,12 @@ Server_opts = TypedDict(
     show_default=True,
     help="Choose minimum level of debug messages: [DEBUG, INFO, WARN, ERROR, CRITICAL]",
 )
+@click.option(
+    "--connection-attempts",
+    default=10,
+    show_default=True,
+    help="Maximum number of failed connection attempts. A connection attempt is made once per second.",
+)
 @click.argument(
     "args",
     required=False,
@@ -115,6 +121,7 @@ def launch(
     auto_restart: bool,
     log_level: str,
     mdb_home: str,
+    connection_attempts: int,
     args: tuple[str] | list[str],
 ) -> None:
     """Launch mdb debug server.
@@ -163,6 +170,7 @@ def launch(
         "port": port,
         "ranks": ranks,
         "select": select,
+        "connection_attempts": connection_attempts,
         "target": target.name,
     }
 
