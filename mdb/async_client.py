@@ -6,6 +6,7 @@ import logging
 import os
 import ssl
 from abc import ABC
+from socket import gethostbyaddr
 from typing import Any
 
 from .async_connection import AsyncConnection
@@ -38,8 +39,9 @@ class AsyncClient(ABC):
 
     async def init_connection(self) -> None:
         try:
+            cert_host = gethostbyaddr(self.exchange_hostname)[0]
             reader, writer = await asyncio.open_connection(
-                self.exchange_hostname, self.exchange_port, ssl=self.context
+                cert_host, self.exchange_port, ssl=self.context
             )
             self.conn = AsyncConnection(reader, writer)
         except Exception as e:
@@ -49,7 +51,7 @@ class AsyncClient(ABC):
     async def connect_to_exchange(self, msg: "Message") -> "Message":
         attempts = 0
         while True:
-            if attempts == 10:
+            if attempts == 3:
                 exception_msg = f"couldn't connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
                 raise ConnectionError(exception_msg)
             try:
@@ -58,10 +60,11 @@ class AsyncClient(ABC):
                 await self.conn.send_message(msg)
                 msg = await self.conn.recv_message()
                 break
-            except ConnectionRefusedError:
+            except Exception as e:
                 await asyncio.sleep(1)
-                logging.info(f"Attempt {attempts} to connect to exchange server.")
-                logging.info("sleeping for 1s")
+                logger.exception(f"{e}")
+                logger.info(f"Attempt {attempts} to connect to exchange server.")
+                logger.info("sleeping for 1s")
                 attempts += 1
         return msg
 
