@@ -21,6 +21,7 @@ class AsyncClient(ABC):
         self._init_tls()
         self.exchange_hostname = opts["exchange_hostname"]
         self.exchange_port = opts["exchange_port"]
+        self.connection_attempts = opts["connection_attempts"]
 
     def _init_tls(self) -> None:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -51,7 +52,7 @@ class AsyncClient(ABC):
     async def connect_to_exchange(self, msg: "Message") -> "Message":
         attempts = 0
         while True:
-            if attempts == 3:
+            if attempts == self.connection_attempts:
                 exception_msg = f"couldn't connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
                 raise ConnectionError(exception_msg)
             try:
