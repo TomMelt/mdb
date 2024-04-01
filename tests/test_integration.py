@@ -6,9 +6,23 @@ import re
 import shlex
 from subprocess import Popen, run
 from time import sleep
-from typing import Union
+from types import TracebackType
+from typing import Generator, Optional, Type, Union
+
+import pytest
 
 from mdb.utils import strip_bracketted_paste, strip_control_characters
+
+
+@pytest.fixture(autouse=True)
+def slow_down_tests() -> Generator[None, None, None]:
+    yield
+    sleep(1)
+    run(
+        shlex.split("pkill -9 mdb"),
+        capture_output=True,
+    )
+
 
 class BackgroundProcess:
     def __init__(self, command: str):
@@ -21,7 +35,12 @@ class BackgroundProcess:
         sleep(1)
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         print("--- EXITING ---")
         # kill the background command
         self._running_command.kill()
@@ -63,12 +82,8 @@ def standardize_output(text: str) -> str:
     text = "\n".join(list(filter(filter_mask, text.splitlines())))
     return text
 
-def run_test_for_backend(launch_command: str, name: str, backend_script: str):
-    # kill any stray mdb sessions
-    run(
-        shlex.split("pkill -9 mdb"),
-        capture_output=True,
-    )
+
+def run_test_for_backend(launch_command: str, name: str, backend_script: str) -> None:
 
     # run the mdb launcher in the background
     with BackgroundProcess(launch_command):
@@ -78,7 +93,7 @@ def run_test_for_backend(launch_command: str, name: str, backend_script: str):
 
         # run mdb attach and collect the stdout
         result = run(
-            shlex.split("mdb attach -x integration.mdb"),
+            shlex.split("mdb attach -h 127.0.0.1 -x integration.mdb"),
             capture_output=True,
         )
 
@@ -127,8 +142,9 @@ command quit
 quit
 """
 
+
 def test_mdb_gdb() -> None:
-    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2"
+    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2 -h 127.0.0.1"
     run_test_for_backend(launch_command, "gdb", script_gdb)
 
 
@@ -155,25 +171,23 @@ quit
 
 
 def test_mdb_lldb() -> None:
-    launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2"
+    launch_command = (
+        "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1"
+    )
     run_test_for_backend(launch_command, "lldb", script_lldb)
 
-def test_mdb_timeout() -> None:
 
-    # kill any stray mdb sessions
-    run(
-        shlex.split("pkill -9 mdb"),
-        capture_output=True,
-    )
-    sleep(1)
+def test_mdb_timeout() -> None:
 
     # remove existing log file
     os.remove("mdb-attach.log")
     # run mdb attach without start mdb launch
-    run(shlex.split("mdb attach --log-level DEBUG"))
+    run(shlex.split("mdb attach -h 127.0.0.1 --log-level DEBUG"))
 
     with open("mdb-attach.log") as logfile:
-        result_txt = "".join(logfile.readlines())
+        log = logfile.readlines()
+        log = list(filter(lambda x: re.match(r"^(ERROR|INFO).*", x), log))
+        result_txt = "".join(log)
 
     with open("tests/output/timeout-log.out") as logfile:
         answer_text = "".join(logfile.readlines())

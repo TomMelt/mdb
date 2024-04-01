@@ -8,6 +8,7 @@ import signal
 from asyncio import Task
 from os import mkdir
 from os.path import exists, expanduser, join
+from socket import gethostbyaddr
 from subprocess import run
 
 import click
@@ -137,11 +138,15 @@ def launch(
     if not exists(MDB_HOME):
         mkdir(MDB_HOME)
 
-    if not (exists(MDB_CERT_PATH) or exists(MDB_KEY_PATH)):
-        subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={hostname}"
-        opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
-        cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
-        run(shlex.split(cmd))
+    # certificate hostname cannot be an IP address so it must be resolved to a hostname
+    cert_host = gethostbyaddr(hostname)[0]
+    subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={cert_host}"
+    opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
+    cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
+    proc = run(shlex.split(cmd), capture_output=True)
+    logger.debug("generating ssl certificate and key")
+    logger.debug(cmd)
+    logger.debug(proc.stderr.decode())
 
     args = list(args)
 
