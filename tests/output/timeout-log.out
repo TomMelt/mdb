@@ -1,22 +1,13 @@
-DEBUG:asyncio:Using selector: EpollSelector
-INFO:root:Attempt 0 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 1 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 2 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 3 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 4 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 5 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 6 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 7 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 8 to connect to exchange server.
-INFO:root:sleeping for 1s
-INFO:root:Attempt 9 to connect to exchange server.
-INFO:root:sleeping for 1s
-ERROR:mdb.mdb_attach:couldn't connect to exchange server at localhost:2000.
+ERROR:mdb.async_client:init connection error
+ERROR:mdb.async_client:[Errno 111] Connect call failed ('127.0.0.1', 2000)
+INFO:mdb.async_client:Attempt 0 to connect to exchange server.
+INFO:mdb.async_client:sleeping for 1s
+ERROR:mdb.async_client:init connection error
+ERROR:mdb.async_client:[Errno 111] Connect call failed ('127.0.0.1', 2000)
+INFO:mdb.async_client:Attempt 1 to connect to exchange server.
+INFO:mdb.async_client:sleeping for 1s
+ERROR:mdb.async_client:init connection error
+ERROR:mdb.async_client:[Errno 111] Connect call failed ('127.0.0.1', 2000)
+INFO:mdb.async_client:Attempt 2 to connect to exchange server.
+INFO:mdb.async_client:sleeping for 1s
+ERROR:mdb.mdb_attach:couldn't connect to exchange server at 127.0.0.1:2000.
