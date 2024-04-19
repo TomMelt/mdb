@@ -120,7 +120,7 @@ def launch(
 
     Example:
 
-    $ mdb launch -n 8 --auto-restart ./simple-mpi.exe
+    $ mdb launch -n 8 -b gdb -t ./simple-mpi.exe
     """
 
     numeric_level = getattr(logging, log_level.upper(), None)
