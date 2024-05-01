@@ -18,6 +18,11 @@ class DebugBackend(ABC):
 
     @property
     @abstractmethod
+    def argument_separator(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
     def prompt_string(self) -> str:
         pass
 
@@ -40,7 +45,11 @@ class GDBBackend(DebugBackend):
 
     @property
     def debug_command(self) -> str:
-        return "gdb -q "
+        return "gdb -q"
+
+    @property
+    def argument_separator(self) -> str:
+        return "--args"
 
     @property
     def prompt_string(self) -> str:
@@ -64,6 +73,10 @@ class LLDBBackend(DebugBackend):
     @property
     def debug_command(self) -> str:
         return "lldb --source-quietly --no-use-colors"
+
+    @property
+    def argument_separator(self) -> str:
+        return "--"
 
     @property
     def prompt_string(self) -> str:
