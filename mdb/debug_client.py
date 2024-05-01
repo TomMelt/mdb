@@ -20,6 +20,7 @@ class DebugClient(AsyncClient):
         super().__init__(opts=opts)
         self.myrank = int(opts["rank"])
         self.target = opts["target"]
+        self.args = opts["args"]
         if opts["backend"].lower() == "gdb":
             self.backend: DebugBackend = GDBBackend()
         elif opts["backend"].lower() == "lldb":
@@ -29,9 +30,20 @@ class DebugClient(AsyncClient):
 
     async def init_debug_proc(self) -> None:
         backend = self.backend
-        dbg_proc = pexpect.spawn(
-            " ".join([backend.debug_command, self.target]), timeout=None
+        if self.args:
+            args = " ".join(self.args)
+        else:
+            args = ""
+
+        print("backend.debug_command = ", backend.debug_command)
+        print("backend.argument_separator = ", backend.argument_separator)
+        print("self.target = ", self.target)
+        print("args = ", args)
+        debug_command = " ".join(
+            [backend.debug_command, backend.argument_separator, self.target, args]
         )
+        logger.debug("running debug command: [%s]", debug_command)
+        dbg_proc = pexpect.spawn(debug_command, timeout=None)
         dbg_proc.expect(backend.prompt_string)
         for command in backend.start_commands:
             dbg_proc.sendline(command)
