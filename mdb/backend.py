@@ -2,6 +2,7 @@
 # details.
 
 from abc import ABC, abstractmethod
+from typing import List, Type
 
 
 class DebugBackend(ABC):
@@ -91,4 +92,4 @@ class LLDBBackend(DebugBackend):
         return r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
 
 
-backends = [LLDBBackend, GDBBackend]
+backends: List[Type[DebugBackend]] = [LLDBBackend, GDBBackend]
