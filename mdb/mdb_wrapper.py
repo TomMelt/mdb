@@ -23,6 +23,7 @@ Wrapper_opts = TypedDict(
         "ranks": int,
         "select": str,
         "target": str,
+        "connection_attempts": int,
     },
 )
 
