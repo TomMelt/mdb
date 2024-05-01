@@ -20,7 +20,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y gdb libopenmpi-dev libssl-dev clang
+        sudo apt install -y gdb libopenmpi-dev libssl-dev lldb
     - name: Build example mpi program
       run: |
         make -C examples/
@@ -33,5 +33,3 @@ jobs:
     - name: Check coverage
       run: |
         python .github/workflows/coverage.py 60
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
