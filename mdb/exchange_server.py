@@ -50,9 +50,13 @@ class AsyncExchangeServer:
         try:
             msg = await conn.recv_message()
         except Exception as e:
-            print(e)
+            logger.exception(
+                "Exception in handling connection"
+            )
+            return
+
         logger.info(
-            "exchange server received {%s} from {%s}.",
+            "exchange server received [%s] from %s.",
             msg.msg_type,
             msg.data["from"],
         )
