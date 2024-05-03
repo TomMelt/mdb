@@ -4,7 +4,7 @@
 import os
 import re
 import shlex
-from subprocess import Popen, run
+from subprocess import Popen, run, PIPE
 from time import sleep
 from types import TracebackType
 from typing import Generator, Optional, Type, Union
@@ -26,11 +26,23 @@ def slow_down_tests() -> Generator[None, None, None]:
 
 class BackgroundProcess:
     def __init__(self, command: str):
+        self._running_command = None
         self.command = shlex.split(command)
 
     def __enter__(self) -> "BackgroundProcess":
         print("--- LAUNCHING ---")
-        self._running_command = Popen(self.command, stdout=None, stderr=None)
+        self._running_command = Popen(
+            self.command,
+            stdout=PIPE,
+            stderr=PIPE,
+            env={
+                # on this CI this might run as root because
+                # docker containers are the wild wild west
+                "OMPI_ALLOW_RUN_AS_ROOT": "1",
+                "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
+                **os.environ,
+            },
+        )
         self._running_command.__enter__()
         sleep(1)
         return self
@@ -44,6 +56,17 @@ class BackgroundProcess:
         print("--- EXITING ---")
         # kill the background command
         self._running_command.kill()
+
+        # print server's output
+        print("--- OUTPUT BEGIN ---")
+        print(self._running_command.stdout.read().decode())
+        print("--- OUTPUT END ---")
+
+        # print server's error log
+        print("--- ERROR BEGIN ---")
+        print(self._running_command.stderr.read().decode())
+        print("--- ERROR END ---")
+
         self._running_command.__exit__(exc_type, exc_value, traceback)
 
 
@@ -144,7 +167,7 @@ quit
 
 
 def test_mdb_gdb() -> None:
-    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2 -h 127.0.0.1"
+    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2 -h 127.0.0.1 --log-level=DEBUG"
     run_test_for_backend(launch_command, "gdb", script_gdb)
 
 
@@ -171,9 +194,7 @@ quit
 
 
 def test_mdb_lldb() -> None:
-    launch_command = (
-        "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1"
-    )
+    launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG"
     run_test_for_backend(launch_command, "lldb", script_lldb)
 
 
