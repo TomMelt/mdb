@@ -18,7 +18,12 @@ logger = logging.getLogger(__name__)
 
 class AsyncClient(ABC):
     def __init__(self, opts: dict[Any, Any]):
-        self._init_tls()
+        if not os.environ.get("MDB_DISABLE_TLS", None):
+            self._init_tls()
+        else:
+            logger.warn("TLS is disabled by environment variable.")
+            self.context = None
+
         self.exchange_hostname = opts["exchange_hostname"]
         self.exchange_port = opts["exchange_port"]
         self.connection_attempts = opts["connection_attempts"]
