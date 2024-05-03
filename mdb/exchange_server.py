@@ -1,6 +1,7 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
+import os
 import asyncio
 import logging
 import signal
@@ -16,7 +17,12 @@ logger = logging.getLogger(__name__)
 
 class AsyncExchangeServer:
     def __init__(self, opts: dict[str, Any]):
-        self._init_tls()
+        if not os.environ.get("MDB_DISABLE_TLS", None):
+            self._init_tls()
+        else:
+            logger.warn("TLS is disabled by environment variable.")
+            self.context = None
+
         self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
         self.port = opts["port"]
