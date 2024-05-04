@@ -21,7 +21,7 @@ class AsyncClient(ABC):
         if not os.environ.get("MDB_DISABLE_TLS", None):
             self._init_tls()
         else:
-            logger.warn("TLS is disabled by environment variable.")
+            logger.warning("TLS is disabled by environment variable.")
             self.context = None
 
         self.exchange_hostname = opts["exchange_hostname"]

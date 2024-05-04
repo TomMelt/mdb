@@ -20,7 +20,7 @@ class AsyncExchangeServer:
         if not os.environ.get("MDB_DISABLE_TLS", None):
             self._init_tls()
         else:
-            logger.warn("TLS is disabled by environment variable.")
+            logger.warning("TLS is disabled by environment variable.")
             self.context = None
 
         self.number_of_ranks = opts["number_of_ranks"]
