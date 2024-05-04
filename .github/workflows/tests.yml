@@ -28,7 +28,7 @@ jobs:
         pip install -e .[develop,termgraph]
     - name: Run tests
       run: |
-        pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv tests/
+        MDB_DISABLE_TLS=1 pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv
     - name: Check coverage
       run: |
         python .github/workflows/coverage.py 60
