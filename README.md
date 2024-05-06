@@ -4,7 +4,7 @@
 [![style](https://github.com/TomMelt/mdb/actions/workflows/code-validation.yml/badge.svg?branch=main)](https://github.com/TomMelt/mdb/actions/workflows/code-validation.yml)
 [![readthedocs](https://readthedocs.org/projects/mdb/badge/?version=latest)](https://mdb.readthedocs.io/en/latest/?badge=latest)
 
-An MPI debugger built on [`gdb`](https://www.sourceware.org/gdb/).
+An MPI-aware frontend for serial debuggers, such as [`gdb`](https://www.sourceware.org/gdb/) and [`lldb`](https://lldb.llvm.org).
 
 # Documentation
 
@@ -13,14 +13,15 @@ For help with installation, a quick-start tutorial (with example debug session) 
 
 # Purpose
 
-`mdb` is a debugger aimed at parallel programs using the MPI programming paradigm. `mdb` acts as a wrapper around `gdb` and, as
-such, it supports the following languages:
+`mdb` is a debugger aimed at parallel programs using the MPI programming paradigm. `mdb` acts as a MPI-aware frontend for
+different backend debuggers, such as `gdb` and `lldb`. As such, it supports the following languages:
 
 * C
 * C++
 * Fortran
 
-Technically `gdb` supports other languages as well, but this is the intersection of languages that MPI is implemented in.
+Technically `gdb` supports other languages as well, but this is the intersection of languages that MPI is implemented in. For
+`lldb` your mileage may vary when debugging Fortran.
 
 # Usage
 
@@ -61,21 +62,20 @@ guide](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb).
 
 ### Non-Python Dependencies
 
-* `gdb`
-* `gdbserver`
+* Either `gdb` or `lldb` (depending on your preference)
 
-`mdb` does not package `gdb` or `gdbserver`. You will need these installed on your system in order to run `mdb`. Please visit
-[GNU's website](https://sourceware.org/gdb/) for information on how to install `gdb` and `gdbserver` on your system.
+`mdb` does not package `gdb` or `lldb`. You will need these installed on your system in order to run `mdb`. Please visit
+the debugger's respective sites for installation instructions e.g., [`gdb`](https://sourceware.org/gdb/) and
+[`lldb`](https://lldb.llvm.org/resources/build.html).
 
 ### Python Dependencies
 
-The main python dependencies are (see [`requirements.txt`](requirements.txt)):
+The main python dependencies are listed in the [`pyproject.toml`](pyproject.toml) file, e.g.,
 
 * `click`
 * `matplotlib`
 * `numpy`
 * `pexpect`
-* `rich`
 
 These will all be installed as part of the default `pip` installation. See [installing
 mdb](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb) in the documentation for more information.
