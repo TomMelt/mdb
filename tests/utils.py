@@ -1,9 +1,10 @@
 import os
 import shlex
-from types import TracebackType
-from typing import Generator, Optional, Type, Union
-from subprocess import Popen, run, PIPE
+from subprocess import PIPE, Popen
 from time import sleep
+from types import TracebackType
+from typing import Optional, Type
+
 
 class BackgroundProcess:
     def __init__(self, command: str):
@@ -49,5 +50,3 @@ class BackgroundProcess:
         print("--- ERROR END ---")
 
         self._running_command.__exit__(exc_type, exc_value, traceback)
-
-

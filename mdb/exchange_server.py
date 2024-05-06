@@ -1,9 +1,9 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
-import os
 import asyncio
 import logging
+import os
 import signal
 import ssl
 from typing import Any, Coroutine
@@ -50,9 +50,7 @@ class AsyncExchangeServer:
         try:
             msg = await conn.recv_message()
         except Exception as e:
-            logger.exception(
-                "Exception in handling connection"
-            )
+            logger.exception("%s", e)
             return
 
         logger.info(
@@ -74,7 +72,10 @@ class AsyncExchangeServer:
             init_message = await conn.recv_message()
 
             if init_message.msg_type != "debug_init_complete":
-                logger.error("Client did not send initialize: received [%s]", init_message.msg_type)
+                logger.error(
+                    "Client did not send initialize: received [%s]",
+                    init_message.msg_type,
+                )
             else:
                 logger.info("Client sent initialization confirmed")
 

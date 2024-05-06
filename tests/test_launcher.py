@@ -1,10 +1,14 @@
+import asyncio
+import shlex
+from subprocess import run
+from time import sleep
+from typing import Generator
+
+import pytest
 from utils import BackgroundProcess
 
 from mdb.mdb_client import Client
 
-import asyncio
-import time
-import os
 
 # todo: i forget how to do it but there's a
 # universal pytest file you can define which
@@ -17,6 +21,7 @@ def slow_down_tests() -> Generator[None, None, None]:
         shlex.split("pkill -9 mdb"),
         capture_output=True,
     )
+
 
 def test_ping_launcher() -> None:
     launch_command = "mdb launch -b gdb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
@@ -32,5 +37,3 @@ def test_ping_launcher() -> None:
         asyncio.run(client.connect())
 
     assert client.backend_name == "gdb"
-
-
