@@ -41,7 +41,8 @@ class AsyncClient(ABC):
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
 
-        self.context = context
+        if self.context is not None:
+            self.context = context
 
     async def init_connection(self) -> None:
         try:
