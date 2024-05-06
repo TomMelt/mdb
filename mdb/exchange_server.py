@@ -40,7 +40,8 @@ class AsyncExchangeServer:
         # add these two lines to force check of client credentials
         context.verify_mode = ssl.CERT_REQUIRED
         context.load_verify_locations(ssl_cert_path())
-        self.context = context
+        if self.context is not None:
+            self.context = context
 
     async def handle_connection(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
