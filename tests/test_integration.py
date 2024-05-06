@@ -4,17 +4,16 @@
 import os
 import re
 import shlex
-from subprocess import Popen, run, PIPE
+from subprocess import run
 from time import sleep
-from types import TracebackType
-from typing import Generator, Optional, Type, Union
+from typing import Generator, Union
 
 import pytest
 
-from mdb.utils import strip_bracketted_paste, strip_control_characters
-
 # test utilities
 from utils import BackgroundProcess
+
+from mdb.utils import strip_bracketted_paste, strip_control_characters
 
 
 @pytest.fixture(autouse=True)

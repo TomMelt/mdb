@@ -69,7 +69,11 @@ class AsyncClient(ABC):
             except Exception as e:
                 await asyncio.sleep(1)
                 logger.exception("%s", e)
-                logger.info("Attempt %d/%d to connect to exchange server. Sleeping 1 second...", attempts, self.connection_attempts)
+                logger.info(
+                    "Attempt %d/%d to connect to exchange server. Sleeping 1 second...",
+                    attempts,
+                    self.connection_attempts,
+                )
                 attempts += 1
         return msg
 
