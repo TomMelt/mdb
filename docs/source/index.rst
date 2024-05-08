@@ -5,15 +5,13 @@ mdb
 ===
 
 Welcome to ``mdb``'s documentation! ``mdb`` is a debugger aimed at parallel programs using the `MPI
-<https://www.mpi-forum.org>`_ programming paradigm. ``mdb`` acts as a wrapper around GNU's `gdb
-<https://sourceware.org/gdb>`_ and, as such, it supports the following languages:
+<https://www.mpi-forum.org>`_ programming paradigm. ``mdb`` acts as a wrapper around different
+serial debugger backends e.g.,  `gdb <https://sourceware.org/gdb>`_ and `lldb
+<https://lldb.llvm.org/>`_. It supports the following languages:
 
 * C
 * C++
 * Fortran
-
-Technically ``gdb`` supports other languages as well, but this is the intersection of languages that
-MPI is implemented in and that I have had a chance to test.
 
 .. toctree::
    :maxdepth: 2
