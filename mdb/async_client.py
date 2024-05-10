@@ -7,7 +7,7 @@ import os
 import ssl
 from abc import ABC
 from socket import gethostbyaddr
-from typing import Any
+from typing import Any, Optional
 
 from .async_connection import AsyncConnection
 from .messages import Message
@@ -18,11 +18,13 @@ logger = logging.getLogger(__name__)
 
 class AsyncClient(ABC):
     def __init__(self, opts: dict[Any, Any]):
+
+        self.context: Optional[ssl.SSLContext] = None
+
         if not os.environ.get("MDB_DISABLE_TLS", None):
             self._init_tls()
         else:
             logger.warning("TLS is disabled by environment variable.")
-            self.context = None
 
         self.exchange_hostname = opts["exchange_hostname"]
         self.exchange_port = opts["exchange_port"]
@@ -41,8 +43,7 @@ class AsyncClient(ABC):
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
 
-        if self.context is not None:
-            self.context = context
+        self.context = context
 
     async def init_connection(self) -> None:
         try:

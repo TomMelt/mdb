@@ -6,7 +6,7 @@ import logging
 import os
 import signal
 import ssl
-from typing import Any, Coroutine
+from typing import Any, Coroutine, Optional
 
 from .async_connection import AsyncConnection
 from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
@@ -17,11 +17,13 @@ logger = logging.getLogger(__name__)
 
 class AsyncExchangeServer:
     def __init__(self, opts: dict[str, Any]):
+
+        self.context: Optional[ssl.SSLContext] = None
+
         if not os.environ.get("MDB_DISABLE_TLS", None):
             self._init_tls()
         else:
             logger.warning("TLS is disabled by environment variable.")
-            self.context = None
 
         self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
@@ -40,8 +42,7 @@ class AsyncExchangeServer:
         # add these two lines to force check of client credentials
         context.verify_mode = ssl.CERT_REQUIRED
         context.load_verify_locations(ssl_cert_path())
-        if self.context is not None:
-            self.context = context
+        self.context = context
 
     async def handle_connection(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
