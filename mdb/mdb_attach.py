@@ -64,6 +64,12 @@ ShellOpts = TypedDict(
     show_default=True,
     help="Plotting library to use. Recommended default is [termgraph] but if this is not available [matplotlib] will be used. [matplotlib] is best if there are many ranks to debug e.g., -n 100.",
 )
+@click.option(
+    "--connection-attempts",
+    default=3,
+    show_default=True,
+    help="Maximum number of failed connection attempts. A connection attempt is made once per second.",
+)
 def attach(
     hostname: str,
     port: int,
@@ -71,6 +77,7 @@ def attach(
     exec_script: click.File,
     log_level: str,
     plot_lib: str,
+    connection_attempts: int,
 ) -> None:
     """Attach to mdb debug server.
 
@@ -101,6 +108,7 @@ def attach(
     client_opts = {
         "exchange_hostname": hostname,
         "exchange_port": port,
+        "connection_attempts": connection_attempts,
     }
     client = Client(opts=client_opts)
 

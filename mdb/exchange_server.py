@@ -3,9 +3,10 @@
 
 import asyncio
 import logging
+import os
 import signal
 import ssl
-from typing import Any, Coroutine
+from typing import Any, Coroutine, Optional
 
 from .async_connection import AsyncConnection
 from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
@@ -16,7 +17,14 @@ logger = logging.getLogger(__name__)
 
 class AsyncExchangeServer:
     def __init__(self, opts: dict[str, Any]):
-        self._init_tls()
+
+        self.context: Optional[ssl.SSLContext] = None
+
+        if not os.environ.get("MDB_DISABLE_TLS", None):
+            self._init_tls()
+        else:
+            logger.warning("TLS is disabled by environment variable.")
+
         self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
         self.port = opts["port"]
@@ -44,9 +52,11 @@ class AsyncExchangeServer:
         try:
             msg = await conn.recv_message()
         except Exception as e:
-            print(e)
+            logger.exception("%s", e)
+            return
+
         logger.info(
-            "exchange server received {%s} from {%s}.",
+            "exchange server received [%s] from %s.",
             msg.msg_type,
             msg.data["from"],
         )
@@ -60,6 +70,17 @@ class AsyncExchangeServer:
         if msg.data["from"] == DEBUG_CLIENT:
             self.debuggers.append(conn)
             await conn.send_message(Message.debug_conn_response())
+            # wait for it to inform us that it's completed init
+            init_message = await conn.recv_message()
+
+            if init_message.msg_type != "debug_init_complete":
+                logger.error(
+                    "Client did not send initialize: received [%s]",
+                    init_message.msg_type,
+                )
+            else:
+                logger.info("Client sent initialization confirmed")
+
             return  # keep connection open
 
         if msg.data["from"] == MDB_CLIENT:

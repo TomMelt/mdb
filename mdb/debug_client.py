@@ -102,6 +102,9 @@ class DebugClient(AsyncClient):
         await self.init_debug_proc()
         logger.info("debug proc initialized")
 
+        # tell the exhange server we are done with init
+        await self.conn.send_message(Message.debug_init_complete())
+
         previous_task = None
 
         while True:
