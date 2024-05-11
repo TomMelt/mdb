@@ -4,28 +4,26 @@
 import os
 import re
 import shlex
-from subprocess import Popen, run
+from subprocess import run
 from time import sleep
-from typing import Union
+from typing import Generator, Union
+
+import pytest
+
+# test utilities
+from utils import BackgroundProcess
 
 from mdb.utils import strip_bracketted_paste, strip_control_characters
 
-class BackgroundProcess:
-    def __init__(self, command: str):
-        self.command = shlex.split(command)
 
-    def __enter__(self) -> "BackgroundProcess":
-        print("--- LAUNCHING ---")
-        self._running_command = Popen(self.command, stdout=None, stderr=None)
-        self._running_command.__enter__()
-        sleep(1)
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        print("--- EXITING ---")
-        # kill the background command
-        self._running_command.kill()
-        self._running_command.__exit__(exc_type, exc_value, traceback)
+@pytest.fixture(autouse=True)
+def slow_down_tests() -> Generator[None, None, None]:
+    yield
+    sleep(1)
+    run(
+        shlex.split("pkill -9 mdb"),
+        capture_output=True,
+    )
 
 
 def strip_runtime_specific_output(text: str) -> str:
@@ -33,8 +31,8 @@ def strip_runtime_specific_output(text: str) -> str:
     text = re.sub(r"[Pp]rocess \d+", "process [proc id]", text)
     # remove LWP
     text = re.sub(r"(LWP \d+)", "(LWP XXX)", text)
-    # remove thread ids
-    text = re.sub(r"Thread 0[xX][0-9a-fA-F]+", "Thread [thread id]", text)
+    # remove hex address
+    text = re.sub(r"0[xX][0-9a-fA-F]+", "[hex add]", text)
     # remove absolute cwd
     text = re.sub(
         r"cmdline = '[\/\w]+/simple-mpi.exe'", "cmdline = simple-mpi.exe", text
@@ -63,12 +61,8 @@ def standardize_output(text: str) -> str:
     text = "\n".join(list(filter(filter_mask, text.splitlines())))
     return text
 
-def run_test_for_backend(launch_command: str, name: str, backend_script: str):
-    # kill any stray mdb sessions
-    run(
-        shlex.split("pkill -9 mdb"),
-        capture_output=True,
-    )
+
+def run_test_for_backend(launch_command: str, name: str, backend_script: str) -> None:
 
     # run the mdb launcher in the background
     with BackgroundProcess(launch_command):
@@ -78,7 +72,7 @@ def run_test_for_backend(launch_command: str, name: str, backend_script: str):
 
         # run mdb attach and collect the stdout
         result = run(
-            shlex.split("mdb attach -x integration.mdb"),
+            shlex.split("mdb attach -h 127.0.0.1 -p 62000 -x integration.mdb"),
             capture_output=True,
         )
 
@@ -127,8 +121,9 @@ command quit
 quit
 """
 
+
 def test_mdb_gdb() -> None:
-    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2"
+    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
     run_test_for_backend(launch_command, "gdb", script_gdb)
 
 
@@ -155,27 +150,24 @@ quit
 
 
 def test_mdb_lldb() -> None:
-    launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2"
+    launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
     run_test_for_backend(launch_command, "lldb", script_lldb)
+
 
 def test_mdb_timeout() -> None:
 
-    # kill any stray mdb sessions
-    run(
-        shlex.split("pkill -9 mdb"),
-        capture_output=True,
-    )
-    sleep(1)
-
     # remove existing log file
-    os.remove("mdb-attach.log")
+    try:
+        os.remove("mdb-attach.log")
+    except FileNotFoundError:
+        pass
     # run mdb attach without start mdb launch
-    run(shlex.split("mdb attach --log-level DEBUG"))
+    run(shlex.split("mdb attach -h 127.0.0.1 --log-level DEBUG -p 62000"))
 
     with open("mdb-attach.log") as logfile:
         result_txt = "".join(logfile.readlines())
 
-    with open("tests/output/timeout.log") as logfile:
+    with open("tests/output/timeout-log.out") as logfile:
         answer_text = "".join(logfile.readlines())
 
     assert result_txt == answer_text
