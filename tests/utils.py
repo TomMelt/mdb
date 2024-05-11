@@ -13,15 +13,12 @@ class BackgroundProcess:
 
     def __enter__(self) -> "BackgroundProcess":
         print("--- LAUNCHING ---")
+
         self._running_command = Popen(
             self.command,
             stdout=PIPE,
             stderr=PIPE,
             env={
-                # on this CI this might run as root because
-                # docker containers are the wild wild west
-                "OMPI_ALLOW_RUN_AS_ROOT": "1",
-                "OMPI_ALLOW_RUN_AS_ROOT_CONFIRM": "1",
                 **os.environ,
             },
         )

@@ -52,8 +52,8 @@ class AsyncClient(ABC):
                 cert_host, self.exchange_port, ssl=self.context
             )
             self.conn = AsyncConnection(reader, writer)
-        except Exception as e:
-            logger.exception("init connection error")
+        except ConnectionRefusedError as e:
+            logger.info("init connection error")
             raise e
 
     async def connect_to_exchange(self, msg: "Message") -> "Message":
@@ -68,15 +68,14 @@ class AsyncClient(ABC):
                 await self.conn.send_message(msg)
                 msg = await self.conn.recv_message()
                 break
-            except Exception as e:
+            except ConnectionError:
                 await asyncio.sleep(1)
-                logger.exception("%s", e)
+                attempts += 1
                 logger.info(
                     "Attempt %d/%d to connect to exchange server. Sleeping 1 second...",
                     attempts,
                     self.connection_attempts,
                 )
-                attempts += 1
         return msg
 
     async def close(self) -> None:

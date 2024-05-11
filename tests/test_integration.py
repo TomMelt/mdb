@@ -31,8 +31,8 @@ def strip_runtime_specific_output(text: str) -> str:
     text = re.sub(r"[Pp]rocess \d+", "process [proc id]", text)
     # remove LWP
     text = re.sub(r"(LWP \d+)", "(LWP XXX)", text)
-    # remove thread ids
-    text = re.sub(r"Thread 0[xX][0-9a-fA-F]+", "Thread [thread id]", text)
+    # remove hex address
+    text = re.sub(r"0[xX][0-9a-fA-F]+", "[hex add]", text)
     # remove absolute cwd
     text = re.sub(
         r"cmdline = '[\/\w]+/simple-mpi.exe'", "cmdline = simple-mpi.exe", text
@@ -157,14 +157,15 @@ def test_mdb_lldb() -> None:
 def test_mdb_timeout() -> None:
 
     # remove existing log file
-    os.remove("mdb-attach.log")
+    try:
+        os.remove("mdb-attach.log")
+    except FileNotFoundError:
+        pass
     # run mdb attach without start mdb launch
     run(shlex.split("mdb attach -h 127.0.0.1 --log-level DEBUG -p 62000"))
 
     with open("mdb-attach.log") as logfile:
-        log = logfile.readlines()
-        log = list(filter(lambda x: re.match(r"^(ERROR|INFO).*", x), log))
-        result_txt = "".join(log)
+        result_txt = "".join(logfile.readlines())
 
     with open("tests/output/timeout-log.out") as logfile:
         answer_text = "".join(logfile.readlines())
