@@ -56,7 +56,6 @@ class DebugClient(AsyncClient):
         self, message: Message, prev: Optional[asyncio.Task[Any]]
     ) -> None:
         command = message.data["command"]
-        select = message.data["select"]
         output = ""
         if command == "interrupt":
             logger.warning("Interrupt received")
@@ -75,6 +74,7 @@ class DebugClient(AsyncClient):
             output = f"\r\nInterrupted: {success}\r\n"
 
         else:
+            select = message.data["select"]
             logger.debug("Running command: '%s'", command)
             logger.debug("self.myrank = %d", self.myrank)
             if self.myrank in select:
