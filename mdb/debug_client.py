@@ -71,7 +71,9 @@ class DebugClient(AsyncClient):
             self.dbg_proc.sendintr()
             await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
             # report on how that all went
-            output = f"\r\nInterrupted: {success}\r\n"
+            output = self.dbg_proc.before.decode()
+            output = strip_bracketted_paste(output)
+            output += f"\r\nInterrupted: {success}\r\n"
 
         else:
             select = message.data["select"]
