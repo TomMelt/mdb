@@ -106,6 +106,16 @@ class Message:
             },
         )
 
+    @staticmethod
+    def debug_init_complete() -> "Message":
+        return Message(
+            "debug_init_complete",
+            {
+                "from": DEBUG_CLIENT,
+                "to": EXCHANGE,
+            },
+        )
+
     def to_json(self) -> bytes:
         msg = dict(msg_type=self.msg_type, data=self.data)
         return json.dumps(msg).encode() + END_BYTES
