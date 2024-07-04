@@ -42,7 +42,7 @@ class AsyncClient(ABC):
                 self.exchange_hostname, self.exchange_port, ssl=self.context
             )
             self.conn = AsyncConnection(reader, writer)
-        except Exception as e :
+        except Exception as e:
             logger.exception("init connection error")
             raise e
 

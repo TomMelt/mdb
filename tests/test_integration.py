@@ -10,6 +10,7 @@ from typing import Union
 
 from mdb.utils import strip_bracketted_paste, strip_control_characters
 
+
 class BackgroundProcess:
     def __init__(self, command: str):
         self.command = shlex.split(command)
@@ -62,6 +63,7 @@ def standardize_output(text: str) -> str:
     # required for GitHub CI run
     text = "\n".join(list(filter(filter_mask, text.splitlines())))
     return text
+
 
 def run_test_for_backend(launch_command: str, name: str, backend_script: str):
     # kill any stray mdb sessions
@@ -127,6 +129,7 @@ command quit
 quit
 """
 
+
 def test_mdb_gdb() -> None:
     launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2"
     run_test_for_backend(launch_command, "gdb", script_gdb)
@@ -157,6 +160,7 @@ quit
 def test_mdb_lldb() -> None:
     launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2"
     run_test_for_backend(launch_command, "lldb", script_lldb)
+
 
 def test_mdb_timeout() -> None:
 
