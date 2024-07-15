@@ -166,6 +166,10 @@ def test_mdb_timeout() -> None:
         log = list(filter(lambda x: re.match(r"^(ERROR|INFO).*", x), log))
         result_txt = "".join(log)
 
+    # uncomment this block to write test output
+    with open("timeout-log.out", "w") as outfile:
+        outfile.write(result_txt)
+
     with open("tests/output/timeout-log.out") as logfile:
         answer_text = "".join(logfile.readlines())
 
