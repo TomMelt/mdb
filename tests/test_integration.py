@@ -27,6 +27,8 @@ def slow_down_tests() -> Generator[None, None, None]:
 
 
 def strip_runtime_specific_output(text: str) -> str:
+    # remove lldb's "Process [proc id] resuming" statements
+    text = re.sub(r".*Process \d+ resuming\n", "", text)
     # remove process ids
     text = re.sub(r"[Pp]rocess \d+", "process [proc id]", text)
     # remove LWP
