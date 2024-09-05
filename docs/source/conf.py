@@ -12,7 +12,7 @@ import sys
 project = "mdb"
 copyright = "2024, Tom Meltzer"
 author = "Tom Meltzer"
-release = "0.0.1-alpha"
+release = "1.0.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

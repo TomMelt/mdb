@@ -30,6 +30,22 @@ First we will create and activate a ``conda`` environment for ``mdb`` (you can o
    $ conda create -n mdb python
    $ conda activate mdb
 
+You then have two options for install. Either from source (using GitHub) or using PyPI
+(recommended).
+
+pip install
++++++++++++
+
+To install mdb with the optional package ``termgraph`` use the following command.
+
+.. code-block:: console
+
+   $ pip install mdb[termgraph]
+
+
+GitHub install
+++++++++++++++
+
 Then we can download and install the ``mdb`` code. You can download/clone the ``mdb`` code anywhere
 but in this example I will choose the home directory.
 
