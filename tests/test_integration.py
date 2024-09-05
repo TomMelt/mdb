@@ -149,6 +149,7 @@ command quit
 quit
 """
 
+
 @pytest.mark.skip(reason="Expected output is out of date")
 def test_mdb_lldb() -> None:
     launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
@@ -172,3 +173,14 @@ def test_mdb_timeout() -> None:
         answer_text = "".join(logfile.readlines())
 
     assert result_txt == answer_text
+
+
+def test_mdb_connect() -> None:
+    launch_command = "mdb launch -b gdb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
+
+    with BackgroundProcess(launch_command):
+        result = run(
+            shlex.split("mdb attach -h 127.0.0.1 -p 62000 -x integration.mdb"),
+            capture_output=True,
+        )
+        _ = result.stdout.decode("utf-8")
