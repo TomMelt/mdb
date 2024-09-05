@@ -31,8 +31,8 @@ def strip_runtime_specific_output(text: str) -> str:
     text = re.sub(r"[Pp]rocess \d+", "process [proc id]", text)
     # remove LWP
     text = re.sub(r"(LWP \d+)", "(LWP XXX)", text)
-    # remove hex address
-    text = re.sub(r"0[xX][0-9a-fA-F]+", "[hex add]", text)
+    # remove thread ids
+    text = re.sub(r"Thread 0[xX][0-9a-fA-F]+", "Thread [thread id]", text)
     # remove absolute cwd
     text = re.sub(
         r"cmdline = '[\/\w]+/simple-mpi.exe'", "cmdline = simple-mpi.exe", text

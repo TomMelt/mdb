@@ -56,7 +56,6 @@ class DebugClient(AsyncClient):
         self, message: Message, prev: Optional[asyncio.Task[Any]]
     ) -> None:
         command = message.data["command"]
-        select = message.data["select"]
         output = ""
         if command == "interrupt":
             logger.warning("Interrupt received")
@@ -72,9 +71,12 @@ class DebugClient(AsyncClient):
             self.dbg_proc.sendintr()
             await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
             # report on how that all went
-            output = f"\r\nInterrupted: {success}\r\n"
+            output = self.dbg_proc.before.decode()
+            output = strip_bracketted_paste(output)
+            output += f"\r\nInterrupted: {success}\r\n"
 
         else:
+            select = message.data["select"]
             logger.debug("Running command: '%s'", command)
             logger.debug("self.myrank = %d", self.myrank)
             if self.myrank in select:

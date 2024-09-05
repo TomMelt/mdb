@@ -52,9 +52,9 @@ class AsyncClient(ABC):
                 cert_host, self.exchange_port, ssl=self.context
             )
             self.conn = AsyncConnection(reader, writer)
-        except Exception:
+        except Exception as e:
             logger.info("init connection error")
-            raise ConnectionError
+            raise e
 
     async def connect_to_exchange(self, msg: "Message") -> "Message":
         attempts = 0

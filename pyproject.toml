@@ -3,8 +3,8 @@ requires = ["setuptools >= 61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mdb"
-version = "0.0.0"
+name = "mdb_debugger"
+version = "1.0.2"
 dependencies = [
     "click==8.1.7",
     "matplotlib==3.8.3",
@@ -14,10 +14,10 @@ dependencies = [
 ]
 requires-python = ">= 3.8"
 authors = [
-  {name = "Tom Meltzer" },
+  {name = "Tom Meltzer", email="tdm39@cam.ac.uk" },
 ]
 maintainers = [
-  {name = "Tom Meltzer" },
+  {name = "Tom Meltzer", email="tdm39@cam.ac.uk" },
 ]
 readme = "README.md"
 license = { file = "LICENSE" }
