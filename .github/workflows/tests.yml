@@ -29,6 +29,9 @@ jobs:
         pip install -e .[develop,termgraph]
     - name: Run tests
       run: |
+        # without this, mpi wont start and the server goes into a death spiral
+        export OMPI_ALLOW_RUN_AS_ROOT=1
+        export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
         MDB_DISABLE_TLS=1 pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv
     - name: Check coverage
       run: |
