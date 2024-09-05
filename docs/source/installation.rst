@@ -36,12 +36,12 @@ You then have two options for install. Either from source (using GitHub) or usin
 pip install
 +++++++++++
 
-To install mdb with the optional package ``termgraph`` use the following command.
+To install ``mdb`` with the optional package ``termgraph`` use the following command (**Note:** the
+name ``mdb`` is already in use on PyPI, so I have decided to call the repo ``mdb-debugger``)
 
 .. code-block:: console
 
-   $ pip install mdb[termgraph]
-
+   $ pip install mdb-debugger[termgraph]
 
 GitHub install
 ++++++++++++++
