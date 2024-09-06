@@ -180,8 +180,12 @@ def test_mdb_connect() -> None:
     launch_command = "mdb launch -b gdb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
 
     with BackgroundProcess(launch_command):
-        result = run(
-            shlex.split("mdb attach -h 127.0.0.1 -p 62000 -x integration.mdb"),
-            capture_output=True,
+        loop, shell = mdb.mdb_attach.attach_shell(
+            {
+                "exchange_hostname": "127.0.0.1",
+                "exchange_port": 62000,
+                "connection_attempts": 3,
+            },
+            "termgraph",
         )
-        _ = result.stdout.decode("utf-8")
+        loop.close()

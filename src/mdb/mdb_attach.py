@@ -10,7 +10,7 @@ import signal
 import click
 from typing_extensions import TypedDict
 
-from .mdb_client import Client
+from .mdb_client import Client, ClientOpts
 from .mdb_shell import mdbShell
 
 ShellOpts = TypedDict(
@@ -51,7 +51,12 @@ ShellOpts = TypedDict(
     "-x",
     "--exec-script",
     type=click.File("r"),
-    help="Execute a set of mdb commands contained in a script file.",
+    help="Execute a set of mdb commands contained in a script file. This script will run and then normal shell mode will be resumed unless `--interactive=false` is also passed.",
+)
+@click.option(
+    "--interactive",
+    default=True,
+    help="Controls whether mdb will spawn an interactive debugging shell or not. Intended use is for with `-x/--exec-script`.",
 )
 @click.option(
     "--log-level",
@@ -82,6 +87,7 @@ def attach(
     port: int,
     select: str,
     exec_script: click.File,
+    interactive: bool,
     log_level: str,
     log_file: str,
     plot_lib: str,
@@ -108,7 +114,7 @@ def attach(
     else:
         logger_kwargs["filename"] = log_file
 
-    # init a log configuration
+    # init a global logging configuration
     logging.basicConfig(**logger_kwargs)
 
     supported_plot_libs = ["termgraph", "matplotlib"]
@@ -116,16 +122,47 @@ def attach(
         msg = f"warning: unrecognized plot library [{plot_lib}]. Supported libraries are [{supported_plot_libs}]."
         raise ValueError(msg)
 
-    if exec_script is None:
-        script = None
-    else:
-        script = exec_script.name
-
     client_opts = {
         "exchange_hostname": hostname,
         "exchange_port": port,
         "connection_attempts": connection_attempts,
     }
+
+    if exec_script is None:
+        script = None
+    else:
+        script = exec_script.name
+
+    shell = attach_shell(
+        client_opts,
+        plot_lib,
+        select=select,
+        script_path=script,
+    )
+
+    if not interactive:
+        shell.preloop()
+    else:
+        shell.cmdloop()
+
+    # get the current event loop
+    loop = asyncio.get_event_loop()
+    loop.close()
+
+
+def attach_shell(
+    client_opts: ClientOpts,
+    plot_lib: str,
+    select: str = None,
+    script_path: str = None,
+) -> mdbShell:
+    """
+    Attach to mdb debug server. Returns the shell instance. Intended use is for
+    within wrappers, scripts, or tests.
+
+    For details about the arguments, see the docstring of `attach`.
+    """
+
     client = Client(opts=client_opts)
 
     loop = asyncio.get_event_loop()
@@ -140,7 +177,7 @@ def attach(
 
     shell_opts: ShellOpts = {
         "backend_name": client.backend_name,
-        "exec_script": script,
+        "exec_script": script_path,
         "plot_lib": plot_lib,
         "ranks": ranks,
         "select": select,
@@ -160,5 +197,4 @@ def attach(
             functools.partial(ask_exit, signame),
         )
 
-    mshell.cmdloop()
-    loop.close()
+    return mshell
