@@ -4,16 +4,18 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from .async_client import AsyncClient
+from .async_client import AsyncClient, AsyncClientOpts
 from .messages import Message
 
 logger = logging.getLogger(__name__)
 
+# alias
+ClientOpts = AsyncClientOpts
+
 
 class Client(AsyncClient):
-    def __init__(self, opts: dict[str, Any]):
+    def __init__(self, opts: AsyncClientOpts):
         super().__init__(opts=opts)
 
     async def send_interrupt(self, signame: str) -> None:

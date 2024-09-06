@@ -7,7 +7,9 @@ import os
 import ssl
 from abc import ABC
 from socket import gethostbyaddr
-from typing import Any, Optional
+from typing import Optional
+
+from typing_extensions import TypedDict
 
 from .async_connection import AsyncConnection
 from .messages import Message
@@ -15,12 +17,22 @@ from .utils import ssl_cert_path, ssl_key_path
 
 logger = logging.getLogger(__name__)
 
+AsyncClientOpts = TypedDict(
+    "AsyncClientOpts",
+    {
+        "exchange_hostname": str,
+        "exchange_port": int,
+        "connection_attempts": int,
+    },
+)
+
 
 class AsyncClient(ABC):
-    def __init__(self, opts: dict[Any, Any]):
+    def __init__(self, opts: AsyncClientOpts):
 
         self.context: Optional[ssl.SSLContext] = None
 
+        # TODO: this should also be configurable via an option
         if not os.environ.get("MDB_DISABLE_TLS", None):
             self._init_tls()
         else:
