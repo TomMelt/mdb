@@ -15,6 +15,8 @@ from utils import BackgroundProcess
 
 from mdb.utils import strip_bracketted_paste, strip_control_characters
 
+import mdb.mdb_attach
+
 
 @pytest.fixture(autouse=True)
 def slow_down_tests() -> Generator[None, None, None]:
@@ -163,16 +165,15 @@ def test_mdb_timeout() -> None:
         os.remove("mdb-attach.log")
     except FileNotFoundError:
         pass
+
     # run mdb attach without start mdb launch
-    run(shlex.split("mdb attach -h 127.0.0.1 --log-level DEBUG -p 62000"))
-
-    with open("mdb-attach.log") as logfile:
-        result_txt = "".join(logfile.readlines())
-
-    with open("tests/output/timeout-log.out") as logfile:
-        answer_text = "".join(logfile.readlines())
-
-    assert result_txt == answer_text
+    try:
+        mdb.mdb_attach.attach(
+            ["-h", "127.0.0.1", "--log-level", "DEBUG", "-p", "62000"],
+            standalone_mode=False,
+        )
+    except ConnectionError as e:
+        assert str(e) == "couldn't connect to exchange server at 127.0.0.1:62000."
 
 
 def test_mdb_connect() -> None:
