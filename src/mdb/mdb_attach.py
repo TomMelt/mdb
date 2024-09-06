@@ -93,7 +93,6 @@ def attach(
     logging.basicConfig(
         filename="mdb-attach.log", encoding="utf-8", level=numeric_level
     )
-    logger = logging.getLogger(__name__)
 
     supported_plot_libs = ["termgraph", "matplotlib"]
     if plot_lib not in supported_plot_libs:
@@ -114,12 +113,7 @@ def attach(
 
     loop = asyncio.get_event_loop()
 
-    try:
-        loop.run_until_complete(client.connect())
-    except ConnectionError as e:
-        logger.error(e)
-        print(e)
-        exit(1)
+    loop.run_until_complete(client.connect())
 
     ranks = client.number_of_ranks
 
