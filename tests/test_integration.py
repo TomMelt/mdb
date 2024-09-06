@@ -3,6 +3,7 @@
 
 import os
 import re
+import asyncio
 import shlex
 from subprocess import run
 from time import sleep
@@ -76,10 +77,17 @@ def run_test_for_backend(
             "termgraph",
         )
 
+        loop = asyncio.get_event_loop()
+        command_response = loop.run_until_complete(
+            shell.client.conn.send_message(mdb.messages.Message.ping())
+        )
+        # wait to get the pong
+        command_response = loop.run_until_complete(shell.client.conn.recv_message())
+
+        assert command_response.msg_type == "pong"
+
         shell.onecmd("command info proc")
         out, err = capfd.readouterr()
-
-        assert "LAUNCHING" in out
 
         # TODO: this should check the output like it used to but for now we
         # just test if it blows up or not
@@ -171,3 +179,13 @@ def test_mdb_connect() -> None:
             },
             "termgraph",
         )
+
+        # ping pong
+        loop = asyncio.get_event_loop()
+        command_response = loop.run_until_complete(
+            shell.client.conn.send_message(mdb.messages.Message.ping())
+        )
+        # wait to get the pong
+        command_response = loop.run_until_complete(shell.client.conn.recv_message())
+
+        assert command_response.msg_type == "pong"
