@@ -106,10 +106,20 @@ class AsyncExchangeServer:
                 for debugger in self.debuggers
             ]
             messages = await asyncio.gather(*tasks)
-            logger.debug("Sending results to client")
-            await conn.send_message(
-                Message.exchange_command_response(messages=messages)
-            )
+
+            if all(i.msg_type == "debug_command_response" for i in messages):
+                logger.debug("Sending results to client")
+                await conn.send_message(
+                    Message.exchange_command_response(messages=messages)
+                )
+            elif all(i.msg_type == "pong" for i in messages):
+                logger.debug("Sending pong to client")
+                await conn.send_message(Message.pong())
+            else:
+                logger.error(
+                    "Inconsistent debugger message types: %s",
+                    set(i.msg_type for i in messages),
+                )
 
     async def client_loop(self, conn: AsyncConnection) -> None:
         # the problem here is we don't know if another message is going to come
