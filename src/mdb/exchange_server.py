@@ -141,7 +141,7 @@ class AsyncExchangeServer:
                     "No debuggers connected after timeout period. Exchange server shutting down."
                 )
             )
-            self.kill()
+            await self.kill()
 
         asyncio.create_task(self._forward_all_debuggers_to_client(conn))
 

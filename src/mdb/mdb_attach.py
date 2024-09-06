@@ -17,7 +17,7 @@ ShellOpts = TypedDict(
     "ShellOpts",
     {
         "backend_name": str,
-        "exec_script": str,
+        "exec_script": str | None,
         "plot_lib": str,
         "ranks": int,
         "select": str,
@@ -115,7 +115,7 @@ def attach(
         logger_kwargs["filename"] = log_file
 
     # init a global logging configuration
-    logging.basicConfig(**logger_kwargs)
+    logging.basicConfig(**logger_kwargs)  # type: ignore
 
     supported_plot_libs = ["termgraph", "matplotlib"]
     if plot_lib not in supported_plot_libs:
@@ -134,7 +134,7 @@ def attach(
         script = exec_script.name
 
     shell = attach_shell(
-        client_opts,
+        client_opts,  # type: ignore
         plot_lib,
         select=select,
         script_path=script,
@@ -153,8 +153,8 @@ def attach(
 def attach_shell(
     client_opts: ClientOpts,
     plot_lib: str,
-    select: str = None,
-    script_path: str = None,
+    select: None | str = None,
+    script_path: None | str = None,
 ) -> mdbShell:
     """
     Attach to mdb debug server. Returns the shell instance. Intended use is for

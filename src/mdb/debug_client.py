@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class DebugClient(AsyncClient):
-    def __init__(self, opts: dict[str, Any]):
-        super().__init__(opts=opts)
+    def __init__(self, opts: dict[str, str]):
+        super().__init__(opts=opts)  # type: ignore
         self.myrank = int(opts["rank"])
         self.target = opts["target"]
         self.args = opts["args"]
