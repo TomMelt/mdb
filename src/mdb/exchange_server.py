@@ -14,6 +14,8 @@ from .utils import ssl_cert_path, ssl_key_path
 
 logger = logging.getLogger(__name__)
 
+DEBUGGER_TIMEOUT_DURATION = 10  # seconds
+
 
 class AsyncExchangeServer:
     def __init__(self, opts: dict[str, Any]):
@@ -131,6 +133,15 @@ class AsyncExchangeServer:
         # to handle this, every time a message comes in from the client, we send it to all debuggers
         # every time a message comes in from the debuggers, we send it to the client
 
+        if not await self.ensure_debuggers():
+            await conn.send_message(
+                # notify the client we're about to shutdown the exchange server
+                Message.exchange_info(
+                    "No debuggers connected after timeout period. Exchange server shutting down."
+                )
+            )
+            self.kill()
+
         asyncio.create_task(self._forward_all_debuggers_to_client(conn))
 
         while True:
@@ -175,8 +186,11 @@ class AsyncExchangeServer:
 
     async def shutdown(self, signame: str) -> None:
         """Cleanup tasks tied to the service's shutdown."""
-        loop = asyncio.get_event_loop()
         logger.info(f"mdb launcher received signal {signame}")
+        await self.kill()
+
+    async def kill(self) -> None:
+        loop = asyncio.get_event_loop()
         try:
             proc = self.launch_task.result()
             logger.info(f"terminating process [{proc.pid}]")
@@ -186,3 +200,18 @@ class AsyncExchangeServer:
         except Exception as e:
             print(e)
         loop.stop()
+
+    async def ensure_debuggers(self) -> bool:
+        count = 0
+
+        while len(self.debuggers) == 0:
+            await asyncio.sleep(1)
+            count += 1
+
+            if count > DEBUGGER_TIMEOUT_DURATION:
+                logger.error("No debuggers connected in timeout interval")
+                return False
+
+        logger.debug("Debuggers connected: %d", len(self.debuggers))
+
+        return True
