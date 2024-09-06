@@ -30,6 +30,20 @@ class Message:
         )
 
     @staticmethod
+    def ping() -> "Message":
+        return Message(
+            "ping",
+            {},
+        )
+
+    @staticmethod
+    def pong() -> "Message":
+        return Message(
+            "pong",
+            {},
+        )
+
+    @staticmethod
     def debug_conn_response() -> "Message":
         return Message(
             "mdb_conn_response",

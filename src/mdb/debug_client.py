@@ -113,6 +113,13 @@ class DebugClient(AsyncClient):
             # as soon as we get a command, run it so we can go back to waiting
             # for the next command (else we can't capture interrupts correctly)
             msg = await self.conn.recv_message()
-            previous_task = asyncio.create_task(
-                self.execute_command(msg, previous_task)
-            )
+
+            if msg.msg_type == "ping":
+                logger.debug("Received ping")
+                await self.conn.send_message(Message.pong())
+            elif msg.msg_type == "mdb_command_request":
+                previous_task = asyncio.create_task(
+                    self.execute_command(msg, previous_task)
+                )
+            else:
+                logger.error("Unhandled message type: %s", msg.msg_type)
