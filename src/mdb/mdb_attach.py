@@ -1,6 +1,7 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
+import sys
 import asyncio
 import functools
 import logging
@@ -59,6 +60,12 @@ ShellOpts = TypedDict(
     help="Choose minimum level of debug messages: [DEBUG, INFO, WARN, ERROR, CRITICAL]",
 )
 @click.option(
+    "--log-file",
+    default="mdb-attach.log",
+    show_default=True,
+    help="The path to a file to write the logs to. Will create the file if it does not exist. Special values are `stderr` and `stdout`, which correspond to the programs standard error and output respectively.",
+)
+@click.option(
     "--plot-lib",
     default="termgraph",
     show_default=True,
@@ -76,6 +83,7 @@ def attach(
     select: str,
     exec_script: click.File,
     log_level: str,
+    log_file: str,
     plot_lib: str,
     connection_attempts: int,
 ) -> None:
@@ -90,9 +98,18 @@ def attach(
     if not isinstance(numeric_level, int):
         raise ValueError("Invalid log level: %s" % log_level)
 
-    logging.basicConfig(
-        filename="mdb-attach.log", encoding="utf-8", level=numeric_level
-    )
+    # logic to workout where we are logging to
+    logger_kwargs = dict(encoding="utf-8", level=numeric_level)
+
+    if log_file == "stderr":
+        logger_kwargs["stream"] = sys.stderr
+    elif log_file == "stdout":
+        logger_kwargs["stream"] = sys.stdout
+    else:
+        logger_kwargs["filename"] = log_file
+
+    # init a log configuration
+    logging.basicConfig(**logger_kwargs)
 
     supported_plot_libs = ["termgraph", "matplotlib"]
     if plot_lib not in supported_plot_libs:
