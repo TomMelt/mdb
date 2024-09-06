@@ -139,9 +139,12 @@ class mdbShell(cmd.Cmd):
         command_response = loop.run_until_complete(
             self.client.run_command(command, select)
         )
-        response = sort_debug_response(command_response.data["results"])
-        pretty_print_response(response)
 
+        if command_response.msg_type == "exchange_command_response":
+            response = sort_debug_response(command_response.data["results"])
+            pretty_print_response(response)
+        else:
+            print("Received unexpected message type: %s", command_response.msg_type)
         return
 
     def do_quit(self, line: str) -> bool:
