@@ -70,7 +70,7 @@ class AsyncExchangeServer:
         # to be pushed to `self.debuggers` or not, etc
 
         if msg.data["from"] == DEBUG_CLIENT:
-            self.debuggers.append(conn)
+            # ack
             await conn.send_message(Message.debug_conn_response())
             # wait for it to inform us that it's completed init
             init_message = await conn.recv_message()
@@ -82,8 +82,9 @@ class AsyncExchangeServer:
                 )
             else:
                 logger.info("Client sent initialization confirmed")
-
-            return  # keep connection open
+                # only now we append the connection
+                self.debuggers.append(conn)
+                return  # keep connection open
 
         if msg.data["from"] == MDB_CLIENT:
             # tell the client about the setup
