@@ -121,6 +121,15 @@ class Message:
         )
 
     @staticmethod
+    def exchange_info(message: str) -> "Message":
+        return Message(
+            "exchange_info",
+            {
+                "message": message,
+            },
+        )
+
+    @staticmethod
     def debug_init_complete() -> "Message":
         return Message(
             "debug_init_complete",

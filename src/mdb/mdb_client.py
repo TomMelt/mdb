@@ -29,8 +29,20 @@ class Client(AsyncClient):
         await self.conn.send_message(
             Message.mdb_command_request(command=command, select=select)
         )
-        command_response = await self.conn.recv_message()
-        return command_response
+
+        while True:
+            command_response = await self.conn.recv_message()
+
+            if command_response.msg_type == "exchange_command_response":
+                return command_response
+            elif command_response.msg_type == "exchange_info":
+                print(
+                    "[*] Exchange Server: {}".format(command_response.data["message"])
+                )
+            else:
+                raise Exception(
+                    "Unhandled message type: {}".format(command_response.msg_type)
+                )
 
     async def connect(self) -> None:
         """
