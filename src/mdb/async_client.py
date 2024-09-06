@@ -68,9 +68,10 @@ class AsyncClient(ABC):
                 await self.conn.send_message(msg)
                 msg = await self.conn.recv_message()
                 break
-            except ConnectionError:
+            except Exception:
                 await asyncio.sleep(1)
                 attempts += 1
+                logger.exception("Failed to connect")
                 logger.info(
                     "Attempt %d/%d to connect to exchange server. Sleeping 1 second...",
                     attempts,
