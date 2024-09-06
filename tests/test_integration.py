@@ -64,7 +64,7 @@ def standardize_output(text: str) -> str:
 
 
 def run_test_for_backend(
-    capfd, launch_command: str, name: str, backend_script: str
+    capfd: pytest.CaptureFixture, launch_command: str, name: str, backend_script: str
 ) -> None:
     # run the mdb launcher in the background
     with BackgroundProcess(launch_command):
@@ -117,7 +117,7 @@ quit
 """
 
 
-def test_mdb_gdb(capfd) -> None:
+def test_mdb_gdb(capfd: pytest.CaptureFixture) -> None:
     launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
     run_test_for_backend(capfd, launch_command, "gdb", script_gdb)
 
@@ -144,7 +144,7 @@ quit
 """
 
 
-def test_mdb_lldb(capfd) -> None:
+def test_mdb_lldb(capfd: pytest.CaptureFixture) -> None:
     launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
     run_test_for_backend(capfd, launch_command, "lldb", script_lldb)
 
