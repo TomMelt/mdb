@@ -3,9 +3,10 @@
 
 import asyncio
 import logging
+import os
 import signal
 import ssl
-from typing import Any, Coroutine
+from typing import Any, Coroutine, Optional
 
 from .async_connection import AsyncConnection
 from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
@@ -13,10 +14,19 @@ from .utils import ssl_cert_path, ssl_key_path
 
 logger = logging.getLogger(__name__)
 
+DEBUGGER_TIMEOUT_DURATION = 10  # seconds
+
 
 class AsyncExchangeServer:
     def __init__(self, opts: dict[str, Any]):
-        self._init_tls()
+
+        self.context: Optional[ssl.SSLContext] = None
+
+        if not os.environ.get("MDB_DISABLE_TLS", None):
+            self._init_tls()
+        else:
+            logger.warning("TLS is disabled by environment variable.")
+
         self.number_of_ranks = opts["number_of_ranks"]
         self.hostname = opts["hostname"]
         self.port = opts["port"]
@@ -44,9 +54,11 @@ class AsyncExchangeServer:
         try:
             msg = await conn.recv_message()
         except Exception as e:
-            print(e)
+            logger.exception("%s", e)
+            return
+
         logger.info(
-            "exchange server received {%s} from {%s}.",
+            "exchange server received [%s] from %s.",
             msg.msg_type,
             msg.data["from"],
         )
@@ -58,9 +70,21 @@ class AsyncExchangeServer:
         # to be pushed to `self.debuggers` or not, etc
 
         if msg.data["from"] == DEBUG_CLIENT:
-            self.debuggers.append(conn)
+            # ack
             await conn.send_message(Message.debug_conn_response())
-            return  # keep connection open
+            # wait for it to inform us that it's completed init
+            init_message = await conn.recv_message()
+
+            if init_message.msg_type != "debug_init_complete":
+                logger.error(
+                    "Client did not send initialize: received [%s]",
+                    init_message.msg_type,
+                )
+            else:
+                logger.info("Client sent initialization confirmed")
+                # only now we append the connection
+                self.debuggers.append(conn)
+                return  # keep connection open
 
         if msg.data["from"] == MDB_CLIENT:
             # tell the client about the setup
@@ -85,10 +109,20 @@ class AsyncExchangeServer:
                 for debugger in self.debuggers
             ]
             messages = await asyncio.gather(*tasks)
-            logger.debug("Sending results to client")
-            await conn.send_message(
-                Message.exchange_command_response(messages=messages)
-            )
+
+            if all(i.msg_type == "debug_command_response" for i in messages):
+                logger.debug("Sending results to client")
+                await conn.send_message(
+                    Message.exchange_command_response(messages=messages)
+                )
+            elif all(i.msg_type == "pong" for i in messages):
+                logger.debug("Sending pong to client")
+                await conn.send_message(Message.pong())
+            else:
+                logger.error(
+                    "Inconsistent debugger message types: %s",
+                    set(i.msg_type for i in messages),
+                )
 
     async def client_loop(self, conn: AsyncConnection) -> None:
         # the problem here is we don't know if another message is going to come
@@ -99,6 +133,15 @@ class AsyncExchangeServer:
 
         # to handle this, every time a message comes in from the client, we send it to all debuggers
         # every time a message comes in from the debuggers, we send it to the client
+
+        if not await self.ensure_debuggers():
+            await conn.send_message(
+                # notify the client we're about to shutdown the exchange server
+                Message.exchange_info(
+                    "No debuggers connected after timeout period. Exchange server shutting down."
+                )
+            )
+            await self.kill()
 
         asyncio.create_task(self._forward_all_debuggers_to_client(conn))
 
@@ -144,8 +187,11 @@ class AsyncExchangeServer:
 
     async def shutdown(self, signame: str) -> None:
         """Cleanup tasks tied to the service's shutdown."""
-        loop = asyncio.get_event_loop()
         logger.info(f"mdb launcher received signal {signame}")
+        await self.kill()
+
+    async def kill(self) -> None:
+        loop = asyncio.get_event_loop()
         try:
             proc = self.launch_task.result()
             logger.info(f"terminating process [{proc.pid}]")
@@ -155,3 +201,18 @@ class AsyncExchangeServer:
         except Exception as e:
             print(e)
         loop.stop()
+
+    async def ensure_debuggers(self) -> bool:
+        count = 0
+
+        while len(self.debuggers) == 0:
+            await asyncio.sleep(1)
+            count += 1
+
+            if count > DEBUGGER_TIMEOUT_DURATION:
+                logger.error("No debuggers connected in timeout interval")
+                return False
+
+        logger.debug("Debuggers connected: %d", len(self.debuggers))
+
+        return True
