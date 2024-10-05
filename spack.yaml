@@ -1,0 +1,24 @@
+# This is a Spack Environment file.
+#
+# It describes a set of packages to be installed, along with
+# configuration settings.
+#
+# To build a create a new spack environment use the following
+#     spack env create mdb spack.yaml
+#     spack env activate -p mdb
+#     spack concretize
+#     spack install
+
+spack:
+  specs:
+  - mdb+manpage+termgraph
+  packages:
+    python:
+      require:
+        - "+tkinter"
+    py-matplotlib:
+      require:
+        - "backend=qt5agg"
+  view: true
+  concretizer:
+    unify: True
