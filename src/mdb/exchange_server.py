@@ -122,26 +122,6 @@ class AsyncExchangeServer:
         )
         return task
 
-    def listen(self) -> None:
-        # either pass in an event loop, or make one
-        loop = asyncio.get_event_loop()
-
-        # TODO: to get better control of the server, we can wrap our own
-        # transport layer and then add a system of hooks for logging or other
-        # events. For example, if a debug client loses connection, the exchange
-        # server should let the user know somehow. By using the library
-        # `start_server`, we lose some of that control, but lets us move
-        # faster.
-        task = asyncio.start_server(
-            self.handle_connection,
-            self.hostname,
-            self.port,
-            ssl=self.context,
-        )
-
-        loop.run_until_complete(task)
-        loop.run_forever()
-
     async def shutdown(self, signame: str) -> None:
         """Cleanup tasks tied to the service's shutdown."""
         loop = asyncio.get_event_loop()
