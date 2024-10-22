@@ -48,6 +48,8 @@ def strip_runtime_specific_output(text: str) -> str:
     text = re.sub(r"at 0[xX][0-9a-fA-F]+", "at [hex address]", text)
     # remove trailing whitespace (causes
     text = re.sub(r"\s+\n", "\n", text)
+    # remove $x variable notation (new lldb dropped it e.g., $0 = some_value)
+    text = re.sub(r"\$\d+\s+=\s+", "", text)
     return text
 
 
@@ -57,6 +59,10 @@ def standardize_output(text: str) -> str:
 
     def filter_mask(line: str) -> Union[str, None]:
         if re.search(r"\d+:Reading.*from remote target...", line):
+            return None
+        if re.search(r"\[thread id\]", line):
+            return None
+        if re.search(r"\[proc id\]", line):
             return None
         return line
 
@@ -179,7 +185,7 @@ def test_mdb_timeout() -> None:
     with open("mdb-attach.log") as logfile:
         result_txt = "".join(logfile.readlines())
 
-    with open("tests/output/timeout.log") as logfile:
+    with open("tests/output/mdb-attach-log") as logfile:
         answer_text = "".join(logfile.readlines())
 
     assert result_txt == answer_text
