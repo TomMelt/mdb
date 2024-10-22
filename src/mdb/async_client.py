@@ -42,8 +42,8 @@ class AsyncClient(ABC):
                 self.exchange_hostname, self.exchange_port, ssl=self.context
             )
             self.conn = AsyncConnection(reader, writer)
-        except Exception as e:
-            logger.exception("init connection error")
+        except ConnectionRefusedError as e:
+            logger.debug("init connection error")
             raise e
 
     async def connect_to_exchange(self, msg: "Message") -> "Message":

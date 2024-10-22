@@ -22,9 +22,10 @@ class AsyncConnection:
     async def recv_message(self) -> "Message":
         try:
             raw_msg = await self.reader.readuntil(separator=END_BYTES)
-        except Exception as e:
-            logger.exception("async read error")
-            raise e
+        except asyncio.IncompleteReadError:
+            # if connection drops we return None
+            # this can happen when the user force closes the attach client
+            return
         msg = Message.from_json(raw_msg)
         logger.debug("msg received [%s]", msg.msg_type)
         return msg

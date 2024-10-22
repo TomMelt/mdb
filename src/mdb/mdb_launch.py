@@ -168,7 +168,9 @@ def launch(
 
     cmd = wrapper_launcher.launch_command()
     logger.debug(f"launch command: {cmd}")
-    launch_task = loop.create_task(asyncio.create_subprocess_exec(*shlex.split(cmd)))
+    launch_task = loop.create_task(
+        asyncio.create_subprocess_exec(*shlex.split(cmd)), name="launch_task"
+    )
 
     exchange_opts = {
         "hostname": hostname,
@@ -178,7 +180,7 @@ def launch(
         "launch_task": launch_task,
     }
     server = AsyncExchangeServer(opts=exchange_opts)
-    loop.create_task(server.start_server())
+    loop.create_task(server.start_server(), name="starting server")
 
     for s in [signal.SIGINT, signal.SIGTERM]:
 

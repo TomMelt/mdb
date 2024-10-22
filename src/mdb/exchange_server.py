@@ -8,7 +8,7 @@ import ssl
 from typing import Any, Coroutine
 
 from .async_connection import AsyncConnection
-from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
+from .messages import ATTACH_CLIENT, DEBUG_CLIENT, Message
 from .utils import ssl_cert_path, ssl_key_path
 
 logger = logging.getLogger(__name__)
@@ -58,11 +58,13 @@ class AsyncExchangeServer:
         # to be pushed to `self.debuggers` or not, etc
 
         if msg.data["from"] == DEBUG_CLIENT:
+            conn.type = DEBUG_CLIENT
             self.debuggers.append(conn)
             await conn.send_message(Message.debug_conn_response())
             return  # keep connection open
 
-        if msg.data["from"] == MDB_CLIENT:
+        if msg.data["from"] == ATTACH_CLIENT:
+            conn.type = ATTACH_CLIENT
             # tell the client about the setup
             await conn.send_message(
                 Message.mdb_conn_response(
@@ -70,7 +72,9 @@ class AsyncExchangeServer:
                 )
             )
             # schedule the loop to run
-            loop.create_task(self.client_loop(conn))
+            loop.create_task(
+                self.client_loop(conn), name="handle msg from attach client"
+            )
             # but allow this function to return so it's not just stuck on the
             # stack
             return
@@ -80,15 +84,26 @@ class AsyncExchangeServer:
 
     async def _forward_all_debuggers_to_client(self, conn: AsyncConnection) -> None:
         while True:
-            tasks = [
-                asyncio.create_task(debugger.recv_message())
-                for debugger in self.debuggers
-            ]
-            messages = await asyncio.gather(*tasks)
-            logger.debug("Sending results to client")
-            await conn.send_message(
-                Message.exchange_command_response(messages=messages)
-            )
+            if self.debuggers:
+                tasks = [
+                    asyncio.create_task(debugger.recv_message(), name="debug tasks")
+                    for debugger in self.debuggers
+                ]
+                logger.debug("waiting to gather output from debug clients")
+                messages = await asyncio.gather(*tasks)
+                if any([msg is None for msg in messages]):
+                    logger.info("null message received from debugging clients")
+                    logger.info("quitting...")
+                    return
+                else:
+                    logger.debug("sending gathered messages to attach client")
+                    await conn.send_message(
+                        Message.exchange_command_response(messages=messages)
+                    )
+            else:
+                # sleep if debuggers haven't been established yet
+                await asyncio.sleep(1)
+                return
 
     async def client_loop(self, conn: AsyncConnection) -> None:
         # the problem here is we don't know if another message is going to come
@@ -106,6 +121,9 @@ class AsyncExchangeServer:
             try:
                 command = await conn.recv_message()
                 logger.debug("Received from client: %s", command)
+                if command is None:
+                    await self.shutdown(signal.SIGINT.name)
+                    break
             except asyncio.exceptions.IncompleteReadError:
                 logger.info("shutting down exchange server")
                 await self.shutdown(signal.SIGINT.name)
@@ -128,9 +146,10 @@ class AsyncExchangeServer:
         logger.info(f"mdb launcher received signal {signame}")
         try:
             proc = self.launch_task.result()
-            logger.info(f"terminating process [{proc.pid}]")
-            proc.terminate()
-            proc.kill()
+            if proc.returncode is None:
+                logger.info(f"terminating process [{proc.pid}]")
+                proc.terminate()
+            await proc.wait()
             logger.info(f"process [{proc.pid}] terminated")
         except Exception as e:
             print(e)
