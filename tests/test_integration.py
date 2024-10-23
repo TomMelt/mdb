@@ -44,7 +44,7 @@ def strip_runtime_specific_output(text: str) -> str:
     # remove absolute exe
     text = re.sub(r"exe = '[\/\w]+/simple-mpi.exe'", "exe = simple-mpi.exe", text)
     # remove program address
-    text = re.sub(r"at 0[xX][0-9a-fA-F]+", "at [hex address]", text)
+    text = re.sub(r"0[xX][0-9a-fA-F]+", "[hex address]", text)
     # remove trailing whitespace (causes
     text = re.sub(r"\s+\n", "\n", text)
     return text

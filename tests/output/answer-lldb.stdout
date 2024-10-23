@@ -1,6 +1,6 @@
 hello
 0:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 1.1
-0:    frame #0: 0x0000555555555364 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:24:7
+0:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:24:7
 0:   21    int process_rank, size_of_cluster;
 0:   22    float var;
 0:   23
@@ -11,7 +11,7 @@ hello
 0:   27    MPI_Comm_size(MPI_COMM_WORLD, &size_of_cluster);
 ************************************************************************
 1:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 1.1
-1:    frame #0: 0x0000555555555364 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:24:7
+1:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:24:7
 1:   21    int process_rank, size_of_cluster;
 1:   22    float var;
 1:   23
@@ -20,14 +20,14 @@ hello
 1:   25
 1:   26    MPI_Init(NULL, NULL);
 1:   27    MPI_Comm_size(MPI_COMM_WORLD, &size_of_cluster);
-0:Breakpoint 2: where = simple-mpi-cpp.exe`main + 95 at simple-mpi-cpp.cpp:30:12, address = 0x00005555555553a8
+0:Breakpoint 2: where = simple-mpi-cpp.exe`main + 95 at simple-mpi-cpp.cpp:30:12, address = [hex address]
 ************************************************************************
-1:Breakpoint 2: where = simple-mpi-cpp.exe`main + 95 at simple-mpi-cpp.cpp:30:12, address = 0x00005555555553a8
-0:Breakpoint 3: where = simple-mpi-cpp.exe`main + 127 at simple-mpi-cpp.cpp:32:20, address = 0x00005555555553c8
+1:Breakpoint 2: where = simple-mpi-cpp.exe`main + 95 at simple-mpi-cpp.cpp:30:12, address = [hex address]
+0:Breakpoint 3: where = simple-mpi-cpp.exe`main + 127 at simple-mpi-cpp.cpp:32:20, address = [hex address]
 ************************************************************************
-1:Breakpoint 3: where = simple-mpi-cpp.exe`main + 127 at simple-mpi-cpp.cpp:32:20, address = 0x00005555555553c8
+1:Breakpoint 3: where = simple-mpi-cpp.exe`main + 127 at simple-mpi-cpp.cpp:32:20, address = [hex address]
 0:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 2.1
-0:    frame #0: 0x00005555555553a8 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:30:12
+0:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:30:12
 0:   27    MPI_Comm_size(MPI_COMM_WORLD, &size_of_cluster);
 0:   28    MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
 0:   29
@@ -37,7 +37,7 @@ hello
 0:   32    if (process_rank == 0){
 ************************************************************************
 1:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 2.1
-1:    frame #0: 0x00005555555553a8 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:30:12
+1:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:30:12
 1:   27    MPI_Comm_size(MPI_COMM_WORLD, &size_of_cluster);
 1:   28    MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
 1:   29
@@ -46,7 +46,7 @@ hello
 1:   31
 1:   32    if (process_rank == 0){
 0:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 3.1
-0:    frame #0: 0x00005555555553c8 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:32:20
+0:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:32:20
 0:   29
 0:   30    var = 10.*process_rank;
 0:   31
@@ -55,13 +55,13 @@ hello
 0:   34
 0:   35      for (int i = 0; i < 3; ++i) {
 0:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 3.1
-0:    frame #0: 0x00005555555553c8 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:32:20
+0:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:32:20
 ************************************************************************
 1:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 2.1
-1:    frame #0: 0x00005555555553a8 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:30:12
+1:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:30:12
 unrecognized command [made-up-command]. Type help to find out list of possible commands.
 1:* thread #1, name = 'simple-mpi-cpp.', stop reason = breakpoint 3.1
-1:    frame #0: 0x00005555555553c8 simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:32:20
+1:    frame #0: [hex address] simple-mpi-cpp.exe`main at simple-mpi-cpp.cpp:32:20
 1:   29
 1:   30    var = 10.*process_rank;
 1:   31
