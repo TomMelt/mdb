@@ -18,7 +18,7 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y gdb libopenmpi-dev libssl-dev clang
+        sudo apt install -y gdb libopenmpi-dev libssl-dev lldb
     - name: Build example mpi program
       run: |
         make -C examples/

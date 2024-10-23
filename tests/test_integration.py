@@ -45,7 +45,7 @@ def strip_runtime_specific_output(text: str) -> str:
     # remove absolute exe
     text = re.sub(r"exe = '[\/\w]+/simple-mpi.exe'", "exe = simple-mpi.exe", text)
     # remove program address
-    text = re.sub(r"at 0[xX][0-9a-fA-F]+", "at [hex address]", text)
+    text = re.sub(r"0[xX][0-9a-fA-F]+", "[hex address]", text)
     # remove trailing whitespace (causes
     text = re.sub(r"\s+\n", "\n", text)
     # remove $x variable notation (new lldb dropped it e.g., $0 = some_value)
@@ -108,6 +108,9 @@ def run_test_for_backend(launch_command: str, name: str, backend_script: str):
         # remove run specific outputs
         result_txt = standardize_output(result_txt)
         answer_text = standardize_output(answer_text)
+
+        with open(f"answer-{name}-filtered.stdout", "w") as outfile:
+            outfile.write(result_txt)
 
         # print(result_txt)
 
