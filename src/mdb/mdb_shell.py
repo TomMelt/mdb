@@ -230,7 +230,7 @@ class mdbShell(cmd.Cmd):
             self.cmdqueue.extend(commands)
         else:
             for command in commands:
-                self.onecmd(command)
+                self.onecmd(self.precmd(command))
 
     def do_broadcast(self, line: str) -> None:
         """

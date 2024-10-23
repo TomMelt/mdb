@@ -12,8 +12,6 @@ class BackgroundProcess:
         self.command = shlex.split(command)
 
     def __enter__(self) -> "BackgroundProcess":
-        print("--- LAUNCHING ---")
-
         self._running_command = Popen(
             self.command,
             stdout=PIPE,
