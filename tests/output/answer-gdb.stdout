@@ -34,9 +34,9 @@ unrecognized command [made-up-command]. Type help to find out list of possible c
 1:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
 1:17  if (process_rank == 0) then
 File [deliberately-missing-file.mdb] not found. Please check the file exists and try again.
-0:$1 = 25
+0:25
 ************************************************************************
-1:$1 = 25
+1:25
 0:Continuing.
 0:           1 s...
 0:           2 s...

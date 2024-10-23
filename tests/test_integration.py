@@ -47,6 +47,8 @@ def strip_runtime_specific_output(text: str) -> str:
     text = re.sub(r"0[xX][0-9a-fA-F]+", "[hex address]", text)
     # remove trailing whitespace (causes
     text = re.sub(r"\s+\n", "\n", text)
+    # remove $x variable notation (new lldb dropped it e.g., $0 = some_value)
+    text = re.sub(r"\$\d+\s+=\s+", "", text)
     return text
 
 
