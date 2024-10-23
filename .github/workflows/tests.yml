@@ -28,9 +28,10 @@ jobs:
     - name: debug config
       run: |
         git clone https://github.com/TomMelt/dotfiles.git ~/.dotfiles
-        ln -sf ~/.dotfiles/.tmux.conf .
-        ln -sf ~/.dotfiles/.gitconfig .
+        ln -sf ~/.dotfiles/.tmux.conf $HOME/
+        ln -sf ~/.dotfiles/.gitconfig $HOME/
         cat ~/.dotfiles/.bash_aliases >> $HOME/.bashrc
+        source $HOME/.bashrc
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
     - name: Run tests
