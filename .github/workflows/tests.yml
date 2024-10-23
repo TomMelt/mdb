@@ -25,11 +25,14 @@ jobs:
     - name: Install mdb and additional python packages
       run: |
         pip install -e .[develop,termgraph]
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    - name: debug config
       run: |
         git clone https://github.com/TomMelt/dotfiles.git ~/.dotfiles
         ln -sf ~/.dotfiles/.tmux.conf .
+        ln -sf ~/.dotfiles/.gitconfig .
+        cat ~/.dotfiles/.bash_aliases >> $HOME/.bashrc
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
     - name: Run tests
       run: |
         pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv tests/
