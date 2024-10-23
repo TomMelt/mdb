@@ -9,7 +9,7 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 3
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
@@ -25,8 +25,8 @@ jobs:
     - name: Install mdb and additional python packages
       run: |
         pip install -e .[develop,termgraph]
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
     - name: Run tests
       run: |
         pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv tests/

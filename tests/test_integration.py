@@ -86,7 +86,7 @@ def run_test_for_backend(launch_command: str, name: str, backend_script: str):
 
         # run mdb attach and collect the stdout
         result = run(
-            shlex.split("mdb attach -x integration.mdb"),
+            shlex.split("mdb attach -h localhost -x integration.mdb"),
             capture_output=True,
         )
 
@@ -140,7 +140,7 @@ quit
 
 
 def test_mdb_gdb() -> None:
-    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2"
+    launch_command = "mdb launch -b gdb -t examples/simple-mpi.exe -n 2 -h localhost"
     run_test_for_backend(launch_command, "gdb", script_gdb)
 
 
@@ -167,7 +167,9 @@ quit
 
 
 def test_mdb_lldb() -> None:
-    launch_command = "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2"
+    launch_command = (
+        "mdb launch -b lldb -t examples/simple-mpi-cpp.exe -n 2 -h localhost"
+    )
     run_test_for_backend(launch_command, "lldb", script_lldb)
 
 
@@ -183,7 +185,7 @@ def test_mdb_timeout() -> None:
     # remove existing log file
     os.remove("mdb-attach.log")
     # run mdb attach without start mdb launch
-    run(shlex.split("mdb attach --log-level DEBUG"))
+    run(shlex.split("mdb attach --log-level DEBUG -h localhost"))
 
     with open("mdb-attach.log") as logfile:
         result_txt = "".join(logfile.readlines())
