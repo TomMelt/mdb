@@ -27,6 +27,9 @@ jobs:
         pip install -e .[develop,termgraph]
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
+      run: |
+        git clone https://github.com/TomMelt/dotfiles.git ~/.dotfiles
+        ln -sf ~/.dotfiles/.tmux.conf .
     - name: Run tests
       run: |
         pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv tests/
