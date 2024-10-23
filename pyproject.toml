@@ -56,3 +56,5 @@ ignore = ["E203", "E501"]
 
 [tool.mypy]
 exclude = ["conf.py"]
+strict = true
+allow_redefinition = true
