@@ -29,7 +29,6 @@ AsyncClientOpts = TypedDict(
 
 class AsyncClient(ABC):
     def __init__(self, opts: AsyncClientOpts):
-
         self.context: Optional[ssl.SSLContext] = None
 
         # TODO: this should also be configurable via an option
@@ -64,26 +63,26 @@ class AsyncClient(ABC):
                 cert_host, self.exchange_port, ssl=self.context
             )
             self.conn = AsyncConnection(reader, writer)
-        except Exception as e:
-            logger.info("init connection error")
+        except ConnectionRefusedError as e:
+            logger.debug("init connection error")
             raise e
 
     async def connect_to_exchange(self, msg: "Message") -> "Message":
         attempts = 0
         while True:
             if attempts == self.connection_attempts:
-                exception_msg = f"couldn't connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
-                raise ConnectionError(exception_msg)
+                log_msg = f"couldn't connect to exchange server at {self.exchange_hostname}:{self.exchange_port}."
+                logger.error(log_msg)
+                return Message.connection_dropped()
             try:
                 await self.init_connection()
                 logger.info("connected to exchange")
                 await self.conn.send_message(msg)
                 msg = await self.conn.recv_message()
                 break
-            except Exception:
-                await asyncio.sleep(1)
+            except ConnectionRefusedError:
                 attempts += 1
-                logger.exception("Failed to connect")
+                await asyncio.sleep(1)
                 logger.info(
                     "Attempt %d/%d to connect to exchange server. Sleeping 1 second...",
                     attempts,
