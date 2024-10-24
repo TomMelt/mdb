@@ -1,11 +1,11 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
-import sys
 import asyncio
 import functools
 import logging
 import signal
+import sys
 
 import click
 from typing_extensions import TypedDict
