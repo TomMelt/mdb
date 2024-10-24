@@ -109,7 +109,6 @@ def run_test_for_backend(
             answer_text = infile.read()
             answer_text = answer_text.split("\n")
 
-        print(result_txt)
         assert len(result_txt) == len(answer_text)
 
         for result_line, answer_line in zip(result_txt, answer_text):
@@ -171,7 +170,6 @@ def test_mdb_lldb(capfd: pytest.CaptureFixture[str]) -> None:
 
 
 def test_mdb_timeout() -> None:
-
     # remove existing log file
     try:
         os.remove("mdb-attach.log")
@@ -187,18 +185,29 @@ def test_mdb_timeout() -> None:
     except ConnectionError as e:
         assert str(e) == "couldn't connect to exchange server at 127.0.0.1:62000."
 
+    with open("mdb-attach.log") as logfile:
+        result_txt = "".join(logfile.readlines())
+
+    with open("tests/output/mdb-attach-log") as logfile:
+        answer_text = "".join(logfile.readlines())
+
+    assert len(result_txt) == len(answer_text)
+
+    for result_line, answer_line in zip(result_txt, answer_text):
+        assert result_line == answer_line
+
 
 def test_mdb_connect() -> None:
     launch_command = "mdb launch -b gdb -t examples/simple-mpi-cpp.exe -n 2 -h 127.0.0.1 --log-level=DEBUG -p 62000"
 
     with BackgroundProcess(launch_command):
         shell = mdb.mdb_attach.attach_shell(  # noqa: F841
-            {
+            client_opts={
                 "exchange_hostname": "127.0.0.1",
                 "exchange_port": 62000,
                 "connection_attempts": 3,
             },
-            "termgraph",
+            plot_lib="termgraph",
         )
 
         # ping pong
