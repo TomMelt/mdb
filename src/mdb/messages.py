@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass
 from typing import Any
 
-MDB_CLIENT = "mdb client"
+ATTACH_CLIENT = "attach client"
 DEBUG_CLIENT = "debug client"
 EXCHANGE = "exchange server"
 
@@ -57,7 +57,7 @@ class Message:
     def mdb_conn_request() -> "Message":
         return Message(
             "mdb_conn_request",
-            {"from": MDB_CLIENT, "to": EXCHANGE},
+            {"from": ATTACH_CLIENT, "to": EXCHANGE},
         )
 
     @staticmethod
@@ -66,7 +66,7 @@ class Message:
             "mdb_conn_response",
             {
                 "from": EXCHANGE,
-                "to": MDB_CLIENT,
+                "to": ATTACH_CLIENT,
                 "no_of_ranks": no_of_ranks,
                 "backend_name": backend_name,
             },
@@ -77,7 +77,7 @@ class Message:
         return Message(
             "mdb_command_request",
             {
-                "from": MDB_CLIENT,
+                "from": ATTACH_CLIENT,
                 "to": EXCHANGE,
                 "command": command,
                 "select": select,
@@ -89,7 +89,7 @@ class Message:
         return Message(
             "mdb_interrupt_request",
             {
-                "from": MDB_CLIENT,
+                "from": ATTACH_CLIENT,
                 "to": EXCHANGE,
                 "command": "interrupt",
             },
@@ -115,7 +115,7 @@ class Message:
             "exchange_command_response",
             {
                 "from": EXCHANGE,
-                "to": MDB_CLIENT,
+                "to": ATTACH_CLIENT,
                 "results": results,
             },
         )
@@ -133,6 +133,16 @@ class Message:
     def debug_init_complete() -> "Message":
         return Message(
             "debug_init_complete",
+            {
+                "from": DEBUG_CLIENT,
+                "to": EXCHANGE,
+            },
+        )
+
+    @staticmethod
+    def connection_dropped() -> "Message":
+        return Message(
+            "connection dropped",
             {
                 "from": DEBUG_CLIENT,
                 "to": EXCHANGE,

@@ -9,7 +9,7 @@ import ssl
 from typing import Any, Coroutine, Optional
 
 from .async_connection import AsyncConnection
-from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
+from .messages import ATTACH_CLIENT, DEBUG_CLIENT, Message
 from .utils import ssl_cert_path, ssl_key_path
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class AsyncExchangeServer:
                 self.debuggers.append(conn)
                 return  # keep connection open
 
-        if msg.data["from"] == MDB_CLIENT:
+        if msg.data["from"] == ATTACH_CLIENT:
             # tell the client about the setup
             await conn.send_message(
                 Message.mdb_conn_response(
