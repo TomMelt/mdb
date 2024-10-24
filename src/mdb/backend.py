@@ -6,7 +6,6 @@ from typing import List, Type
 
 
 class DebugBackend(ABC):
-
     @property
     @abstractmethod
     def name(self) -> str:
@@ -39,7 +38,6 @@ class DebugBackend(ABC):
 
 
 class GDBBackend(DebugBackend):
-
     @property
     def name(self) -> str:
         return "gdb"
