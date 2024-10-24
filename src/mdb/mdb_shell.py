@@ -139,9 +139,12 @@ class mdbShell(cmd.Cmd):
         command_response = loop.run_until_complete(
             self.client.run_command(command, select)
         )
-        response = sort_debug_response(command_response.data["results"])
-        pretty_print_response(response)
 
+        if command_response.msg_type == "exchange_command_response":
+            response = sort_debug_response(command_response.data["results"])
+            pretty_print_response(response)
+        else:
+            print("Received unexpected message type: %s", command_response.msg_type)
         return
 
     def do_quit(self, line: str) -> bool:
@@ -203,23 +206,31 @@ class mdbShell(cmd.Cmd):
 
             (mdb) execute test.mdb
         """
+        file = line
+        try:
+            with open(file) as infile:
+                contents = infile.read()
+            self.execute_script(contents, queue=True)
+        except FileNotFoundError:
+            print(
+                f"File [{file}] not found. Please check the file exists and try again."
+            )
 
+    def execute_script(self, script: str, queue: bool = False) -> None:
         def strip_comments(text: str) -> str | None:
             if re.match(r"^\s*#.*", text):
                 return None
             return text
 
-        file = line
-        try:
-            with open(file) as infile:
-                commands = infile.read().splitlines()
-                # strip comments from list of commands (lines starting with `#`)
-                commands = list(filter(strip_comments, commands))
-                self.cmdqueue.extend(commands)
-        except FileNotFoundError:
-            print(
-                f"File [{file}] not found. Please check the file exists and try again."
-            )
+        commands = script.splitlines()
+        # strip comments from list of commands (lines starting with `#`)
+        commands = list(filter(strip_comments, commands))
+
+        if queue:
+            self.cmdqueue.extend(commands)
+        else:
+            for command in commands:
+                self.onecmd(self.precmd(command))
 
     def do_broadcast(self, line: str) -> None:
         """

@@ -30,6 +30,20 @@ class Message:
         )
 
     @staticmethod
+    def ping() -> "Message":
+        return Message(
+            "ping",
+            {},
+        )
+
+    @staticmethod
+    def pong() -> "Message":
+        return Message(
+            "pong",
+            {},
+        )
+
+    @staticmethod
     def debug_conn_response() -> "Message":
         return Message(
             "mdb_conn_response",
@@ -103,6 +117,25 @@ class Message:
                 "from": EXCHANGE,
                 "to": MDB_CLIENT,
                 "results": results,
+            },
+        )
+
+    @staticmethod
+    def exchange_info(message: str) -> "Message":
+        return Message(
+            "exchange_info",
+            {
+                "message": message,
+            },
+        )
+
+    @staticmethod
+    def debug_init_complete() -> "Message":
+        return Message(
+            "debug_init_complete",
+            {
+                "from": DEBUG_CLIENT,
+                "to": EXCHANGE,
             },
         )
 

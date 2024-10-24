@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class DebugClient(AsyncClient):
-    def __init__(self, opts: dict[str, Any]):
-        super().__init__(opts=opts)
+    def __init__(self, opts: dict[str, str]):
+        super().__init__(opts=opts)  # type: ignore
         self.myrank = int(opts["rank"])
         self.target = opts["target"]
         self.args = opts["args"]
@@ -104,12 +104,22 @@ class DebugClient(AsyncClient):
         await self.init_debug_proc()
         logger.info("debug proc initialized")
 
+        # tell the exhange server we are done with init
+        await self.conn.send_message(Message.debug_init_complete())
+
         previous_task = None
 
         while True:
             # as soon as we get a command, run it so we can go back to waiting
             # for the next command (else we can't capture interrupts correctly)
             msg = await self.conn.recv_message()
-            previous_task = asyncio.create_task(
-                self.execute_command(msg, previous_task)
-            )
+
+            if msg.msg_type == "ping":
+                logger.debug("Received ping")
+                await self.conn.send_message(Message.pong())
+            elif msg.msg_type == "mdb_command_request":
+                previous_task = asyncio.create_task(
+                    self.execute_command(msg, previous_task)
+                )
+            else:
+                logger.error("Unhandled message type: %s", msg.msg_type)

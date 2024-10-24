@@ -23,6 +23,7 @@ Wrapper_opts = TypedDict(
         "ranks": int,
         "select": str,
         "target": str,
+        "connection_attempts": int,
     },
 )
 
@@ -59,6 +60,12 @@ Wrapper_opts = TypedDict(
     required=True,
     help="Target binary to debug.",
 )
+@click.option(
+    "--connection-attempts",
+    default=10,
+    show_default=True,
+    help="Maximum number of failed connection attempts. A connection attempt is made once per second.",
+)
 @click.argument(
     "args",
     required=False,
@@ -70,6 +77,7 @@ def wrapper(
     exchange_port: int,
     backend: str,
     target: click.File,
+    connection_attempts: int,
     args: tuple[str] | list[str],
 ) -> None:
     """Run mdb wrapper for debug backend.
@@ -90,6 +98,7 @@ def wrapper(
         "rank": my_rank,
         "backend": backend,
         "target": target.name,
+        "connection_attempts": connection_attempts,
         "args": args,
     }
 
@@ -97,7 +106,7 @@ def wrapper(
     logging.basicConfig(filename=f"rank.{my_rank}.log", level=logging.DEBUG)
     logger = logging.getLogger(__name__)
 
-    dbg_client = DebugClient(opts)
+    dbg_client = DebugClient(opts)  # type: ignore
     logger.debug("debug client initialized")
 
     loop = asyncio.get_event_loop()
@@ -116,6 +125,7 @@ class WrapperLauncher:
         self.select = parse_ranks(prog_opts["select"])
         self.appfile = prog_opts["appfile"]
         self.backend = prog_opts["backend"]
+        self.connection_attempts = prog_opts["connection_attempts"]
         self.args = prog_opts["args"]
         self.set_mpi_mode()
         return
@@ -130,7 +140,7 @@ class WrapperLauncher:
         lines = []
         for rank in range(self.ranks):
             if rank in self.select:
-                line = f"-n 1 mdb wrapper -m {rank} -h {self.hostname} -p {self.port} -b {self.backend} -t {self.target} -- {self.args}"
+                line = f"-n 1 mdb wrapper -m {rank} -h {self.hostname} -p {self.port} -b {self.backend} -t {self.target} --connection-attempts {self.connection_attempts} -- {self.args}"
             else:
                 line = f"-n 1 {self.target} -- {self.args}"
             lines.append(line)

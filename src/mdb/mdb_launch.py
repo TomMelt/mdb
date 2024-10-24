@@ -8,6 +8,7 @@ import signal
 from asyncio import Task
 from os import mkdir
 from os.path import exists, expanduser, join
+from socket import gethostbyaddr
 from subprocess import run
 
 import click
@@ -98,6 +99,12 @@ Server_opts = TypedDict(
     show_default=True,
     help="Choose minimum level of debug messages: [DEBUG, INFO, WARN, ERROR, CRITICAL]",
 )
+@click.option(
+    "--connection-attempts",
+    default=10,
+    show_default=True,
+    help="Maximum number of failed connection attempts. A connection attempt is made once per second.",
+)
 @click.argument(
     "args",
     required=False,
@@ -114,6 +121,7 @@ def launch(
     auto_restart: bool,
     log_level: str,
     mdb_home: str,
+    connection_attempts: int,
     args: tuple[str] | list[str],
 ) -> None:
     """Launch mdb debug server.
@@ -137,11 +145,15 @@ def launch(
     if not exists(MDB_HOME):
         mkdir(MDB_HOME)
 
-    if not (exists(MDB_CERT_PATH) or exists(MDB_KEY_PATH)):
-        subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={hostname}"
-        opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
-        cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
-        run(shlex.split(cmd))
+    # certificate hostname cannot be an IP address so it must be resolved to a hostname
+    cert_host = gethostbyaddr(hostname)[0]
+    subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={cert_host}"
+    opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
+    cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
+    proc = run(shlex.split(cmd), capture_output=True)
+    logger.debug("generating ssl certificate and key")
+    logger.debug(cmd)
+    logger.debug(proc.stderr.decode())
 
     args = list(args)
 
@@ -158,6 +170,7 @@ def launch(
         "port": port,
         "ranks": ranks,
         "select": select,
+        "connection_attempts": connection_attempts,
         "target": target.name,
     }
 

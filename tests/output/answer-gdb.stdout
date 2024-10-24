@@ -1,80 +1,55 @@
 hello
-mdb - mpi debugger - built on various backends. Type ? for more info. To exit interactive mode type "q", "quit", "Ctrl+D" or "Ctrl+]".
-0:process 55030
-0:cmdline = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-0:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
-0:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
+0:cmdline = simple-mpi.exe
+0:cwd = [mdb root]
+0:exe = simple-mpi.exe
 ************************************************************************
-1:process 55031
-1:cmdline = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-1:cwd = '/home/melt/sync/cambridge/projects/side/mdb'
-1:exe = '/home/melt/sync/cambridge/projects/side/mdb/examples/simple-mpi.exe'
-
-0:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
+1:cmdline = simple-mpi.exe
+1:cwd = [mdb root]
+1:exe = simple-mpi.exe
+0:Breakpoint 2 at [hex address]: file simple-mpi.f90, line 15.
 ************************************************************************
-1:Breakpoint 2 at 0x5555555552da: file simple-mpi.f90, line 15.
-
-0:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
+1:Breakpoint 2 at [hex address]: file simple-mpi.f90, line 15.
+0:Breakpoint 3 at [hex address]: file simple-mpi.f90, line 17.
 ************************************************************************
-1:Breakpoint 3 at 0x5555555552f6: file simple-mpi.f90, line 17.
-
+1:Breakpoint 3 at [hex address]: file simple-mpi.f90, line 17.
 0:Continuing.
-0:[New Thread 0x7ffff6e0c640 (LWP 55064)]
-0:[New Thread 0x7ffff660b640 (LWP 55066)]
 0:
 0:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
 0:15  var = 10.*process_rank
 ************************************************************************
 1:Continuing.
-1:[New Thread 0x7ffff6e0c640 (LWP 55065)]
-1:[New Thread 0x7ffff660b640 (LWP 55067)]
 1:
 1:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
 1:15  var = 10.*process_rank
-
 0:Continuing.
 0:
 0:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
 0:17  if (process_rank == 0) then
-
 0:#0  simple () at simple-mpi.f90:17
 ************************************************************************
 1:#0  simple () at simple-mpi.f90:15
-
 unrecognized command [made-up-command]. Type help to find out list of possible commands.
 1:Continuing.
 1:
 1:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
 1:17  if (process_rank == 0) then
-
 File [deliberately-missing-file.mdb] not found. Please check the file exists and try again.
-0:$1 = 25
+0:25
 ************************************************************************
-1:$1 = 25
-
+1:25
 0:Continuing.
-0: process 0 sleeping for 3s...
 0:           1 s...
 0:           2 s...
 0:           3 s...
 0: in level 1
 0: in level 2
 0: internal process:            0 of            2
-0: var =    0.00000000    
-0:[Thread 0x7ffff660b640 (LWP 55066) exited]
-0:[Thread 0x7ffff6e0c640 (LWP 55064) exited]
-0:[Inferior 1 (process 55030) exited normally]
+0: var =    0.00000000
 ************************************************************************
 1:Continuing.
 1: in level 1
 1: in level 2
 1: internal process:            1 of            2
-1: var =    10.0000000    
-1:[Thread 0x7ffff660b640 (LWP 55067) exited]
-1:[Thread 0x7ffff6e0c640 (LWP 55065) exited]
-1:[Inferior 1 (process 55031) exited normally]
-
+1: var =    10.0000000
 ************************************************************************
-
-
 exiting mdb...
