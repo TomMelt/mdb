@@ -95,7 +95,9 @@ class AsyncExchangeServer:
                 )
             )
             # schedule the loop to run
-            loop.create_task(self.client_loop(conn))
+            loop.create_task(
+                self.client_loop(conn), name="handle msg from attach client"
+            )
             # but allow this function to return so it's not just stuck on the
             # stack
             return
@@ -106,7 +108,7 @@ class AsyncExchangeServer:
     async def _forward_all_debuggers_to_client(self, conn: AsyncConnection) -> None:
         while True:
             tasks = [
-                asyncio.create_task(debugger.recv_message())
+                asyncio.create_task(debugger.recv_message(), name="debug tasks")
                 for debugger in self.debuggers
             ]
             messages = await asyncio.gather(*tasks)
