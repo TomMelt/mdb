@@ -167,7 +167,11 @@ def attach_shell(
 
     loop = asyncio.get_event_loop()
 
-    loop.run_until_complete(client.connect())
+    try:
+        loop.run_until_complete(client.connect())
+    except ConnectionError:
+        logging.error("failed to connect to exchange server")
+        exit(0)
 
     ranks = client.number_of_ranks
 
@@ -196,5 +200,4 @@ def attach_shell(
             getattr(signal, signame),
             functools.partial(ask_exit, signame),
         )
-
     return mshell
