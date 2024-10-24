@@ -1,3 +1,0 @@
-WARNING:mdb.async_client:TLS is disabled by environment variable.
-DEBUG:asyncio:Using selector: EpollSelector
-INFO:mdb.async_client:init connection error

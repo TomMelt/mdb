@@ -117,5 +117,7 @@ class DebugClient(AsyncClient):
                 previous_task = asyncio.create_task(
                     self.execute_command(msg, previous_task)
                 )
+            elif msg.msg_type == Message.connection_dropped().msg_type:
+                return
             else:
                 logger.error("Unhandled message type: %s", msg.msg_type)

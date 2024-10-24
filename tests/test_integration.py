@@ -176,20 +176,22 @@ def test_mdb_timeout() -> None:
     except FileNotFoundError:
         pass
 
-    # run mdb attach without start mdb launch
-    try:
-        mdb.mdb_attach.attach(
-            ["-h", "127.0.0.1", "--log-level", "DEBUG", "-p", "62000"],
-            standalone_mode=False,
-        )
-    except ConnectionError as e:
-        assert str(e) == "couldn't connect to exchange server at 127.0.0.1:62000."
+    launch_command = (
+        "mdb attach --log-level DEBUG --connection-attempts 5 -h 127.0.0.1 -p 3000"
+    )
+
+    run(
+        shlex.split(launch_command),
+        capture_output=True,
+    )
 
     with open("mdb-attach.log") as logfile:
         result_txt = "".join(logfile.readlines())
+        result_txt = result_txt.split("\n")
 
     with open("tests/output/mdb-attach-log") as logfile:
         answer_text = "".join(logfile.readlines())
+        answer_text = answer_text.split("\n")
 
     assert len(result_txt) == len(answer_text)
 
@@ -209,7 +211,6 @@ def test_mdb_connect() -> None:
             },
             plot_lib="termgraph",
         )
-
         # ping pong
         loop = asyncio.get_event_loop()
         command_response = loop.run_until_complete(
@@ -217,5 +218,4 @@ def test_mdb_connect() -> None:
         )
         # wait to get the pong
         command_response = loop.run_until_complete(shell.client.conn.recv_message())
-
         assert command_response.msg_type == "pong"

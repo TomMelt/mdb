@@ -49,6 +49,8 @@ class Client(AsyncClient):
         Connect to exchange server.
         """
         msg = await self.connect_to_exchange(Message.mdb_conn_request())
+        if msg.msg_type == Message.connection_dropped().msg_type:
+            raise ConnectionError
         self.number_of_ranks = msg.data["no_of_ranks"]
         self.backend_name = msg.data["backend_name"]
         return
