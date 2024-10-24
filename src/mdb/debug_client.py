@@ -35,10 +35,6 @@ class DebugClient(AsyncClient):
         else:
             args = ""
 
-        print("backend.debug_command = ", backend.debug_command)
-        print("backend.argument_separator = ", backend.argument_separator)
-        print("self.target = ", self.target)
-        print("args = ", args)
         debug_command = " ".join(
             [backend.debug_command, backend.argument_separator, self.target, args]
         )
