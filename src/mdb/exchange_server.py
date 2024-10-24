@@ -19,7 +19,6 @@ DEBUGGER_TIMEOUT_DURATION = 10  # seconds
 
 class AsyncExchangeServer:
     def __init__(self, opts: dict[str, Any]):
-
         self.context: Optional[ssl.SSLContext] = None
 
         if not os.environ.get("MDB_DISABLE_TLS", None):
@@ -70,23 +69,25 @@ class AsyncExchangeServer:
         # to be pushed to `self.debuggers` or not, etc
 
         if msg.data["from"] == DEBUG_CLIENT:
-            # ack
+            conn.type = DEBUG_CLIENT
             await conn.send_message(Message.debug_conn_response())
             # wait for it to inform us that it's completed init
             init_message = await conn.recv_message()
 
             if init_message.msg_type != "debug_init_complete":
                 logger.error(
-                    "Client did not send initialize: received [%s]",
+                    "%s did not send initialize: received [%s]",
+                    DEBUG_CLIENT,
                     init_message.msg_type,
                 )
             else:
-                logger.info("Client sent initialization confirmed")
+                logger.info("%s sent initialization confirmed", DEBUG_CLIENT)
                 # only now we append the connection
                 self.debuggers.append(conn)
                 return  # keep connection open
 
         if msg.data["from"] == ATTACH_CLIENT:
+            conn.type = ATTACH_CLIENT
             # tell the client about the setup
             await conn.send_message(
                 Message.mdb_conn_response(
@@ -110,18 +111,30 @@ class AsyncExchangeServer:
             ]
             messages = await asyncio.gather(*tasks)
 
-            if all(i.msg_type == "debug_command_response" for i in messages):
+            if any([msg.msg_type == "connection_dropped" for msg in messages]):
+                # this normally occurs when the mdb attach client is killed
+                logger.info("null message received from debugging clients")
+                logger.info("quitting...")
+                return
+
+            if all(msg.msg_type == "debug_command_response" for msg in messages):
                 logger.debug("Sending results to client")
                 await conn.send_message(
                     Message.exchange_command_response(messages=messages)
                 )
-            elif all(i.msg_type == "pong" for i in messages):
+            elif all(msg.msg_type == "pong" for msg in messages):
                 logger.debug("Sending pong to client")
                 await conn.send_message(Message.pong())
+            elif all(
+                msg.msg_type == Message.connection_dropped().msg_type
+                for msg in messages
+            ):
+                logger.info("Debug client connection dropped.")
+                return
             else:
                 logger.error(
                     "Inconsistent debugger message types: %s",
-                    set(i.msg_type for i in messages),
+                    set(msg.msg_type for msg in messages),
                 )
 
     async def client_loop(self, conn: AsyncConnection) -> None:
@@ -149,6 +162,10 @@ class AsyncExchangeServer:
             try:
                 command = await conn.recv_message()
                 logger.debug("Received from client: %s", command)
+                if command.msg_type == Message.connection_dropped().msg_type:
+                    print("connection dropped")
+                    await self.shutdown(signal.SIGINT.name)
+                    break
             except asyncio.exceptions.IncompleteReadError:
                 logger.info("shutting down exchange server")
                 await self.shutdown(signal.SIGINT.name)
@@ -174,9 +191,10 @@ class AsyncExchangeServer:
         loop = asyncio.get_event_loop()
         try:
             proc = self.launch_task.result()
-            logger.info(f"terminating process [{proc.pid}]")
-            proc.terminate()
-            proc.kill()
+            if proc.returncode is None:
+                logger.info(f"terminating process [{proc.pid}]")
+                proc.terminate()
+            await proc.wait()
             logger.info(f"process [{proc.pid}] terminated")
         except Exception as e:
             print(e)
@@ -192,7 +210,6 @@ class AsyncExchangeServer:
             if count > DEBUGGER_TIMEOUT_DURATION:
                 logger.error("No debuggers connected in timeout interval")
                 return False
-
         logger.debug("Debuggers connected: %d", len(self.debuggers))
 
         return True
