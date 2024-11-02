@@ -60,6 +60,12 @@ Server_opts = TypedDict(
     help="MPI launcher e.g., mpirun, mpiexec, srun etc.",
 )
 @click.option(
+    "--mpi-config-opt",
+    default="",
+    show_default=True,
+    help="mdb will try to automatically detect the option name for the --app/--configfile option. This option overrides the automatic detection.",
+)
+@click.option(
     "-p",
     "--port",
     default=2000,
@@ -121,6 +127,7 @@ def launch(
     select: str | None,
     hostname: str,
     mpi_command: str,
+    mpi_config_opt: str,
     port: int,
     backend: str,
     target: click.File,
@@ -174,6 +181,7 @@ def launch(
         "backend": backend,
         "hostname": hostname,
         "mpi_command": mpi_command,
+        "mpi_config_opt": mpi_config_opt,
         "port": port,
         "ranks": ranks,
         "select": select,
