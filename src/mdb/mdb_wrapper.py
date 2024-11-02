@@ -4,6 +4,7 @@
 import asyncio
 import logging
 import subprocess
+from shlex import join
 
 import click
 from typing_extensions import TypedDict
@@ -23,6 +24,7 @@ Wrapper_opts = TypedDict(
         "ranks": int,
         "select": str,
         "target": str,
+        "redirect_stdout": str,
         "connection_attempts": int,
     },
 )
@@ -61,6 +63,12 @@ Wrapper_opts = TypedDict(
     help="Target binary to debug.",
 )
 @click.option(
+    "--redirect-stdout",
+    type=click.File("w"),
+    required=False,
+    help="Redirect stdout from the target binary. If omitted, stdout will not be redirected.",
+)
+@click.option(
     "--connection-attempts",
     default=10,
     show_default=True,
@@ -77,6 +85,7 @@ def wrapper(
     exchange_port: int,
     backend: str,
     target: click.File,
+    redirect_stdout: click.File,
     connection_attempts: int,
     args: tuple[str] | list[str],
 ) -> None:
@@ -98,6 +107,9 @@ def wrapper(
         "rank": my_rank,
         "backend": backend,
         "target": target.name,
+        "redirect_stdout": (
+            redirect_stdout.name if redirect_stdout is not None else None
+        ),
         "connection_attempts": connection_attempts,
         "args": args,
     }
@@ -121,6 +133,7 @@ class WrapperLauncher:
         self.hostname = prog_opts["hostname"]
         self.port = prog_opts["port"]
         self.target = prog_opts["target"]
+        self.redirect_stdout = prog_opts["redirect_stdout"]
         self.mpi_command = prog_opts["mpi_command"]
         self.select = parse_ranks(prog_opts["select"])
         self.appfile = prog_opts["appfile"]
@@ -140,7 +153,34 @@ class WrapperLauncher:
         lines = []
         for rank in range(self.ranks):
             if rank in self.select:
-                line = f"-n 1 mdb wrapper -m {rank} -h {self.hostname} -p {self.port} -b {self.backend} -t {self.target} --connection-attempts {self.connection_attempts} -- {self.args}"
+                options = [
+                    "-n",
+                    "1",
+                    "mdb",
+                    "wrapper",
+                    "-m",
+                    f"{rank}",
+                    "-h",
+                    f"{self.hostname}",
+                    "-p",
+                    f"{self.port}",
+                    "-b",
+                    f"{self.backend}",
+                    "-t",
+                    f"{self.target}",
+                    "--connection-attempts",
+                    f"{self.connection_attempts}",
+                ]
+                if self.redirect_stdout is not None:
+                    options = options + [
+                        "--redirect-stdout",
+                        f"{self.redirect_stdout}",
+                    ]
+                options = options + [
+                    "--",
+                    f"{self.args}",
+                ]
+                line = join(options)
             else:
                 line = f"-n 1 {self.target} -- {self.args}"
             lines.append(line)
