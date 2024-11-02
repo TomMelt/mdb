@@ -33,6 +33,7 @@ class AsyncExchangeServer:
         self.backend_name = opts["backend"]
         self.launch_task = opts["launch_task"]
         self.debuggers: list[AsyncConnection] = []
+        self.debug_client_count = 0
         logger.info(f"echange server started :: {self.hostname}:{self.port}")
 
     def _init_tls(self) -> None:
@@ -74,6 +75,16 @@ class AsyncExchangeServer:
             await conn.send_message(Message.debug_conn_response())
             # wait for it to inform us that it's completed init
             init_message = await conn.recv_message()
+
+            self.debug_client_count += 1
+
+            print(
+                "connecting to debuggers ... (%d/%d)"
+                % (self.debug_client_count, self.number_of_ranks),
+                end="\r",
+            )
+            if self.debug_client_count == self.number_of_ranks:
+                print("\nall debug clients connected")
 
             if init_message.msg_type != "debug_init_complete":
                 logger.error(
@@ -185,7 +196,7 @@ class AsyncExchangeServer:
     async def ensure_debuggers(self) -> bool:
         count = 0
 
-        while len(self.debuggers) == 0:
+        while self.debug_client_count != self.number_of_ranks:
             await asyncio.sleep(1)
             count += 1
 
