@@ -109,7 +109,6 @@ def run_test_for_backend(
             answer_text = infile.read()
             answer_text = answer_text.split("\n")
 
-        print(result_txt)
         assert len(result_txt) == len(answer_text)
 
         for result_line, answer_line in zip(result_txt, answer_text):
@@ -171,21 +170,33 @@ def test_mdb_lldb(capfd: pytest.CaptureFixture[str]) -> None:
 
 
 def test_mdb_timeout() -> None:
-
     # remove existing log file
     try:
         os.remove("mdb-attach.log")
     except FileNotFoundError:
         pass
 
-    # run mdb attach without start mdb launch
-    try:
-        mdb.mdb_attach.attach(
-            ["-h", "127.0.0.1", "--log-level", "DEBUG", "-p", "62000"],
-            standalone_mode=False,
-        )
-    except ConnectionError as e:
-        assert str(e) == "couldn't connect to exchange server at 127.0.0.1:62000."
+    launch_command = (
+        "mdb attach --log-level DEBUG --connection-attempts 5 -h 127.0.0.1 -p 3000"
+    )
+
+    run(
+        shlex.split(launch_command),
+        capture_output=True,
+    )
+
+    with open("mdb-attach.log") as logfile:
+        result_txt = "".join(logfile.readlines())
+        result_txt = result_txt.split("\n")
+
+    with open("tests/output/mdb-attach-log") as logfile:
+        answer_text = "".join(logfile.readlines())
+        answer_text = answer_text.split("\n")
+
+    assert len(result_txt) == len(answer_text)
+
+    for result_line, answer_line in zip(result_txt, answer_text):
+        assert result_line == answer_line
 
 
 def test_mdb_connect() -> None:
@@ -193,14 +204,13 @@ def test_mdb_connect() -> None:
 
     with BackgroundProcess(launch_command):
         shell = mdb.mdb_attach.attach_shell(  # noqa: F841
-            {
+            client_opts={
                 "exchange_hostname": "127.0.0.1",
                 "exchange_port": 62000,
                 "connection_attempts": 3,
             },
-            "termgraph",
+            plot_lib="termgraph",
         )
-
         # ping pong
         loop = asyncio.get_event_loop()
         command_response = loop.run_until_complete(
@@ -208,5 +218,4 @@ def test_mdb_connect() -> None:
         )
         # wait to get the pong
         command_response = loop.run_until_complete(shell.client.conn.recv_message())
-
         assert command_response.msg_type == "pong"
