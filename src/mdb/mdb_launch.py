@@ -86,6 +86,12 @@ Server_opts = TypedDict(
     help="Directory where mdb SSL/TLS certificate and key are stored.",
 )
 @click.option(
+    "--redirect-stdout",
+    type=click.File("w"),
+    required=False,
+    help="Redirect stdout from the target binary. If omitted, stdout will not be redirected.",
+)
+@click.option(
     "-r",
     "--auto-restart",
     is_flag=True,
@@ -118,6 +124,7 @@ def launch(
     port: int,
     backend: str,
     target: click.File,
+    redirect_stdout: click.File,
     auto_restart: bool,
     log_level: str,
     mdb_home: str,
@@ -172,6 +179,9 @@ def launch(
         "select": select,
         "connection_attempts": connection_attempts,
         "target": target.name,
+        "redirect_stdout": (
+            redirect_stdout.name if redirect_stdout is not None else None
+        ),
     }
 
     wrapper_launcher = WrapperLauncher(wl_opts)

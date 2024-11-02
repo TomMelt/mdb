@@ -29,7 +29,12 @@ class DebugBackend(ABC):
 
     @property
     @abstractmethod
-    def start_commands(self) -> list[str]:
+    def default_options(self) -> list[str]:
+        pass
+
+    @property
+    @abstractmethod
+    def start_command(self) -> str:
         pass
 
     @property
@@ -57,9 +62,13 @@ class GDBBackend(DebugBackend):
         return r"\(gdb\)"
 
     @property
-    def start_commands(self) -> list[str]:
-        commands = ["set pagination off", "set confirm off", "start"]
+    def default_options(self) -> list[str]:
+        commands = ["set pagination off", "set confirm off"]
         return commands
+
+    @property
+    def start_command(self) -> str:
+        return "start"
 
     @property
     def float_regex(self) -> str:
@@ -84,8 +93,12 @@ class LLDBBackend(DebugBackend):
         return r"\(lldb\)"
 
     @property
-    def start_commands(self) -> list[str]:
-        return ["b main", "run"]
+    def default_options(self) -> list[str]:
+        return ["b main"]
+
+    @property
+    def start_command(self) -> str:
+        return "run"
 
     @property
     def float_regex(self) -> str:

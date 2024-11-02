@@ -20,6 +20,7 @@ class DebugClient(AsyncClient):
         super().__init__(opts=opts)  # type: ignore
         self.myrank = int(opts["rank"])
         self.target = opts["target"]
+        self.stdout = opts["redirect_stdout"]
         self.args = opts["args"]
         if opts["backend"].lower() == "gdb":
             self.backend: DebugBackend = GDBBackend()
@@ -41,9 +42,14 @@ class DebugClient(AsyncClient):
         logger.debug("running debug command: [%s]", debug_command)
         dbg_proc = pexpect.spawn(debug_command, timeout=None)
         dbg_proc.expect(backend.prompt_string)
-        for command in backend.start_commands:
+        for command in backend.default_options:
             dbg_proc.sendline(command)
             await dbg_proc.expect(backend.prompt_string, async_=True)
+        command = self.backend.start_command
+        if self.stdout is not None:
+            command += f" >> {self.stdout}"
+        dbg_proc.sendline(command)
+        await dbg_proc.expect(backend.prompt_string, async_=True)
 
         logger.debug("Backend init finished: %s", backend.name)
         self.dbg_proc = dbg_proc
