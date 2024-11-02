@@ -109,6 +109,13 @@ to show more information using the ``--log-level`` flag.
    INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
    DEBUG:mdb.async_connection:sent message [mdb_conn_response]
 
+.. note::
+
+   If your target program requires command line arguments, you can pass those using the option
+   ``--``. For example, if you would normally run your binary as ``./binary -arg1 value``, then you
+   can launch it with the following command ``mdb`` using ``mdb launch -n 2 -t ./binary -- -arg1
+   value``.
+
 .. _attach_client:
 
 Attaching to the mdb Client
