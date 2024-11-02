@@ -20,7 +20,15 @@ class Message:
     @staticmethod
     def from_json(text: bytes) -> "Message":
         msg = json.loads(text.decode()[: -len(END_BYTES)])
-        return Message(msg["msg_type"], msg["data"])
+        if msg["msg_type"] == "exchange_command_response":
+            # the dictionary of results that comes back from the debuggers
+            # should be of type [int, str] but this gets destroyed by
+            # json.loads()
+            results = {int(k): v for k, v in msg["data"]["results"].items()}
+            msg["data"]["results"] = results
+            return Message(msg["msg_type"], msg["data"])
+        else:
+            return Message(msg["msg_type"], msg["data"])
 
     @staticmethod
     def debug_conn_request() -> "Message":
