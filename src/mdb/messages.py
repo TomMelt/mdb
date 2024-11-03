@@ -69,7 +69,9 @@ class Message:
         )
 
     @staticmethod
-    def mdb_conn_response(no_of_ranks: int, backend_name: str) -> "Message":
+    def mdb_conn_response(
+        no_of_ranks: int, backend_name: str, select_str: str
+    ) -> "Message":
         return Message(
             "mdb_conn_response",
             {
@@ -77,6 +79,7 @@ class Message:
                 "to": MDB_CLIENT,
                 "no_of_ranks": no_of_ranks,
                 "backend_name": backend_name,
+                "select_str": select_str,
             },
         )
 
