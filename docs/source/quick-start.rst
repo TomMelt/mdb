@@ -23,24 +23,37 @@ following output.
      $ mdb attach -x script.mdb
 
    Options:
-     -h, --hostname TEXT         Hostname where exchange server is running.
-                                 [default: localhost]
-     -p, --port INTEGER          Starting port address. Each rank's port is
-                                 assigned as [port_address + rank].  [default:
-                                 2000]
-     -s, --select TEXT           Rank(s) to debug e.g., 0,3-5 will debug ranks
-                                 0,3,4 and 5. If empty all ranks will be
-                                 selected. Note ranks starts with zero index.
-     -x, --exec-script FILENAME  Execute a set of mdb commands contained in a
-                                 script file.
-     --log-level TEXT            Choose minimum level of debug messages: [DEBUG,
-                                 INFO, WARN, ERROR, CRITICAL]  [default: WARN]
-     --plot-lib TEXT             Plotting library to use. Recommended default is
-                                 [termgraph] but if this is not available
-                                 [matplotlib] will be used. [matplotlib] is best
-                                 if there are many ranks to debug e.g., -n 100.
-                                 [default: termgraph]
-     --help                      Show this message and exit.
+     -h, --hostname TEXT            Hostname where exchange server is running.
+                                    [default: localhost]
+     -p, --port INTEGER             Starting port address. Each rank's port is
+                                    assigned as [port_address + rank].  [default:
+                                    2000]
+     -x, --exec-script FILENAME     Execute a set of mdb commands contained in a
+                                    script file. This script will run and then
+                                    normal shell mode will be resumed unless
+                                    `--interactive=false` is also passed.
+     --interactive BOOLEAN          Controls whether mdb will spawn an
+                                    interactive debugging shell or not. Intended
+                                    use is for with `-x/--exec-script`.
+     --log-level TEXT               Choose minimum level of debug messages:
+                                    [DEBUG, INFO, WARN, ERROR, CRITICAL]
+                                    [default: WARN]
+     --log-file TEXT                The path to a file to write the logs to. Will
+                                    create the file if it does not exist. Special
+                                    values are `stderr` and `stdout`, which
+                                    correspond to the programs standard error and
+                                    output respectively.  [default: mdb-
+                                    attach.log]
+     --plot-lib TEXT                Plotting library to use. Recommended default
+                                    is [termgraph] but if this is not available
+                                    [matplotlib] will be used. [matplotlib] is
+                                    best if there are many ranks to debug e.g.,
+                                    -n 100.  [default: termgraph]
+     --connection-attempts INTEGER  Maximum number of failed connection attempts.
+                                    A connection attempt is made once per second.
+                                    [default: 3]
+     --help                         Show this message and exit.
+
 
 
 An example program
@@ -55,10 +68,13 @@ directory and compile the code.
 
    $ cd examples/
    $ make
-   mpif90 -ggdb -c  simple-mpi.f90 -o simple-mpi.o
+   mpif90 -ggdb -O0 -c  simple-mpi.f90 -o simple-mpi.o
    mpif90  simple-mpi.o -o simple-mpi.exe
+   mpic++ -ggdb -O0 -c  simple-mpi-cpp.cpp -o simple-mpi-cpp.o
+   mpic++  simple-mpi-cpp.o -o simple-mpi-cpp.exe
    $ ls
-   Makefile  README.md  simple-mpi.exe  simple-mpi.f90  simple-mpi.o  simple-mpi-script.mdb
+   Makefile   simple-mpi-cpp.cpp  simple-mpi-cpp.o  simple-mpi.f90  simple-mpi-script.mdb
+   README.md  simple-mpi-cpp.exe  simple-mpi.exe    simple-mpi.o
 
 You should now see the binary ``simple-mpi.exe``. I also included a simple debug script
 ``simple-mpi-script.mdb`` which can be used to execute a sample debug session, but we will come to
@@ -80,34 +96,25 @@ to show more information using the ``--log-level`` flag.
 
 .. code-block:: console
 
-   $ mdb launch -b gdb -n 8 -t ./simple-mpi.exe --log-level=DEBUG
+   $ mdb launch -b gdb -n 8 -t
+   ./simple-mpi.exe --log-level=DEBUG
+   DEBUG:mdb.mdb_launch:generating ssl certificate and key
+   DEBUG:mdb.mdb_launch:openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -keyout
+   [key stuff omitted]
+
    DEBUG:asyncio:Using selector: EpollSelector
    DEBUG:mdb.mdb_launch:launch command: mpirun --app .mdb.appfile
    INFO:mdb.exchange_server:echange server started :: localhost:2000
    DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
+   INFO:mdb.exchange_server:exchange server received [debug_conn_request] from debug client.
    DEBUG:mdb.async_connection:sent message [mdb_conn_response]
-   DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
-   DEBUG:mdb.async_connection:sent message [mdb_conn_response]
-   DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
-   DEBUG:mdb.async_connection:sent message [mdb_conn_response]
-   DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
-   DEBUG:mdb.async_connection:sent message [mdb_conn_response]
-   DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
-   DEBUG:mdb.async_connection:sent message [mdb_conn_response]
-   DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
-   DEBUG:mdb.async_connection:sent message [mdb_conn_response]
-   DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
-   DEBUG:mdb.async_connection:sent message [mdb_conn_response]
-   DEBUG:mdb.async_connection:msg received [debug_conn_request]
-   INFO:mdb.exchange_server:exchange server received {debug_conn_request} from {debug client}.
-   DEBUG:mdb.async_connection:sent message [mdb_conn_response]
+   [repeats 7 more times]
+   DEBUG:mdb.async_connection:msg received [debug_init_complete]
+   INFO:mdb.exchange_server:Client sent initialization confirmed
+   [repeats 7 more times]
+   connecting to debuggers ... (8/8)
+   all debug clients connected
+   INFO:mdb.exchange_server:Client sent initialization confirmed
 
 .. note::
 
