@@ -42,8 +42,10 @@ class mdbShell(cmd.Cmd):
 
     def __init__(self, shell_opts: ShellOpts, client: Client) -> None:
         self.ranks = shell_opts["ranks"]
-        self.select_str: str = shell_opts["select"]
-        self.select = parse_ranks(shell_opts["select"])
+        self.exchange_select_str = shell_opts["exchange_select"]
+        self.exchange_select = parse_ranks(self.exchange_select_str)
+        self.select_str = self.exchange_select_str
+        self.select = self.exchange_select
         for backend in backends:
             if backend().name == shell_opts["backend_name"].lower():
                 self.backend = backend()
@@ -192,8 +194,13 @@ class mdbShell(cmd.Cmd):
             self.select_str = f"0-{self.ranks - 1}"
         else:
             self.select_str = line
-        self.prompt = f"(mdb {self.select_str}) "
         self.select = parse_ranks(self.select_str)
+        if not set(self.select) <= set(self.exchange_select):
+            msg = "Error: user specified option [select] must be subset of available ranks (check mdb launch command)."
+            msg += f"\nselect = [{self.select_str}] but available ranks are [{self.exchange_select_str}]."
+            print(msg)
+            return
+        self.prompt = f"(mdb {self.select_str}) "
         return
 
     def do_execute(self, line: str) -> None:

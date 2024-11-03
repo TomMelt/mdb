@@ -10,7 +10,7 @@ from typing import Any, Coroutine, Optional
 
 from .async_connection import AsyncConnection
 from .messages import DEBUG_CLIENT, MDB_CLIENT, Message
-from .utils import ssl_cert_path, ssl_key_path
+from .utils import parse_ranks, ssl_cert_path, ssl_key_path
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,8 @@ class AsyncExchangeServer:
             logger.warning("TLS is disabled by environment variable.")
 
         self.number_of_ranks = opts["number_of_ranks"]
+        self.select_str = opts["select"]
+        self.max_debug_clients = len(parse_ranks(self.select_str))
         self.hostname = opts["hostname"]
         self.port = opts["port"]
         self.backend_name = opts["backend"]
@@ -80,10 +82,10 @@ class AsyncExchangeServer:
 
             print(
                 "connecting to debuggers ... (%d/%d)"
-                % (self.debug_client_count, self.number_of_ranks),
+                % (self.debug_client_count, self.max_debug_clients),
                 end="\r",
             )
-            if self.debug_client_count == self.number_of_ranks:
+            if self.debug_client_count == self.max_debug_clients:
                 print("\nall debug clients connected")
 
             if init_message.msg_type != "debug_init_complete":
@@ -101,7 +103,9 @@ class AsyncExchangeServer:
             # tell the client about the setup
             await conn.send_message(
                 Message.mdb_conn_response(
-                    no_of_ranks=self.number_of_ranks, backend_name=self.backend_name
+                    no_of_ranks=self.number_of_ranks,
+                    backend_name=self.backend_name,
+                    select_str=self.select_str,
                 )
             )
             # schedule the loop to run
@@ -196,7 +200,7 @@ class AsyncExchangeServer:
     async def ensure_debuggers(self) -> bool:
         count = 0
 
-        while self.debug_client_count != self.number_of_ranks:
+        while self.debug_client_count != self.max_debug_clients:
             await asyncio.sleep(1)
             count += 1
 

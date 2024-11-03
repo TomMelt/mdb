@@ -207,6 +207,7 @@ def launch(
         "number_of_ranks": ranks,
         "backend": backend,
         "launch_task": launch_task,
+        "select": select,
     }
     server = AsyncExchangeServer(opts=exchange_opts)
     loop.create_task(server.start_server())

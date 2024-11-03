@@ -1,11 +1,11 @@
 # Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
-import sys
 import asyncio
 import functools
 import logging
 import signal
+import sys
 
 import click
 from typing_extensions import TypedDict
@@ -20,7 +20,7 @@ ShellOpts = TypedDict(
         "exec_script": str | None,
         "plot_lib": str,
         "ranks": int,
-        "select": str,
+        "exchange_select": str,
     },
 )
 
@@ -39,13 +39,6 @@ ShellOpts = TypedDict(
     default=2000,
     show_default=True,
     help="Starting port address. Each rank's port is assigned as [port_address + rank].",
-)
-@click.option(
-    "-s",
-    "--select",
-    default=None,
-    show_default=True,
-    help="Rank(s) to debug e.g., 0,3-5 will debug ranks 0,3,4 and 5. If empty all ranks will be selected. Note ranks starts with zero index.",
 )
 @click.option(
     "-x",
@@ -85,7 +78,6 @@ ShellOpts = TypedDict(
 def attach(
     hostname: str,
     port: int,
-    select: str,
     exec_script: click.File,
     interactive: bool,
     log_level: str,
@@ -136,7 +128,6 @@ def attach(
     shell = attach_shell(
         client_opts,  # type: ignore
         plot_lib,
-        select=select,
         script_path=script,
     )
 
@@ -153,7 +144,6 @@ def attach(
 def attach_shell(
     client_opts: ClientOpts,
     plot_lib: str,
-    select: None | str = None,
     script_path: None | str = None,
 ) -> mdbShell:
     """
@@ -171,16 +161,12 @@ def attach_shell(
 
     ranks = client.number_of_ranks
 
-    # debug all ranks if "select" is not set
-    if select is None:
-        select = f"0-{ranks - 1}"
-
     shell_opts: ShellOpts = {
         "backend_name": client.backend_name,
         "exec_script": script_path,
         "plot_lib": plot_lib,
         "ranks": ranks,
-        "select": select,
+        "exchange_select": client.select_str,
     }
 
     mshell = mdbShell(shell_opts, client)

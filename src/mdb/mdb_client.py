@@ -51,4 +51,5 @@ class Client(AsyncClient):
         msg = await self.connect_to_exchange(Message.mdb_conn_request())
         self.number_of_ranks = msg.data["no_of_ranks"]
         self.backend_name = msg.data["backend_name"]
+        self.select_str = msg.data["select_str"]
         return
