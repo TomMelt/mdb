@@ -109,7 +109,6 @@ def run_test_for_backend(
             answer_text = infile.read()
             answer_text = answer_text.split("\n")
 
-        print(result_txt)
         assert len(result_txt) == len(answer_text)
 
         for result_line, answer_line in zip(result_txt, answer_text):
@@ -125,6 +124,7 @@ command continue
 command 0 continue
 command bt -1
 made-up-command
+select 10
 select 1
 command continue
 execute deliberately-missing-file.mdb

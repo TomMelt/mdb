@@ -29,6 +29,8 @@ hello
 ************************************************************************
 1:#0  simple () at simple-mpi.f90:15
 unrecognized command [made-up-command]. Type help to find out list of possible commands.
+Error: user specified option [select] must be subset of available ranks (check mdb launch command).
+select = [10] but available ranks are [0-1].
 1:Continuing.
 1:
 1:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
