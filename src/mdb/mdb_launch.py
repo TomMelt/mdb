@@ -5,6 +5,7 @@ import asyncio
 import logging
 import shlex
 import signal
+import socket
 from asyncio import Task
 from os import mkdir
 from os.path import exists, expanduser, join
@@ -49,9 +50,9 @@ Server_opts = TypedDict(
 @click.option(
     "-h",
     "--hostname",
-    default="localhost",
+    default="",
     show_default=True,
-    help="Hostname machine name.",
+    help="Hostname of machine where exchange server will run. If left empty, it will default to the IP address of the machine that submits the mdb launch command. Note that if running multinode jobs the hostname needs to be resolvable and not just localhost i.e., 127.0.0.1.",
 )
 @click.option(
     "--mpi-command",
@@ -160,6 +161,11 @@ def launch(
         mkdir(MDB_HOME)
 
     # certificate hostname cannot be an IP address so it must be resolved to a hostname
+    if hostname == "":
+        hostname = socket.gethostbyname(socket.gethostname())
+    print(f"running on host: {hostname}")
+    print("to connect to the debugger run:")
+    print(f"mdb attach -h {hostname} -p {port}\n")
     cert_host = gethostbyaddr(hostname)[0]
     subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={cert_host}"
     opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
