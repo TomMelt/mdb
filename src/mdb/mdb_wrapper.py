@@ -4,7 +4,6 @@
 import asyncio
 import logging
 import subprocess
-from shlex import join
 
 import click
 from typing_extensions import TypedDict
@@ -182,9 +181,9 @@ class WrapperLauncher:
                     "--",
                     f"{self.args}",
                 ]
-                line = join(options)
+                line = " ".join(options)
             else:
-                line = f"-n 1 {self.target} -- {self.args}"
+                line = f"-n 1 {self.target} {self.args}"
             lines.append(line)
 
         with open(self.appfile, "w") as appfile:
