@@ -172,10 +172,10 @@ def attach_shell(
     mshell = mdbShell(shell_opts, client)
 
     def ask_exit(signame: str) -> None:
-        # we tell mshell to send a command and not listen for a response, since
-        # there is already a task in the event queue that is waiting for a
-        # response
-        asyncio.create_task(mshell.client.send_interrupt(signame=signame))
+        # at mshell level we have to disable CTRL+C. We only want to send a
+        # signal if there is a debug task running. Cancellation of running
+        # tasks is handled in the `do_command` method of `mdbShell`
+        return
 
     for signame in {"SIGINT", "SIGTERM"}:
         loop.add_signal_handler(

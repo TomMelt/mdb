@@ -5,10 +5,12 @@ from __future__ import annotations
 
 import asyncio
 import cmd
+import functools
 import os
 import re
 import readline
 import shlex
+import signal
 from shlex import split
 from subprocess import run
 from typing import TYPE_CHECKING
@@ -138,9 +140,38 @@ class mdbShell(cmd.Cmd):
             command = " ".join(commands[1:])
 
         loop = asyncio.get_event_loop()
+
+        def ask_exit(signame: str) -> None:
+            # we tell debug process to send a command and not listen for a
+            # response, since there is already a task in the event queue that
+            # is waiting for a response
+            asyncio.create_task(self.client.send_interrupt(signame=signame))
+
+        for signame in {"SIGINT", "SIGTERM"}:
+            loop.add_signal_handler(
+                getattr(signal, signame),
+                functools.partial(ask_exit, signame),
+            )
+
         command_response = loop.run_until_complete(
             self.client.run_command(command, select)
         )
+
+        def ask_remain_calm(signame: str) -> None:
+            # we tell debug process to send a command and not listen for a
+            # response, since there is already a task in the event queue that
+            # is waiting for a response
+            print("remain calm")
+            return
+
+        for signame in {"SIGINT", "SIGTERM"}:
+            loop.remove_signal_handler(
+                getattr(signal, signame),
+            )
+            loop.add_signal_handler(
+                getattr(signal, signame),
+                functools.partial(ask_remain_calm, signame),
+            )
 
         if command_response.msg_type == "exchange_command_response":
             response = sort_debug_response(command_response.data["results"])
