@@ -22,6 +22,7 @@ class DebugClient(AsyncClient):
         self.target = opts["target"]
         self.stdout = opts["redirect_stdout"]
         self.args = opts["args"]
+        self.is_running = False
         if opts["backend"].lower() == "gdb":
             self.backend: DebugBackend = GDBBackend()
         elif opts["backend"].lower() == "lldb":
@@ -59,7 +60,7 @@ class DebugClient(AsyncClient):
     ) -> None:
         command = message.data["command"]
         output = ""
-        if command == "interrupt":
+        if command == "interrupt" and self.is_running:
             logger.warning("Interrupt received")
             # stop whatever is current running, so it doesn't try to reply
             if prev is not None:
@@ -68,9 +69,11 @@ class DebugClient(AsyncClient):
             if not success:
                 # nothing needed cancelling, so no reply needed
                 logger.debug("No task to interrupt")
+                output = f"\r\nInterrupted: {success}\r\n"
+            else:
+                # send intterupt to the process
+                self.dbg_proc.sendintr()
 
-            # send intterupt to the process
-            self.dbg_proc.sendintr()
             await self.dbg_proc.expect(self.backend.prompt_string, async_=True)
             # report on how that all went
             output = self.dbg_proc.before.decode()
@@ -78,6 +81,7 @@ class DebugClient(AsyncClient):
             output += f"\r\nInterrupted: {success}\r\n"
 
         else:
+            self.is_running = True
             select = message.data["select"]
             logger.debug("Running command: '%s'", command)
             logger.debug("self.myrank = %d", self.myrank)
@@ -95,6 +99,7 @@ class DebugClient(AsyncClient):
                     output = "\r\nDebug process is closed. Please re-launch mdb.\r\n"
 
         result = {self.myrank: output}
+        self.is_running = False
         await self.conn.send_message(Message.debug_command_response(result=result))
 
     async def run(self) -> None:
@@ -120,6 +125,11 @@ class DebugClient(AsyncClient):
                 logger.debug("Received ping")
                 await self.conn.send_message(Message.pong())
             elif msg.msg_type == "mdb_command_request":
+                previous_task = asyncio.create_task(
+                    self.execute_command(msg, previous_task)
+                )
+            elif msg.msg_type == Message.mdb_interrupt_request().msg_type:
+                logger.debug("received interrupt: %s", msg.msg_type)
                 previous_task = asyncio.create_task(
                     self.execute_command(msg, previous_task)
                 )
