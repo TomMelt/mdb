@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  validate:
+  tests:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
