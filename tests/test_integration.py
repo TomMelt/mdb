@@ -63,6 +63,9 @@ def standardize_output(text: str) -> list[str]:
             return None
         if re.search(r"\[proc id\]", line):
             return None
+        # remove gdb .gnu_debugaltlink warnings
+        if re.search(r"warning: could not find ..gnu_debugaltlink.", line):
+            return None
         return line
 
     # required for GitHub CI run
