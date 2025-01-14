@@ -96,10 +96,14 @@ to show more information using the ``--log-level`` flag.
 
 .. code-block:: console
 
-   $ mdb launch -b gdb -n 8 -t
-   ./simple-mpi.exe --log-level=DEBUG
+   $ mdb launch -b gdb -n 8 -t ./simple-mpi.exe --log-level=DEBUG
+   running on host: 127.0.1.1
+   to connect to the debugger run:
+   mdb attach -h 127.0.1.1 -p 2000
+
    DEBUG:mdb.mdb_launch:generating ssl certificate and key
    DEBUG:mdb.mdb_launch:openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -keyout
+
    [key stuff omitted]
 
    DEBUG:asyncio:Using selector: EpollSelector
@@ -133,7 +137,7 @@ on how to attach to remote machines) run the ``attach`` command.
 
 .. code-block:: console
 
-   $ mdb attach --log-level=DEBUG
+   $ mdb attach -h 127.0.1.1 -p 2000 --log-level=DEBUG
    mdb - mpi debugger - built on various backends. Type ? for more info. To exit interactive mode
    type "q", "quit", "Ctrl+D" or "Ctrl+]".
    (mdb 0-7)
@@ -350,15 +354,28 @@ sessions. To run the example debug session you can use the following command,
 
 .. code-block:: console
 
-   $ mdb attach -x simple-mpi-script.mdb --log-level=DEBUG
+   $ mdb attach -h 127.0.1.1 -p 2000 -x simple-mpi-script.mdb --log-level=DEBUG
 
 Scripted debugging is also allowed in ``gdb`` and this is where the true benefit of CLI tools really
 shines.
 
 .. _remote_debugging:
 
-Remote debugging
-----------------
+Multi-node debugging (HPC)
+--------------------------
 
-This section (and :ref:`attach_client`) needs to be updated now that the client-server backend has
-been rewritten.
+It is now possible to debug multi-node jobs using ``mdb``. The easiest way is to first obtain an
+interactive session. From here you can run ``mdb launch``. After this command has launched, you will
+see connection information printed to the terminal e.g.,:
+
+.. code-block:: console
+
+   running on host: 127.0.1.1
+   to connect to the debugger run:
+   mdb attach -h 127.0.1.1 -p 2000
+
+Now run ``mdb attach`` with the correct hostname and port from the previous part from the login
+node. Do not worry, the target program is running in the interactive session (not on the login
+node).
+
+
