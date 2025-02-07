@@ -38,18 +38,18 @@ These instructions are for normal use of `mdb`. Please see [below](#Developers) 
     git clone https://github.com/TomMelt/mdb.git
     ```
 
-2. (optional - but recommended) Create a `conda` environment or `venv`.
+2. (optional - but recommended) Create and activate a virtual environment.
 
     ```bash
-    conda create -n mdb python
-    conda activate mdb
+    python3 -m venv .mdb
+    source .mdb/bin/activate
     ```
 
 3. Install `mdb`.
 
     ```bash
     cd mdb/
-    pip install .
+    pip install .[termgraph]
     ```
 
 More information can be found in the [installation

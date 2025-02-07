@@ -18,20 +18,19 @@ Windows Support
 Standard Installation (UNIX)
 ----------------------------
 
-The easiest way to install ``mdb`` is to clone the repo and install it into a `conda environment
-<https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html>`_, or
-other virtual environment of your choice.
+The easiest way to install ``mdb`` is to clone the repo and install it into a virtual environment of
+your choice. For the following example, I will use Python's built-in `venv
+<https://docs.python.org/3/library/venv.html>`_ virtual environment module.
 
-First we will create and activate a ``conda`` environment for ``mdb`` (you can optionally specify a
-``python`` version e.g., using ``python==3.12.0``).
+First we will create and activate a virtual environment for ``mdb``.
 
 .. code-block:: console
 
-   $ conda create -n mdb python
-   $ conda activate mdb
+   $ python3 -m venv .mdb
+   $ source .mdb/bin/activate
 
-You then have two options for install. Either from source (using GitHub) or using PyPI
-(recommended).
+You then have two options for install. Either from GitHub source (recommended for developers) or using PyPI
+(recommended for developers).
 
 pip install
 +++++++++++
@@ -80,7 +79,7 @@ can be done in the following way.
 
 .. code-block:: console
 
-   $ pip install -e .[docs,develop]
+   $ pip install -e .[docs,develop,termgraph]
 
 The ``-e`` (or ``--editable``) flag installs the project in editable mode meaning that your changes
 will be reflected when you save the source files and restart ``mdb``. ``docs`` installs packages
