@@ -155,6 +155,8 @@ class WrapperLauncher:
         for rank in range(self.ranks):
             if rank in self.select:
                 options = [
+                    "--hostfile",
+                    "./myhost",
                     "-n",
                     "1",
                     "mdb",
