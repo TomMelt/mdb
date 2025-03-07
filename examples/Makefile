@@ -3,7 +3,7 @@ CXX:=mpic++
 objects = simple-mpi.o
 cppobjects = simple-mpi-cpp.o
 programs = simple-mpi.exe simple-mpi-cpp.exe
-FLAGS=-ggdb -O0
+FLAGS=-g -O0
 .PHONY: all
 
 all: $(programs)
