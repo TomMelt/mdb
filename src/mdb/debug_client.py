@@ -8,7 +8,7 @@ from typing import Any, Optional
 import pexpect  # type: ignore
 
 from .async_client import AsyncClient
-from .backend import DebugBackend, GDBBackend, LLDBBackend
+from .backend import DebugBackend, GDBBackend, LLDBBackend, CudaGDBBackend
 from .messages import Message
 from .utils import strip_bracketted_paste
 
@@ -25,6 +25,8 @@ class DebugClient(AsyncClient):
         self.is_running = False
         if opts["backend"].lower() == "gdb":
             self.backend: DebugBackend = GDBBackend()
+        elif opts["backend"].lower() == "cuda-gdb":
+            self.backend = CudaGDBBackend()
         elif opts["backend"].lower() == "lldb":
             self.backend = LLDBBackend()
 
