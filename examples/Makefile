@@ -1,8 +1,9 @@
 FC:=mpif90
+CC:=mpicc
 CXX:=mpic++
 objects = simple-mpi.o
 cppobjects = simple-mpi-cpp.o
-programs = simple-mpi.exe simple-mpi-cpp.exe
+programs = simple-mpi.exe simple-mpi-cpp.exe simple-memory.exe
 FLAGS=-g -O0
 .PHONY: all
 
@@ -19,6 +20,9 @@ simple-mpi.exe: simple-mpi.o
 
 simple-mpi-cpp.exe: simple-mpi-cpp.o
 	$(CXX) $(LDFLAGS) $^ -o $@
+
+simple-memory.exe: simple-memory.c
+	$(CC) $(FLAGS) $^ -o $@
 
 clean:
 	rm -f *.o *.exe
