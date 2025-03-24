@@ -2,7 +2,10 @@
 # details.
 
 from abc import ABC, abstractmethod
-from typing import List, Type
+from typing import Dict, Type
+import importlib.util
+import os
+import glob
 
 
 class DebugBackend(ABC):
@@ -43,66 +46,31 @@ class DebugBackend(ABC):
         pass
 
 
-class GDBBackend(DebugBackend):
-
-    @property
-    def name(self) -> str:
-        return "gdb"
-
-    @property
-    def debug_command(self) -> str:
-        return "gdb -q"
-
-    @property
-    def argument_separator(self) -> str:
-        return "--args"
-
-    @property
-    def prompt_string(self) -> str:
-        return r"\(gdb\)"
-
-    @property
-    def default_options(self) -> list[str]:
-        commands = ["set pagination off", "set confirm off"]
-        return commands
-
-    @property
-    def start_command(self) -> str:
-        return "start"
-
-    @property
-    def float_regex(self) -> str:
-        return r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
+backends: Dict[str, Type[DebugBackend]] = {}
 
 
-class LLDBBackend(DebugBackend):
-    @property
-    def name(self) -> str:
-        return "lldb"
+def load_plugins() -> None:
+    plugin_dir = os.path.join(os.path.dirname(__file__), "plugins")
+    if not os.path.exists(plugin_dir):
+        return  # no plugin exist
 
-    @property
-    def debug_command(self) -> str:
-        return "lldb --source-quietly --no-use-colors"
+    for file in glob.glob(os.path.join(plugin_dir, "*.py")):
+        module_name = os.path.splitext(os.path.basename(file))[0]
+        spec = importlib.util.spec_from_file_location(module_name, file)
+        if spec is None or spec.loader is None:  # handle None case
+            continue
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
-    @property
-    def argument_separator(self) -> str:
-        return "--"
-
-    @property
-    def prompt_string(self) -> str:
-        return r"\(lldb\)"
-
-    @property
-    def default_options(self) -> list[str]:
-        return ["b main"]
-
-    @property
-    def start_command(self) -> str:
-        return "run"
-
-    @property
-    def float_regex(self) -> str:
-        return r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
+        # check if module defines a DebugBackend subclass, then store it in backends dictionary
+        for attr in dir(module):
+            cls = getattr(module, attr)
+            if (
+                isinstance(cls, type)
+                and issubclass(cls, DebugBackend)
+                and cls is not DebugBackend
+            ):
+                backends[cls().name] = cls
 
 
-backends: List[Type[DebugBackend]] = [LLDBBackend, GDBBackend]
+load_plugins()

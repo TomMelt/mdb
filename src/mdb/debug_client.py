@@ -8,7 +8,7 @@ from typing import Any, Optional
 import pexpect  # type: ignore
 
 from .async_client import AsyncClient
-from .backend import DebugBackend, GDBBackend, LLDBBackend
+from .backend import backends
 from .messages import Message
 from .utils import strip_bracketted_paste
 
@@ -23,10 +23,12 @@ class DebugClient(AsyncClient):
         self.stdout = opts["redirect_stdout"]
         self.args = opts["args"]
         self.is_running = False
-        if opts["backend"].lower() == "gdb":
-            self.backend: DebugBackend = GDBBackend()
-        elif opts["backend"].lower() == "lldb":
-            self.backend = LLDBBackend()
+
+        backend_name = opts["backend"].lower()
+        if backend_name in backends:
+            self.backend = backends[backend_name]()
+        else:
+            raise ValueError(f"Debugger backend is not supported: {backend_name}")
 
         logger.debug("Selected backend: %s", self.backend.name)
 
