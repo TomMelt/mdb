@@ -48,9 +48,12 @@ class mdbShell(cmd.Cmd):
         self.exchange_select = parse_ranks(self.exchange_select_str)
         self.select_str = self.exchange_select_str
         self.select = self.exchange_select
-        for backend in backends:
-            if backend().name == shell_opts["backend_name"].lower():
-                self.backend = backend()
+        backend_name = shell_opts["backend_name"].lower()
+        if backend_name in backends:
+            self.backend = backends[backend_name]()
+        else:
+            raise ValueError(f"Debugger backend is not supported: {backend_name}")
+
         self.prompt = f"(mdb {self.select_str}) "
         self.client = client
         self.exec_script = shell_opts["exec_script"]
