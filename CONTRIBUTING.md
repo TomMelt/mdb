@@ -21,6 +21,10 @@ MPI applications, whilst also trying to take advantage of as much of `gdb`'s bui
 
 Raise an issue and label it as `enhancement`.
 
+## Adding a Debugger Backend
+
+To integrate a new debugger backend, add a new Python file to the `src/mdb/plugins/` folder, named after the debugger (`[debugger-name].py`). Inside this file, define a class that extends `DebugBackend` to provide an interface for interacting with your debugger and specify its properties.
+
 ## Submitting Pull Requests
 
 Good pull requests—patches, improvements, new features—are a fantastic help. They should remain focused in scope and avoid
