@@ -5,6 +5,8 @@
 
 void f(void)
 {
+  float y = 0;
+  
   int* x = malloc(10 * sizeof(int));
   x[10] = 0;        // problem 1: heap block overrun (Invalid write)
   int j = 0;

@@ -1,4 +1,4 @@
-from mdb.backend import DebugBackend
+from mdb.base import DebugBackend
 
 
 class GDBBackend(DebugBackend):

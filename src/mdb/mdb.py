@@ -7,7 +7,6 @@ from .mdb_attach import attach
 from .mdb_launch import launch
 from .mdb_wrapper import wrapper
 
-
 @click.group()
 def main() -> None:
     """mdb is comprised of two sub-commands [attach] and [launch].
@@ -34,3 +33,5 @@ def run_main() -> None:
 main.add_command(attach)
 main.add_command(launch)
 main.add_command(wrapper)
+
+run_main()

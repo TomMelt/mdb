@@ -1,0 +1,2 @@
+-n 1 mdb wrapper -m 0 -h 127.0.1.1 -p 2000 -b vgdb -t ./examples/simple-memory.exe --connection-attempts 10 -- 
+-n 1 mdb wrapper -m 1 -h 127.0.1.1 -p 2000 -b vgdb -t ./examples/simple-memory.exe --connection-attempts 10 -- 
