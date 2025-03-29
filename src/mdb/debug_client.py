@@ -30,6 +30,8 @@ class DebugClient(AsyncClient):
         else:
             raise ValueError(f"Debugger backend is not supported: {backend_name}")
 
+        self.runtimeOptions = self.backend.runtime_options(opts=opts)
+
         logger.debug("Selected backend: %s", self.backend.name)
 
     async def init_debug_proc(self) -> None:
@@ -45,7 +47,8 @@ class DebugClient(AsyncClient):
         logger.debug("running debug command: [%s]", debug_command)
         dbg_proc = pexpect.spawn(debug_command, timeout=None)
         dbg_proc.expect(backend.prompt_string)
-        for command in backend.default_options:
+        self.runtimeOptions += backend.default_options
+        for command in self.runtimeOptions:
             dbg_proc.sendline(command)
             await dbg_proc.expect(backend.prompt_string, async_=True)
         command = self.backend.start_command
