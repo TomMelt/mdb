@@ -45,6 +45,9 @@ class DebugBackend(ABC):
     def float_regex(self) -> str:
         pass
 
+    def runtime_options(self, opts: dict[str, str]) -> list[str]:
+        return []
+
 
 backends: Dict[str, Type[DebugBackend]] = {}
 
