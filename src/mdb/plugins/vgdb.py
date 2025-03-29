@@ -37,5 +37,5 @@ class VGDBBackend(DebugBackend):
 
     def runtime_options(self, opts:dict[str, str]) -> list[str]:
         return [
-            f"set remote exec-file {opts["target"]}"
+            f"set remote exec-file {opts['target']}"
         ]
