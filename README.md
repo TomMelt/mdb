@@ -58,6 +58,16 @@ guide](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb).
 **Please Note** `mdb` doesn't currently support Windows (see
 [here](https://mdb.readthedocs.io/en/latest/installation.html#windows-support) for more info).
 
+# Known Issues
+
+* Doesn't work with `lldb` version 18. It does work with versions 17 and 20 however (version 19 wouldn't install on my machine so
+  I couldn't test it).
+* Doesn't work with intel MPI yet (open issue
+  [here](https://community.intel.com/t5/Intel-MPI-Library/Issue-when-using-intel-MPI-through-my-debugger-mdb/m-p/1663320#M12060)).
+  A possible workaround would be to try using mpich to launch instead of Intel's `mpiexec`. Note that you will need to use a
+  recent version of mpich (see below).
+* Due to a bug in mpich `mdb` only supports the latest develop version `>=5.0.0a1` - see [#65](https://github.com/TomMelt/mdb/issues/65) for more info)
+
 ## Dependencies
 
 ### Non-Python Dependencies
