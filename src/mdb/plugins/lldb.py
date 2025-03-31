@@ -29,3 +29,6 @@ class LLDBBackend(DebugBackend):
     @property
     def float_regex(self) -> str:
         return r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
+
+    def runtime_options(self, opts: dict[str, str]) -> list[str]:
+        return []

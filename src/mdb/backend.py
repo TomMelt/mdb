@@ -45,8 +45,10 @@ class DebugBackend(ABC):
     def float_regex(self) -> str:
         pass
 
+    @abstractmethod
+    # This can't be a property. Properties can't take arguments
     def runtime_options(self, opts: dict[str, str]) -> list[str]:
-        return []
+        pass
 
 
 backends: Dict[str, Type[DebugBackend]] = {}
