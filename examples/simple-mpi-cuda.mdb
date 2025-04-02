@@ -1,0 +1,14 @@
+broadcast start
+b 8
+b 26
+c
+p process_rank
+info proc
+c
+info local
+p x[0]@10
+broadcast stop
+plot x[1]
+command clear
+command c
+quit
