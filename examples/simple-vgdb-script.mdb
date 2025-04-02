@@ -1,4 +1,0 @@
-command set remote exec-file ./simple-memory.exe
-command set sysroot /
-command target extended-remote | vgdb --multi --vargs -q
-broadcast start
