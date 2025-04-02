@@ -1,4 +1,5 @@
 from mdb.backend import DebugBackend
+import os
 
 
 class VGDBBackend(DebugBackend):
@@ -24,7 +25,7 @@ class VGDBBackend(DebugBackend):
             "set pagination off",
             "set confirm off",
             "set sysroot /",
-            "target extended-remote | vgdb --multi --vargs -q"
+            "target extended-remote | vgdb --multi --vargs -q",
         ]
 
     @property
@@ -35,8 +36,7 @@ class VGDBBackend(DebugBackend):
     def float_regex(self) -> str:
         return r"\d+ = ([+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?)"
 
-    
-    def runtime_options(self, opts:dict[str, str]) -> list[str]:
-        return [
-            f"set remote exec-file {opts['target']}"
-        ]
+    def runtime_options(self, opts: dict[str, str]) -> list[str]:
+        cwd = os.path.join(os.getcwd())
+        filepath = os.path.join(cwd, opts["target"])
+        return [f"set remote exec-file {filepath}"]

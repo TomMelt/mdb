@@ -50,6 +50,7 @@ class DebugClient(AsyncClient):
         self.runtimeOptions += backend.default_options
         for command in self.runtimeOptions:
             dbg_proc.sendline(command)
+            logger.debug("running runtime command: [%s]", command)
             await dbg_proc.expect(backend.prompt_string, async_=True)
         command = self.backend.start_command
         if self.stdout is not None:
