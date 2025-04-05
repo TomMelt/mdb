@@ -3,8 +3,7 @@
 
 import asyncio
 import logging
-
-from .messages import END_BYTES, Message
+from .messages import Message
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,9 @@ class AsyncConnection:
 
     async def recv_message(self) -> "Message":
         try:
-            raw_msg = await self.reader.readuntil(separator=END_BYTES)
+            length = await self.reader.readexactly(4)
+            length = int.from_bytes(length, byteorder='big')
+            raw_msg = await self.reader.readexactly(length)
         except Exception as e:
             logger.exception("async read error")
             raise e
@@ -31,7 +32,13 @@ class AsyncConnection:
 
     async def send_message(self, msg: Message) -> None:
         try:
-            self.writer.write(msg.to_json())
+            data = msg.to_json()
+            length_header = len(data).to_bytes(4, byteorder='big')
+            
+            self.writer.write(length_header)
+            self.writer.write(data)
+            await self.writer.drain()
+
         except Exception as e:
             logger.exception("async send error")
             raise e
