@@ -9,9 +9,6 @@ MDB_CLIENT = "mdb client"
 DEBUG_CLIENT = "debug client"
 EXCHANGE = "exchange server"
 
-END_BYTES = b"_MDB_END_"
-
-
 @dataclass
 class Message:
     msg_type: str
@@ -19,7 +16,7 @@ class Message:
 
     @staticmethod
     def from_json(text: bytes) -> "Message":
-        msg = json.loads(text.decode()[: -len(END_BYTES)])
+        msg = json.loads(text.decode())
         if msg["msg_type"] == "exchange_command_response":
             # the dictionary of results that comes back from the debuggers
             # should be of type [int, str] but this gets destroyed by
@@ -152,4 +149,4 @@ class Message:
 
     def to_json(self) -> bytes:
         msg = dict(msg_type=self.msg_type, data=self.data)
-        return json.dumps(msg).encode() + END_BYTES
+        return json.dumps(msg).encode()
