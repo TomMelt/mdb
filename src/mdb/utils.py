@@ -34,13 +34,15 @@ def extract_float(line: str, backend: "DebugBackend") -> float:
     float_regex = backend.float_regex
     line = strip_control_characters(line)
     m = re.search(float_regex, line)
+
+    if m:
+        try:
+            result = float(m.group(1))
+        except ValueError:
+            print(f"cannot convert variable [{result}] to a float.")
     
-    try:
-        result = float(m.group(1))
-    except (AttributeError, ValueError, IndexError) as e:
-        result = float('nan')
-        print(f"[extract_float]: {e}")
-        
+    # Corner case: if result is uninitialized, the parent function in the callstack
+    # should capture the fired exception of UnboundLocalError.
     return result
 
 
