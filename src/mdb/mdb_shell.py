@@ -88,35 +88,40 @@ class mdbShell(cmd.Cmd):
         response = sort_debug_response(command_response.data["results"])
 
         ranks = np.array(list(response.keys()))
-        data = np.array(
-            list(
-                map(
-                    lambda v: extract_float(v, backend=self.backend),
-                    response.values(),
+
+        try:
+            data = np.array(
+                list(
+                    map(
+                        lambda v: extract_float(v, backend=self.backend),
+                        response.values(),
+                    )
                 )
             )
-        )
 
-        print("min  = ", np.min(data))
-        print("max  = ", np.max(data))
-        print("mean = ", np.mean(data))
+            print("min  = ", np.min(data))
+            print("max  = ", np.max(data))
+            print("mean = ", np.mean(data))
 
-        if self.plot_lib == "termgraph":
-            plt_data_str = "\n".join(
-                [", ".join([str(x), str(y)]) for x, y in zip(ranks, data)]
-            )
-            run(
-                shlex.split("termgraph --color green"),
-                input=plt_data_str,
-                encoding="utf-8",
-            )
-        else:
-            fig, ax = plt.subplots()
-            ax.bar(ranks, data)
-            ax.set_xlabel("rank")
-            ax.set_ylabel("value")
-            ax.set_title(var)
-            plt.show()
+            if self.plot_lib == "termgraph":
+                plt_data_str = "\n".join(
+                    [", ".join([str(x), str(y)]) for x, y in zip(ranks, data)]
+                )
+                run(
+                    shlex.split("termgraph --color green"),
+                    input=plt_data_str,
+                    encoding="utf-8",
+                )
+            else:
+                fig, ax = plt.subplots()
+                ax.bar(ranks, data)
+                ax.set_xlabel("rank")
+                ax.set_ylabel("value")
+                ax.set_title(var)
+                plt.show()
+
+        except Exception as e:            
+            print(f"[do_plot] Exception: {e}")
 
     def do_command(self, line: str) -> None:
         """
