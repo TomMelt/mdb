@@ -9,6 +9,7 @@ MDB_CLIENT = "mdb client"
 DEBUG_CLIENT = "debug client"
 EXCHANGE = "exchange server"
 
+
 @dataclass
 class Message:
     msg_type: str

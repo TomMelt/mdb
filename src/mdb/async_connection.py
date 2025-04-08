@@ -22,7 +22,7 @@ class AsyncConnection:
     async def recv_message(self) -> "Message":
         try:
             length = await self.reader.readexactly(self.numlengthBytes)
-            length = int.from_bytes(length, byteorder='big', signed=False)
+            length = int.from_bytes(length, byteorder="big", signed=False)
             raw_msg = await self.reader.readexactly(length)
         except Exception as e:
             logger.exception("async read error")
@@ -34,8 +34,10 @@ class AsyncConnection:
     async def send_message(self, msg: Message) -> None:
         try:
             data = msg.to_json()
-            length_header = data.__len__().to_bytes(self.numlengthBytes, byteorder='big', signed=False)
-            
+            length_header = len(data).to_bytes(
+                self.numlengthBytes, byteorder="big", signed=False
+            )
+
             self.writer.write(length_header)
             self.writer.write(data)
             await self.writer.drain()
