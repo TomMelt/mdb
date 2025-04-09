@@ -40,9 +40,11 @@ def extract_float(line: str, backend: "DebugBackend") -> float:
             result = float(m.group(1))
         except ValueError:
             print(f"cannot convert variable [{result}] to a float.")
-    
-    # Corner case: if result is uninitialized, the parent function in the callstack
-    # should capture the fired exception of UnboundLocalError.
+    else:
+        msg = "float regex doesn't match following string:\n"
+        msg += line
+
+        raise ValueError(msg)
     return result
 
 
