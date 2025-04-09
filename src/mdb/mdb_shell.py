@@ -120,7 +120,7 @@ class mdbShell(cmd.Cmd):
                 ax.set_title(var)
                 plt.show()
 
-        except Exception as e:            
+        except Exception as e:
             print(f"[do_plot] Exception: {e}")
 
     def do_command(self, line: str) -> None:
