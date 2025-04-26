@@ -5,6 +5,7 @@ import asyncio
 import functools
 import logging
 import signal
+import socket
 import sys
 
 import click
@@ -29,7 +30,7 @@ ShellOpts = TypedDict(
 @click.option(
     "-h",
     "--hostname",
-    default="localhost",
+    default="",
     show_default=True,
     help="Hostname where exchange server is running.",
 )
@@ -113,6 +114,9 @@ def attach(
     if plot_lib not in supported_plot_libs:
         msg = f"warning: unrecognized plot library [{plot_lib}]. Supported libraries are [{supported_plot_libs}]."
         raise ValueError(msg)
+
+    if hostname == "":
+        hostname = socket.gethostbyname(socket.gethostname())
 
     client_opts = {
         "exchange_hostname": hostname,
