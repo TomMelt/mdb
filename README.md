@@ -82,6 +82,7 @@ the debugger's respective sites for installation instructions e.g., [`gdb`](http
 
 The main python dependencies are listed in the [`pyproject.toml`](pyproject.toml) file, e.g.,
 
+* `python>=3.10`
 * `click`
 * `matplotlib`
 * `numpy`
