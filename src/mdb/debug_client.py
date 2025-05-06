@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import re
 from typing import Any, Optional
 
 import pexpect  # type: ignore
@@ -93,6 +94,8 @@ class DebugClient(AsyncClient):
             logger.debug("self.myrank = %d", self.myrank)
             if self.myrank in select:
                 if not self.dbg_proc.closed:
+                    if re.match(r"^\s*dump binary value\s.*", command):
+                        command = re.sub(r"\$RANK\$", str(self.myrank), command)
                     self.dbg_proc.sendline(command)
                     logger.debug("command running: '%s'", command)
                     await self.dbg_proc.expect(
