@@ -66,6 +66,30 @@ class mdbShell(cmd.Cmd):
                 self.plot_lib = "matplotlib"
         super().__init__()
 
+    def do_dump(self, line: str) -> None:
+        """
+        Description:
+        Dump variable in memory to binary file
+        Example:
+        The following command will dump variable [var] to a file with the name [var].dmp.[rank].
+
+            (mdb) dump [var]
+        """
+
+        if not re.search("gdb", self.client.backend_name):
+            print("Error: this feature is only supported for gdb-like backends")
+            return
+
+        var = line
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
+            self.client.run_command(
+                f"dump binary value {var}.dmp.$RANK$ {var}", self.select
+            )
+        )
+        print("written data to disk")
+
     def do_plot(self, line: str) -> None:
         """
         Description:
