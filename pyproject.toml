@@ -58,3 +58,6 @@ ignore = ["E203", "E501"]
 exclude = ["conf.py"]
 strict = true
 allow_redefinition = true
+
+[tool.black]
+line-length = 88
