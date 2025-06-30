@@ -154,13 +154,13 @@ class mdbShell(cmd.Cmd):
         specify which ranks to run the command on.
 
         Example:
-        The following command will run {self.backend.name} command [command] on every process.
+        The following command will run "print myvar" command on every process.
 
-            (mdb) command [command]
+            (mdb) command print myvar
 
-        The following command will run {self.backend.name} command [command] on processes 0,3,4 and 5.
+        The following command will run "print myvar" command on processes 0,3,4 and 5.
 
-            (mdb) command 0,3-5 [command]
+            (mdb) command 0,3-5 print myvar
         """
 
         command = line
