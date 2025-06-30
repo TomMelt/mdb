@@ -249,9 +249,8 @@ To enter broadcast mode type the following,
    (mdb 0-7) broadcast start
    (bcm 0-7)
 
-The command prompt will turn to ``(bcm 0-7)`` and will also change color to yellow (depending on
-your terminal color scheme). To leave broadcast mode either press ``CTRL+D`` or type
-``quit``/``broadcast stop``, e.g.,
+The command prompt will turn to ``(bcm 0-7)``. To leave broadcast mode either press ``CTRL+D`` or
+type ``quit``/``broadcast stop``, e.g.,
 
 .. code-block:: console
 

@@ -326,17 +326,19 @@ class mdbShell(cmd.Cmd):
             )
 
         if self.broadcast_mode:
-            self.prompt = f"\r\x1b[33m(bcm {self.select_str})\x1b[m "
+            self.prompt = f"(bcm {self.select_str}) "
         else:
-            self.prompt = f"\r(mdb {self.select_str}) "
+            self.prompt = f"(mdb {self.select_str}) "
 
         return
 
     def precmd(self, line: str) -> str:
         """Override Cmd.precmd() to only run the command if debug processes are open."""
 
-        if line in ["quit", "EOF"]:
+        if line in ["q", "quit", "EOF"]:
             if self.broadcast_mode:
+                if line == "EOF":
+                    print()
                 return "broadcast stop"
             return line
 
@@ -369,8 +371,8 @@ class mdbShell(cmd.Cmd):
 
     def default(self, line: str) -> bool:  # type: ignore[override]
         """Method called on an input line when the command prefix is not recognized."""
-        if line == "EOF":
-            # Cmd converts CTRL+D to "EOF"
+        if line in ["EOF", "q"]:
+            # cmd converts CTRL+D to "EOF"
             self.onecmd("quit")
             return True
         elif line == "NULL":
