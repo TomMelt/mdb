@@ -19,7 +19,7 @@ All of these details assist the process of investigating and fixing bugs.
 Feature requests are welcome, `mdb` is under active development. My personal ambition is to make `mdb` a powerful debugger for
 MPI applications, whilst also trying to take advantage of as much of `gdb`'s built-in features as possible.
 
-Raise an issue and label it as `enhancement`.
+Raise an issue to request a feature.
 
 ## Adding a Debugger Backend
 
