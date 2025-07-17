@@ -129,12 +129,13 @@ mdb for developers](https://mdb.readthedocs.io/en/latest/installation.html#for-d
 
 # Acknowledgements
 
-This project was inspired by @mystery-e204's [mpidb](https://github.com/mystery-e204/mpidb) tool and @Azrael3000's
-[tmpi](https://github.com/Azrael3000/tmpi) tmux interface.
+This project was inspired by [@mystery-e204](https://github.com/mystery-e204)'s [mpidb](https://github.com/mystery-e204/mpidb)
+tool and [@Azrael3000](https://github.com/Azrael3000)'s [tmpi](https://github.com/Azrael3000/tmpi) tmux interface.
 
 # Similar Projects
 
-I have recently come across @robertu94's [mpigdb](https://github.com/robertu94/mpigdb). It seems to offer similar functionality
+I have recently come across [@robertu94](https://github.com/robertu94)'s [mpigdb](https://github.com/robertu94/mpigdb). It
+seems to offer similar functionality
 and it has a closer integration with gdb using gdb's inbuilt `inferior`s to handle multiple processes at the same time (see
 [gdb manual sec. 4.9](https://sourceware.org/gdb/current/onlinedocs/gdb.html/Inferiors-Connections-and-Programs.html#Inferiors-Connections-and-Programs)
 for more info). The main difference from my perspective is that I can plot variables across MPI processes using `mdb` and AFAIK
