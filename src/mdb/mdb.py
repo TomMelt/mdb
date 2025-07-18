@@ -32,6 +32,13 @@ def run_main() -> None:
     pass
 
 
+@click.command()
+def version() -> None:
+    """Get the version number of mdb."""
+    print("1.0.4")
+
+
 main.add_command(attach)
 main.add_command(launch)
+main.add_command(version)
 main.add_command(wrapper)
