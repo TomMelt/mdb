@@ -43,6 +43,13 @@ class mdbShell(cmd.Cmd):
     broadcast_mode: bool = False
 
     def __init__(self, shell_opts: ShellOpts, client: Client) -> None:
+        self.aliases = {
+            "bc": self.do_broadcast,
+            "q": self.do_quit,
+            "EOF": self.do_quit,
+            "h": self.do_help,
+        }
+
         self.ranks = shell_opts["ranks"]
         self.exchange_select_str = shell_opts["exchange_select"]
         self.exchange_select = parse_ranks(self.exchange_select_str)
@@ -369,18 +376,19 @@ class mdbShell(cmd.Cmd):
         readline.write_history_file(self.hist_file)
         return
 
-    def default(self, line: str) -> bool:  # type: ignore[override]
+    def default(self, line: str) -> bool | None:  # type: ignore[override]
         """Method called on an input line when the command prefix is not recognized."""
-        if line in ["EOF", "q"]:
-            # cmd converts CTRL+D to "EOF"
-            self.onecmd("quit")
-            return True
-        elif line == "NULL":
-            # do nothing
-            # useful to have a fake command for precmd()
-            return False
+        cmd, arg, line = self.parseline(line)
+        if cmd in self.aliases:
+            return self.aliases[cmd](str(arg))
         else:
             print(
                 f"unrecognized command [{line}]. Type help to find out list of possible commands."
             )
             return False
+
+    def do_help(self, arg: str) -> None:
+        """Print help text for commands and aliases."""
+        if arg in self.aliases:
+            arg = self.aliases[arg].__name__[3:]
+        cmd.Cmd.do_help(self, arg)
