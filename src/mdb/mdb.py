@@ -2,6 +2,7 @@
 # details.
 
 import click
+from importlib import metadata
 
 from .mdb_attach import attach
 from .mdb_launch import launch
@@ -32,6 +33,16 @@ def run_main() -> None:
     pass
 
 
+@click.command()
+def version() -> None:
+    """Get the version number of mdb."""
+    try:
+        print(metadata.version("mdb-debugger"))
+    except metadata.PackageNotFoundError:
+        print("mdb-debugger not installed")
+
+
 main.add_command(attach)
 main.add_command(launch)
+main.add_command(version)
 main.add_command(wrapper)
