@@ -121,7 +121,9 @@ def wrapper(
     dbg_client = DebugClient(opts)  # type: ignore
     logger.debug("debug client initialized")
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     loop.run_until_complete(dbg_client.run())
     loop.close()
 
