@@ -66,7 +66,7 @@ guide](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb).
   [here](https://community.intel.com/t5/Intel-MPI-Library/Issue-when-using-intel-MPI-through-my-debugger-mdb/m-p/1663320#M12060)).
   A possible workaround would be to try using mpich to launch instead of Intel's `mpiexec`. Note that you will need to use a
   recent version of mpich (see below).
-* Due to a bug in mpich `mdb` only supports the latest develop version `>=5.0.0a1` - see [#65](https://github.com/TomMelt/mdb/issues/65) for more info)
+* Due to a bug in mpich `mdb` only supports `>=4.3.2` - see [#65](https://github.com/TomMelt/mdb/issues/65) for more info)
 
 ## Dependencies
 
@@ -103,7 +103,7 @@ implementations but I just haven't done it yet.
 
 - [x] Open MPI
 - [x] cray MPI
-- [x] mpich (due to a bug in mpich `mdb` only supports the latest develop version `>=5.0.0a1` - see
+- [x] mpich (due to a bug in mpich `mdb` only supports `>=4.3.2` - see
   [#65](https://github.com/TomMelt/mdb/issues/65) for more info)
 - [ ] Intel oneapi MPI (currently working with Intel on bug)
 - [ ] Slurm `srun` (should work but still needs testing)

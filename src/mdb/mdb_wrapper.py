@@ -210,6 +210,8 @@ class WrapperLauncher:
             return f"{launcher} --configfile {appfile}"
         elif self.mpi_mode == "open mpi":
             return f"{launcher} --app {appfile}"
+        elif self.mpi_mode == "mpich":
+            return f"{launcher} --pmi-port --configfile {appfile}"
         else:
             logging.error(
                 "error: MPI mode not supported. Try specifying the --configfile option."
@@ -220,14 +222,14 @@ class WrapperLauncher:
     def set_mpi_mode(self) -> None:
         """Set mpi_mode depending on which mpirun implementation is being used."""
 
-        supported_modes = ["intel", "open mpi"]
+        supported_modes = {"intel": "intel", "open mpi": "open mpi", "mpich": "hydra" }
 
         mpi_version = subprocess.run(
             ["mpirun", "--version"], capture_output=True
         ).stdout.decode("utf8")
 
-        for name in supported_modes:
-            if name in mpi_version.lower():
+        for name, search_key in supported_modes.items():
+            if search_key in mpi_version.lower():
                 self.mpi_mode = name
                 return
         self.mpi_mode = "unsupported"
