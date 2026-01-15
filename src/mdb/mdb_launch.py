@@ -201,7 +201,8 @@ def launch(
     wrapper_launcher = WrapperLauncher(wl_opts)
     wrapper_launcher.write_app_file()
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     cmd = wrapper_launcher.launch_command()
     logger.debug(f"launch command: {cmd}")
