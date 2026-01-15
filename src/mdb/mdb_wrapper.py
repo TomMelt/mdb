@@ -4,6 +4,7 @@
 import asyncio
 import logging
 import subprocess
+from enum import Enum
 
 import click
 from typing_extensions import TypedDict
@@ -128,9 +129,16 @@ def wrapper(
     loop.close()
 
 
+class MPI_Mode(Enum):
+    UNSUPPORTED = "unsupported"
+    INTEL = "Intel"
+    OPENMPI = "Open MPI"
+    MPICH = "MPICH"
+
+
 class WrapperLauncher:
     def __init__(self, prog_opts: Wrapper_opts) -> None:
-        self.mpi_mode = ""
+        self.mpi_mode: MPI_Mode = MPI_Mode.UNSUPPORTED
         self.ranks = prog_opts["ranks"]
         self.hostname = prog_opts["hostname"]
         self.port = prog_opts["port"]
@@ -208,29 +216,34 @@ class WrapperLauncher:
         launcher = self.mpi_command
         if self.mpi_config_opt != "":
             return f"{launcher} --{self.mpi_config_opt} {appfile}"
-        if self.mpi_mode == "intel":
+        if self.mpi_mode == MPI_Mode.INTEL:
             return f"{launcher} --configfile {appfile}"
-        elif self.mpi_mode == "open mpi":
+        elif self.mpi_mode == MPI_Mode.OPENMPI:
             return f"{launcher} --app {appfile}"
+        elif self.mpi_mode == MPI_Mode.MPICH:
+            return f"{launcher} --pmi-port --configfile {appfile}"
         else:
             logging.error(
                 "error: MPI mode not supported. Try specifying the --configfile option."
             )
             exit(1)
-        return
 
     def set_mpi_mode(self) -> None:
         """Set mpi_mode depending on which mpirun implementation is being used."""
 
-        supported_modes = ["intel", "open mpi"]
+        supported_modes = {
+            MPI_Mode.INTEL: "intel",
+            MPI_Mode.OPENMPI: "open mpi",
+            MPI_Mode.MPICH: "hydra",
+        }
 
         mpi_version = subprocess.run(
             ["mpirun", "--version"], capture_output=True
         ).stdout.decode("utf8")
 
-        for name in supported_modes:
-            if name in mpi_version.lower():
-                self.mpi_mode = name
+        for mode, search_key in supported_modes.items():
+            if search_key in mpi_version.lower():
+                self.mpi_mode = mode
                 return
-        self.mpi_mode = "unsupported"
+        self.mpi_mode = MPI_Mode.UNSUPPORTED
         return
