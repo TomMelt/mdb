@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import os
 import shlex
 import signal
 import socket
@@ -169,11 +170,30 @@ def launch(
     cert_host = gethostbyaddr(hostname)[0]
     subj = f"/C=XX/ST=mdb/L=mdb/O=mdb/OU=mdb/CN={cert_host}"
     opts = "req -x509 -newkey rsa:4096 -sha256 -days 365"
-    cmd = f'openssl {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
+
+    # Use MDB_OPENSSL environment variable if set, otherwise default to 'openssl'
+    openssl_cmd = os.environ.get("MDB_OPENSSL", "openssl")
+    cmd = f'{openssl_cmd} {opts} -keyout {MDB_KEY_PATH} -out {MDB_CERT_PATH} -nodes -subj "{subj}"'
     proc = run(shlex.split(cmd), capture_output=True)
     logger.debug("generating ssl certificate and key")
     logger.debug(cmd)
     logger.debug(proc.stderr.decode())
+
+    # Check if certificate generation was successful
+    if proc.returncode != 0:
+        raise RuntimeError(
+            "Failed to generate SSL certificate.\n"
+            "You can try setting a custom OpenSSL path: export MDB_OPENSSL=/path/to/openssl"
+        )
+
+    # Verify that the certificate files were created
+    if not exists(MDB_CERT_PATH) or not exists(MDB_KEY_PATH):
+        raise FileNotFoundError(
+            "SSL certificate files were not created. "
+            f"Expected files: {MDB_CERT_PATH} and {MDB_KEY_PATH}\n"
+            "Please check that OpenSSL is working correctly. "
+            "You can try: export MDB_OPENSSL=/path/to/openssl"
+        )
 
     args = list(args)
 

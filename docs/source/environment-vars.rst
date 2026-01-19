@@ -21,6 +21,22 @@ following environment variable.
    Do not use ``MDB_DISABLE_HOSTNAME_VERIFY`` on a multi-user system, such as a shared HPC cluster. This
    is for local debugging only.
 
+Custom OpenSSL Path
+-------------------
+
+By default, ``mdb`` uses the ``openssl`` command found in the system PATH. If you need to use a
+specific OpenSSL installation, you can set the ``MDB_OPENSSL`` environment variable to point to the
+desired OpenSSL binary.
+
+.. code-block:: console
+
+   export MDB_OPENSSL=/path/to/custom/openssl
+
+This is useful when if you have multiple OpenSSL versions installed (this is a common issue when
+using ``spack`` environments).
+
+If ``MDB_OPENSSL`` is not set, ``mdb`` will default to using the ``openssl`` command from the system PATH.
+
 .. _cli_env_vars:
 
 CLI options as environment variables
