@@ -67,6 +67,10 @@ guide](https://mdb.readthedocs.io/en/latest/installation.html#installing-mdb).
   A possible workaround would be to try using mpich to launch instead of Intel's `mpiexec`. Note that you will need to use a
   recent version of mpich (see below).
 * Due to a bug in mpich `mdb` only supports `>=4.3.2` - see [#65](https://github.com/TomMelt/mdb/issues/65) for more info)
+* If you encounter issues with SSL/TLS certificate generation (`RuntimeError: Failed to generate SSL certificate.`), you
+  can specify a custom OpenSSL binary using the `MDB_OPENSSL` environment variable (e.g., `export MDB_OPENSSL=/path/to/openssl`).
+  You normally want to use this system binary e.g., `/usr/bin/openssl` but things like `spack` environment sometimes
+  install `openssl` which takes precedence over the system installation.
 
 ## Dependencies
 
