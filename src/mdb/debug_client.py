@@ -4,6 +4,7 @@
 import asyncio
 import logging
 import re
+import shutil
 from typing import Any, Optional
 
 import pexpect  # type: ignore
@@ -46,6 +47,15 @@ class DebugClient(AsyncClient):
             [backend.debug_command, backend.argument_separator, self.target, args]
         )
         logger.debug("running debug command: [%s]", debug_command)
+
+        # Extract the actual command name (first word) to check if it exists
+        command_name = backend.debug_command.split()[0]
+        if not shutil.which(command_name):
+            raise FileNotFoundError(
+                f"Debugger command '{command_name}' not found.\n"
+                f"Please ensure '{command_name}' is installed and available in your PATH."
+            )
+
         dbg_proc = pexpect.spawn(debug_command, timeout=None)
         dbg_proc.expect(backend.prompt_string)
         self.runtimeOptions += backend.default_options
