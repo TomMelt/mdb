@@ -36,6 +36,7 @@ Server_opts = TypedDict(
 @click.command()
 @click.option(
     "-n",
+    "-np",
     "--ranks",
     default=1,
     show_default=True,
