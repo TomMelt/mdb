@@ -189,7 +189,7 @@ Therefore, they both have index ``i=0``. But we can switch process 0 to thread 1
    ************************************************************************
    1:      [Current thread is 10, lane 0 (AMDGPU Lane 2:3:1:1/0 (0,0,0)[0,0,0])]
 
-   (mdb 0-1) command pint i
+   (mdb 0-1) command print i
    0:      $5 = 7552
    ************************************************************************
    1:      $5 = 0
