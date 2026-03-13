@@ -349,7 +349,7 @@ class mdbShell(cmd.Cmd):
                 return "broadcast stop"
             return line
 
-        if line == "broadcast stop" or line == "bc stop":
+        if line in ("broadcast stop", "bc stop"):
             return line
 
         if self.broadcast_mode:
