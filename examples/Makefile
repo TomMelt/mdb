@@ -2,20 +2,21 @@
 # $ make
 # which is equivalent to
 # $ make cpu
-# If you want to build the gpu example, specify gpu or all e.g.,
+# If you want to build the cuda example, specify cuda or all e.g.,
 # $ make all
 # or
-# $ make gpu
+# $ make cuda
 
 FC:=mpif90
 CC:=mpicc
 CXX:=mpic++
-FLAGS=-g -O0
-.PHONY: all cpu gpu
+FLAGS=-ggdb -O0
+.PHONY: all cpu cuda hip
 
 cpu: simple-mpi.exe simple-mpi-cpp.exe simple-memory.exe
-gpu: saxpy-mpi.exe
-all: cpu gpu
+cuda: saxpy-mpi.exe
+hip: saxpy-hip-mpi.exe
+all: cpu cuda hip
 
 simple-mpi.exe: simple-mpi.f90
 	$(FC) $(FLAGS) $^ -o $@
@@ -28,6 +29,9 @@ simple-memory.exe: simple-memory.c
 
 saxpy-mpi.exe: saxpy-mpi.cu
 	$(CXX) $(FLAGS) $^ -o $@
+
+saxpy-hip-mpi.exe: saxpy-hip-mpi.cpp
+	MPICH_CXX=hipcc OMPI_CXX=hipcc $(CXX) $(FLAGS) $^ -o $@
 
 clean:
 	rm -f *.exe
