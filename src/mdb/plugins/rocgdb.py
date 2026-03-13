@@ -21,7 +21,11 @@ class RocGDBBackend(DebugBackend):
 
     @property
     def default_options(self) -> list[str]:
-        commands = ["set breakpoint pending on", "set pagination off", "set confirm off"]
+        commands = [
+            "set breakpoint pending on",
+            "set pagination off",
+            "set confirm off",
+        ]
         return commands
 
     @property
