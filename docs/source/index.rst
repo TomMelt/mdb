@@ -19,6 +19,7 @@ serial debugger backends e.g.,  `gdb <https://sourceware.org/gdb>`_ and `lldb
 
    Installation <installation>
    Quick Start <quick-start>
+   Debugging AMD GPU Kernels <gpu-amd>
 
 .. toctree::
    :maxdepth: 2
