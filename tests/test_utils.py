@@ -1,4 +1,4 @@
-# Copyright 2023-2024 Tom Meltzer. See the top-level COPYRIGHT file for
+# Copyright 2023-2026 Tom Meltzer. See the top-level COPYRIGHT file for
 # details.
 
 from mdb.utils import parse_ranks, strip_bracketted_paste, strip_control_characters
