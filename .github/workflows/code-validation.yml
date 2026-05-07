@@ -3,12 +3,32 @@ name: style
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - '.github/workflows/*.yml'
+      - '**/*.py'
+      - 'pyproject.toml'
+
   pull_request:
-    branches: [ "main" ]
+    paths:
+      - '.github/workflows/*.yml'
+      - '**/*.py'
+      - 'pyproject.toml'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Helps prevent parallel runs of the workflow from overlapping
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Write permissions are not needed for this workflow
+permissions: {}
 
 jobs:
   style:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5

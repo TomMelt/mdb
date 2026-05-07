@@ -3,36 +3,105 @@ name: tests
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - '.github/workflows/test_suite.yml'
+      - '**/*.py'
+      - 'pyproject.toml'
+
   pull_request:
-    branches: [ "main" ]
+    paths:
+      - '.github/workflows/test_suite.yml'
+      - '**/*.py'
+      - 'pyproject.toml'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Helps prevent parallel runs of the workflow from overlapping
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   tests:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
-      with:
-        python-version: '3.11'
-    - name: Install system dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y gdb libopenmpi-dev libssl-dev lldb
-    - name: Build example mpi program
-      run: |
-        make -C examples/
-    - name: Install mdb and additional python packages
-      run: |
-        pip install -e .[develop,termgraph]
-    - name: Run tests
-      run: |
-        # without this, mpi wont start and the server goes into a death spiral
-        export OMPI_ALLOW_RUN_AS_ROOT=1
-        export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
-        MDB_DISABLE_TLS=1 pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv
-    - name: Check coverage
-      run: |
-        python .github/workflows/coverage.py 60
+      # Checkout your repository under $GITHUB_WORKSPACE so your job can access it
+      - name: Checkout code
+        with:
+          persist-credentials: false
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Start Measurement
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: start-measurement
+        continue-on-error: true
+
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install system dependencies
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: get-measurement
+          label: 'install deps'
+        continue-on-error: true
+        run: |
+          sudo apt update
+          sudo apt install -y gdb libopenmpi-dev libssl-dev lldb
+      - name: Build example mpi program
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: get-measurement
+          label: 'build mpi examples'
+        continue-on-error: true
+        run: |
+          make -C examples/
+      - name: Install mdb and additional python packages
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: get-measurement
+          label: 'pip install mdb'
+        continue-on-error: true
+        run: |
+          pip install -e .[develop,termgraph]
+      - name: Run tests
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: get-measurement
+          label: 'run tests'
+        continue-on-error: true
+        run: |
+          # without this, mpi wont start and the server goes into a death spiral
+          export OMPI_ALLOW_RUN_AS_ROOT=1
+          export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+          MDB_DISABLE_TLS=1 pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv
+      - name: Check coverage
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: get-measurement
+          label: 'check coverage'
+        continue-on-error: true
+        run: |
+          python .github/workflows/coverage.py 60
+
+      # NOTE: To measure energy consumption of specific steps in your workflow,
+      # For each step you want to measure, add a measurement step after it with a unique label
+      # this will allow the eco-ci tool to collect energy consumption data. Example below.
+      # See https://github.com/green-coding-solutions/eco-ci-energy-estimation?tab=readme-ov-file#github-action-mandatory-and-optional-variables
+      #   - name: Tests measurement
+      #     uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+      #     with:
+      #       task: get-measurement
+      #       label: 'pytest'
+      #     continue-on-error: true
+
+      - name: Show Energy Results
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: display-results
+        continue-on-error: true
