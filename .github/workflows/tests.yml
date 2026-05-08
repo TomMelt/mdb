@@ -22,6 +22,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Write permissions are not needed for this workflow
+permissions: {}
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -45,49 +48,54 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install system dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y gdb libopenmpi-dev libssl-dev lldb
+      - name: Measure install deps
         uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
         with:
           task: get-measurement
           label: 'install deps'
         continue-on-error: true
-        run: |
-          sudo apt update
-          sudo apt install -y gdb libopenmpi-dev libssl-dev lldb
       - name: Build example mpi program
+        run: |
+          make -C examples/
+      - name: Measure build mpi examples
         uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
         with:
           task: get-measurement
           label: 'build mpi examples'
         continue-on-error: true
-        run: |
-          make -C examples/
       - name: Install mdb and additional python packages
+        run: |
+          pip install -e .[develop,termgraph]
+      - name: Measure pip install mdb
         uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
         with:
           task: get-measurement
           label: 'pip install mdb'
         continue-on-error: true
-        run: |
-          pip install -e .[develop,termgraph]
       - name: Run tests
-        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
-        with:
-          task: get-measurement
-          label: 'run tests'
-        continue-on-error: true
         run: |
           # without this, mpi wont start and the server goes into a death spiral
           export OMPI_ALLOW_RUN_AS_ROOT=1
           export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
           MDB_DISABLE_TLS=1 pytest --cov-report term-missing --cov-report json:cov.json --cov=mdb -vv
+      - name: Measure run tests
+        uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
+        with:
+          task: get-measurement
+          label: 'run tests'
+        continue-on-error: true
       - name: Check coverage
+        run: |
+          python .github/workflows/coverage.py 60
+      - name: Measure check coverage
         uses: green-coding-solutions/eco-ci-energy-estimation@862050e4f01f65b1436e5eca18ba4bd85562f0de # v5.0.0
         with:
           task: get-measurement
           label: 'check coverage'
         continue-on-error: true
-        run: |
-          python .github/workflows/coverage.py 60
 
       # NOTE: To measure energy consumption of specific steps in your workflow,
       # For each step you want to measure, add a measurement step after it with a unique label
