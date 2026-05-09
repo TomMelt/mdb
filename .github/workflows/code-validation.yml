@@ -3,16 +3,11 @@ name: style
 on:
   push:
     branches: [ "main" ]
-    paths:
-      - '.github/workflows/*.yml'
-      - '**/*.py'
-      - 'pyproject.toml'
 
   pull_request:
     paths:
       - '.github/workflows/*.yml'
       - '**/*.py'
-      - 'pyproject.toml'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
