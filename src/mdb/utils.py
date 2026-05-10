@@ -55,7 +55,37 @@ def pretty_print_response(response: dict[int, str]) -> None:
 
 
 def reduce_response(response: dict[int, str]) -> None:
-    """
+    """Reduce debug output by deduplicating common lines across ranks.
+
+    Parses each rank's output, groups identical lines together, and prints
+    each unique line prefixed by the collapsed set of ranks that produced it.
+    Lines from only one rank appear normally; shared lines are printed once
+    with all contributing ranks.
+
+    Example output before and after:
+
+        Before (raw output per rank):
+
+            0:      process 45402
+            0:      cmdline = '/mdb/examples/simple-mpi.exe'
+            0:      cwd = '/mdb'
+            0:      exe = '/mdb/examples/simple-mpi.exe'
+            ************************************************************************
+            1:      process 45403
+            1:      cmdline = '/mdb/examples/simple-mpi.exe'
+            1:      cwd = '/mdb'
+            1:      exe = '/mdb/examples/simple-mpi.exe'
+
+        After (deduplicated, ranks collapsed):
+
+              0: process 45402
+            0-1: cmdline = '/mdb/examples/simple-mpi.exe'
+            0-1: cwd = '/mdb'
+            0-1: exe = '/mdb/examples/simple-mpi.exe'
+              1: process 45403
+
+    Args:
+        response: dict mapping process rank (int) to its output string.
     """
     reduced = defaultdict(list)
     for rank, result in response.items():
@@ -91,7 +121,7 @@ def extract_float(line: str, backend: "DebugBackend") -> float:
 
 def prepend_ranks(rank: int, result: str) -> str:
     return "".join(
-        [f"{rank}:\t" + line + "\r\n" for line in result.split("\r\n")[1:-1]]
+        [f"{rank}: " + line + "\r\n" for line in result.split("\r\n")[1:-1]]
     )
 
 

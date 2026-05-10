@@ -56,6 +56,7 @@ class mdbShell(cmd.Cmd):
         self.exchange_select = parse_ranks(self.exchange_select_str)
         self.select_str = self.exchange_select_str
         self.select = self.exchange_select
+        self.output_mode = "reduce"  # 'pretty' or 'reduce'
         backend_name = shell_opts["backend_name"].lower()
         if backend_name in backends:
             self.backend = backends[backend_name]()
@@ -215,7 +216,10 @@ class mdbShell(cmd.Cmd):
 
         if command_response.msg_type == "exchange_command_response":
             response = sort_debug_response(command_response.data["results"])
-            reduce_response(response)
+            if self.output_mode == "reduce":
+                reduce_response(response)
+            else:
+                pretty_print_response(response)
         else:
             print("Received unexpected message type: %s", command_response.msg_type)
         return
@@ -250,6 +254,39 @@ class mdbShell(cmd.Cmd):
         """
         run(split(line))
         return
+
+    def do_set(self, line: str) -> None:
+        """
+        Description:
+        Set mdb options.
+
+        Example:
+        Switch output format between pretty-printed and reduced (deduplicated) mode:
+
+            (mdb) set output pretty
+            (mdb) set output reduce
+
+        Show current settings:
+
+            (mdb) set
+        """
+        if not line:
+            print(f"output: {self.output_mode}")
+            return
+
+        parts = line.split()
+        if len(parts) < 2:
+            print("Usage: set output [pretty|reduce]")
+            return
+
+        if parts[0].lower() == "output":
+            mode = parts[1].lower()
+            if mode in ("pretty", "reduce"):
+                self.output_mode = mode
+            else:
+                print(f"Error: unknown output mode '{mode}'. Use 'pretty' or 'reduce'.")
+        else:
+            print(f"Error: unknown option '{parts[0]}'. Use 'output'.")
 
     def do_select(self, line: str) -> None:
         """
