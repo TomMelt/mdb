@@ -1,57 +1,36 @@
 hello
-0:cmdline = simple-mpi.exe
-0:cwd = [mdb root]
-0:exe = simple-mpi.exe
-************************************************************************
-1:cmdline = simple-mpi.exe
-1:cwd = [mdb root]
-1:exe = simple-mpi.exe
-0:Breakpoint 2 at [hex address]: file simple-mpi.f90, line 15.
-************************************************************************
-1:Breakpoint 2 at [hex address]: file simple-mpi.f90, line 15.
-0:Breakpoint 3 at [hex address]: file simple-mpi.f90, line 17.
-************************************************************************
-1:Breakpoint 3 at [hex address]: file simple-mpi.f90, line 17.
-0:Continuing.
+0-1: cmdline = simple-mpi.exe
+0-1: cwd = [mdb root]
+0-1: exe = simple-mpi.exe
+0-1: Breakpoint 2 at [hex address]: file simple-mpi.f90, line 15.
+0-1: Breakpoint 3 at [hex address]: file simple-mpi.f90, line 17.
+0-1: Continuing.
+0-1:
+0-1: Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
+0-1: 15  var = 10.*process_rank
+0: Continuing.
 0:
-0:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
-0:15  var = 10.*process_rank
-************************************************************************
-1:Continuing.
-1:
-1:Thread 1 "simple-mpi.exe" hit Breakpoint 2, simple () at simple-mpi.f90:15
-1:15  var = 10.*process_rank
-0:Continuing.
-0:
-0:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
-0:17  if (process_rank == 0) then
-0:#0  simple () at simple-mpi.f90:17
-************************************************************************
-1:#0  simple () at simple-mpi.f90:15
+0: Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
+0: 17  if (process_rank == 0) then
+0: #0  simple () at simple-mpi.f90:17
+1: #0  simple () at simple-mpi.f90:15
 unrecognized command [made-up-command]. Type help to find out list of possible commands.
 Error: user specified option [select] must be subset of available ranks (check mdb launch command).
 select = [10] but available ranks are [0-1].
-1:Continuing.
+1: Continuing.
 1:
-1:Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
-1:17  if (process_rank == 0) then
+1: Thread 1 "simple-mpi.exe" hit Breakpoint 3, simple () at simple-mpi.f90:17
+1: 17  if (process_rank == 0) then
 File [deliberately-missing-file.mdb] not found. Please check the file exists and try again.
-0:25
-************************************************************************
-1:25
-0:Continuing.
-0:           1 s...
-0:           2 s...
-0:           3 s...
-0: in level 1
-0: in level 2
-0: internal process:            0 of            2
-0: var =    0.00000000
-************************************************************************
-1:Continuing.
-1: in level 1
-1: in level 2
-1: internal process:            1 of            2
-1: var =    10.0000000
-************************************************************************
+0-1: 25
+0-1: Continuing.
+  0:            1 s...
+  0:            2 s...
+  0:            3 s...
+0-1:  in level 1
+0-1:  in level 2
+  0:  internal process:            0 of            2
+  0:  var =    0.00000000
+  1:  internal process:            1 of            2
+  1:  var =    10.0000000
 exiting mdb...
