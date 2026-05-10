@@ -24,6 +24,7 @@ from .utils import (
     parse_ranks,
     pretty_print_response,
     sort_debug_response,
+    reduce_response,
 )
 
 if TYPE_CHECKING:
@@ -214,7 +215,7 @@ class mdbShell(cmd.Cmd):
 
         if command_response.msg_type == "exchange_command_response":
             response = sort_debug_response(command_response.data["results"])
-            pretty_print_response(response)
+            reduce_response(response)
         else:
             print("Received unexpected message type: %s", command_response.msg_type)
         return

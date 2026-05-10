@@ -4,6 +4,7 @@
 import re
 from os.path import expanduser
 from typing import TYPE_CHECKING
+from collections import defaultdict
 
 if TYPE_CHECKING:
     from .backend import DebugBackend
@@ -21,6 +22,29 @@ def sort_debug_response(results: dict[int, str]) -> dict[int, str]:
     return dict(sorted(results.items()))
 
 
+def collapse_ranges(values: list[int]) -> str:
+    """Collapse a list of integers into minimal range notation.
+
+    e.g. [1, 2, 3, 6, 7, 10, 11, 12] -> '1-3,6-7,10-12'
+    """
+    sorted_vals = sorted(set(values))
+    if not sorted_vals:
+        return ""
+
+    ranges = []
+    start = end = sorted_vals[0]
+
+    for n in sorted_vals[1:]:
+        if n == end + 1:
+            end = n
+        else:
+            ranges.append(f"{start}-{end}" if start != end else str(start))
+            start = end = n
+
+    ranges.append(f"{start}-{end}" if start != end else str(start))
+    return ",".join(ranges)
+
+
 def pretty_print_response(response: dict[int, str]) -> None:
     lines = []
     for rank, result in response.items():
@@ -28,6 +52,23 @@ def pretty_print_response(response: dict[int, str]) -> None:
             lines.append(prepend_ranks(rank=rank, result=result))
     combined_output = (72 * "*" + "\n").join(lines)
     print(combined_output)
+
+
+def reduce_response(response: dict[int, str]) -> None:
+    """
+    """
+    reduced = defaultdict(list)
+    for rank, result in response.items():
+        if result:
+            for line in result.split("\r\n")[1:-1]:
+                reduced[line].append(rank)
+
+    reduced = {k: collapse_ranges(v) for k, v in reduced.items()}
+
+    max_len = max([len(v) for v in reduced.values()], default=0)
+    for line, ranks_str in reduced.items():
+        padded = ranks_str.rjust(max_len)
+        print(f"{padded}: {line}")
 
 
 def extract_float(line: str, backend: "DebugBackend") -> float:
