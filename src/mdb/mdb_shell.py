@@ -310,6 +310,19 @@ class mdbShell(cmd.Cmd):
             for command in commands:
                 self.onecmd(self.precmd(command))
 
+    def do_toggle_broadcast(self, line: str) -> None:
+        """
+        Description:
+        Toggle broadcast mode on or off. Equivalent to running
+        "broadcast start" or "broadcast stop" depending on the current state.
+        """
+        self.broadcast_mode = not self.broadcast_mode
+        if self.broadcast_mode:
+            self.prompt = f"(bcm {self.select_str}) "
+        else:
+            self.prompt = f"(mdb {self.select_str}) "
+        return
+
     def do_broadcast(self, line: str) -> None:
         """
         Description:
@@ -364,6 +377,7 @@ class mdbShell(cmd.Cmd):
 
         readline.parse_and_bind('"\\e[A": history-search-backward')
         readline.parse_and_bind('"\\e[B": history-search-forward')
+        readline.parse_and_bind('"\\C-b": "toggle_broadcast\\n"')
         if os.path.exists(self.hist_file):
             readline.read_history_file(self.hist_file)
         if self.exec_script is not None:
